@@ -11,5 +11,9 @@ messaging.onBackgroundMessage(payload => {
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(self.clients.openWindow('/'));
+  e.waitUntil(self.clients.openWindow(self.registration.scope));
 });
+
+self.addEventListener('install',()=>self.skipWaiting());
+self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
+self.addEventListener('fetch',()=>{});

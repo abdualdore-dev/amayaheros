@@ -204,7 +204,7 @@ body.auth{background:
 body.auth .login-wrap .nb{background:#fff!important;border:1px solid rgba(214,178,115,.6)!important;box-shadow:0 18px 50px rgba(20,18,46,.45)!important}
 @media (min-width:900px){body.auth{background-color:#2b2950!important}}
 </style>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script></head>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script></head>
 <body class="min-h-screen">
 <div id="app"></div>
 <div id="modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onclick="this.classList.add('hidden')"><img id="modalImg" class="max-h-full max-w-full nb"></div>
@@ -261,20 +261,24 @@ function setLang(){document.documentElement.lang=S.lang;document.documentElement
 function toggleLang(){S.lang=S.lang==='ar'?'en':'ar';save();render()}
 
 /* ---------- Auth ---------- */
-function doLogin(){
- const u=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value;
+async function doLogin(){
+ const u=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value;loginErr=false;
+ if(await fbSignIn(u,p)){if(sessionFromUser(u)){save();render();if(window.Notification&&Notification.permission==='granted')enablePush()}else{try{firebase.auth().signOut()}catch(e){}loginErr=true;render()}return}
  if(u==='abdurhman'&&p==='121212'){S.session={role:'owner'};tab='dash'}
  else if(S.mgrs.find(m=>m.user===u&&m.pass===p)){S.session={role:'mgr',id:S.mgrs.find(m=>m.user===u&&m.pass===p).id};tab='dash'}else{const r=S.runners.find(r=>r.user===u&&r.pass===p&&!r.off);if(r){S.session={role:'runner',id:r.id};tab='me'}else{loginErr=true;return render()}}
  loginErr=false;save();render();
 }
-function logout(){S.session=null;save();render()}
+function logout(){try{if(window.firebase&&firebase.auth&&firebase.auth().currentUser)firebase.auth().signOut()}catch(e){}FB_TOKEN='';S.session=null;save();render()}
 
 /* ---------- Runners ---------- */
-function addRunner(){
+async function addRunner(){
  const n=document.getElementById('rn').value.trim(),u=document.getElementById('ru').value.trim(),p=document.getElementById('rp').value.trim();
- if(!n||!u||!p)return toast('');
- if(u==='abdurhman'||S.runners.some(r=>r.user===u))return toast(' username');
- S.runners.push({id:'r'+Date.now(),name:n,user:u,pass:p,phone:(document.getElementById('rph').value||'').trim(),salary:parseInt(document.getElementById('rsal').value)||700000,photo:pendRP,pv:Date.now()});pendRP='';save();render();
+ if(!n||!u||!p)return toast(T('أكمل الاسم واسم المستخدم وكلمة السر','Fill name, username and password'));
+ if(u==='abdurhman'||S.runners.some(r=>r.user===u)||S.mgrs.some(m=>m.user===u))return toast(T('اسم المستخدم مستخدم مسبقاً','Username already used'));
+ const res=await fbCreate(u,p);
+ if(res==='short')return toast(T('كلمة السر 6 أحرف فأكثر','Password must be 6+ characters'));
+ if(res!=='ok'&&res!=='off')return toast(T('تعذّر إنشاء الحساب: ','Could not create account: ')+res);
+ S.runners.push({id:'r'+Date.now(),name:n,user:u,pass:res==='ok'?'':p,phone:(document.getElementById('rph').value||'').trim(),salary:parseInt(document.getElementById('rsal').value)||700000,photo:pendRP,pv:Date.now()});pendRP='';save();render();
 }
 function pickChar(i){selChar=i;render()}
 
@@ -494,14 +498,14 @@ const dbStatus=()=>!DB?' محلي فقط - غير مربوط بقاعدة بيا
 const dbShow=()=>{const e=document.getElementById('dbs');if(e)e.textContent=dbStatus()};
 const PHC={},LOAD={},PH={};
 const snap=st=>{const o={};AK.forEach(k=>{o[k]={};(st[k]||[]).forEach(x=>{const y={...x};delete y.photo;if(k==='broken'||k==='runners')y.hp=(x.photo||x.hp)?1:0;o[k][UID[k](x)]=JSON.stringify(y)})});MK.forEach(k=>{o[k]={};Object.keys(st[k]||{}).forEach(i=>o[k][i]=JSON.stringify(st[k][i]))});return o};
-async function push(){if(!DB)return;const cur=snap(S),ops=[];pushing++;
+async function push(){if(!DB)return;await refreshTok();const cur=snap(S),ops=[];pushing++;
  try{[...AK,...MK].forEach(k=>{const a=cur[k],b=Rm[k]||{};
-   Object.keys(a).forEach(i=>{if(a[i]!==b[i])ops.push(fetch(`${DB}/amaya/${k}/${i}.json`,{method:'PUT',body:a[i]}))});
-   Object.keys(b).forEach(i=>{if(!(i in a)){ops.push(fetch(`${DB}/amaya/${k}/${i}.json`,{method:'DELETE'}));if(k==='broken'||k==='runners')ops.push(fetch(`${DB}/amaya_photos/${i}.json`,{method:'DELETE'}))}})});
-  S.broken.concat(S.runners).forEach(x=>{if(x.photo&&!PH[x.id]){PH[x.id]=1;ops.push(fetch(`${DB}/amaya_photos/${clean(x.id)}.json`,{method:'PUT',body:JSON.stringify(x.photo)}))}});
+   Object.keys(a).forEach(i=>{if(a[i]!==b[i])ops.push(fetch(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method:'PUT',body:a[i]}))});
+   Object.keys(b).forEach(i=>{if(!(i in a)){ops.push(fetch(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method:'DELETE'}));if(k==='broken'||k==='runners')ops.push(fetch(`${DB}/amaya_photos/${i}.json${AQ()}`,{method:'DELETE'}))}})});
+  S.broken.concat(S.runners).forEach(x=>{if(x.photo&&!PH[x.id]){PH[x.id]=1;ops.push(fetch(`${DB}/amaya_photos/${clean(x.id)}.json${AQ()}`,{method:'PUT',body:JSON.stringify(x.photo)}))}});
   await Promise.all(ops);Rm=cur}catch(e){}finally{pushing--}}
-async function pull(){if(!DB||pushing)return;
- try{const r0=await fetch(`${DB}/amaya.json`),d0=await r0.json();
+async function pull(){if(!DB||pushing)return;await refreshTok();
+ try{const r0=await fetch(`${DB}/amaya.json${AQ()}`),d0=await r0.json();
   if(!r0.ok||(d0&&d0.error)){dbErr=(d0&&d0.error)||('HTTP '+r0.status);dbOk=false;dbShow();return}
   dbErr='';dbOk=true;dbShow();const d=d0||{};if(pushing)return;
   if(!Object.keys(d).length){Rm={};push();return}
@@ -514,7 +518,7 @@ async function pull(){if(!DB||pushing)return;
    if(!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&tab!=='chat'))render();
    else if(tab==='chat'){const cl=document.getElementById('cl');if(cl){cl.innerHTML=chatHTML();cl.scrollTop=cl.scrollHeight}}}
   else Rm=snap(S);
-  S.broken.concat(S.runners).forEach(x=>{if(x.hp&&!x.photo&&!LOAD[x.id]){LOAD[x.id]=1;fetch(`${DB}/amaya_photos/${clean(x.id)}.json`).then(r=>r.json()).then(v=>{const b=S.broken.concat(S.runners).find(y=>y.id===x.id);if(b&&v){b.photo=v;PHC[x.id+'|'+(x.pv||0)]=v;if(!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))render()}}).catch(()=>{}).finally(()=>{delete LOAD[x.id]})}});
+  S.broken.concat(S.runners).forEach(x=>{if(x.hp&&!x.photo&&!LOAD[x.id]){LOAD[x.id]=1;fetch(`${DB}/amaya_photos/${clean(x.id)}.json${AQ()}`).then(r=>r.json()).then(v=>{const b=S.broken.concat(S.runners).find(y=>y.id===x.id);if(b&&v){b.photo=v;PHC[x.id+'|'+(x.pv||0)]=v;if(!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))render()}}).catch(()=>{}).finally(()=>{delete LOAD[x.id]})}});
  }catch(e){dbErr=(e&&e.message)||'network';dbOk=false;dbShow()}}
 
 /* ---------- Pro features ---------- */
@@ -549,7 +553,7 @@ function vStats(){const from=Date.now()-PER*864e5,byI={},byR={};
  const E=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]),card=(h,b,c)=>`<div class="nb ${c} p-3"><h3 class="font-black mb-2">${h}</h3>${b}</div>`;
  return `<div class="flex gap-2 mb-3">${[7,30].map(d=>`<button class="btn ${PER===d?'ye':'bg-white'}" onclick="PER=${d};render()">${d===7?T('أسبوعي','Weekly'):T('شهري','Monthly')}</button>`).join('')}</div><div class="grid gap-4 md:grid-cols-2">${card(' '+T('دقائق التأخير','Late minutes'),bar(late,'rd'),'pk')}${card(' '+T('النقاط','Points'),bar(pts,'gr'),'gr')}${card(' '+T('المكسورات حسب الصنف','Breakage by item'),bar(E(byI),'bl'),'bl')}${card(' '+T('المكسورات حسب الرنر','Breakage by runner'),bar(E(byR),'or'),'or')}</div>`}
 const vLog=()=>`<div class="nb bg-white p-3">${S.log.slice(-100).reverse().map(l=>`<div class="border-b border-slate-200 py-1 text-sm font-bold"> ${fmt(l.at)} ·  ${esc(loc(l.who))} · ${esc(loc(l.act))}</div>`).join('')||'—'}</div>`;
-function addMgr(){const n=mn.value.trim(),u=mu.value.trim(),p=mp.value.trim();if(!n||!u||!p||u==='abdurhman'||S.runners.concat(S.mgrs).some(x=>x.user===u))return toast('');S.mgrs.push({id:'m'+Date.now(),name:n,user:u,pass:p,at:Date.now()});logAct(LX(()=>' '+T('مدير مناوب','manager')+' '+n));save();render()}
+async function addMgr(){const n=mn.value.trim(),u=mu.value.trim(),p=mp.value.trim();if(!n||!u||!p||u==='abdurhman'||S.runners.concat(S.mgrs).some(x=>x.user===u))return toast(T('أكمل الحقول واسم مستخدم غير مكرر','Fill fields, unique username'));const res=await fbCreate(u,p);if(res==='short')return toast(T('كلمة السر 6 أحرف فأكثر','Password 6+ chars'));if(res!=='ok'&&res!=='off')return toast(T('تعذّر إنشاء الحساب: ','Could not create: ')+res);S.mgrs.push({id:'m'+Date.now(),name:n,user:u,pass:res==='ok'?'':p,at:Date.now()});logAct(LX(()=>T('مدير مناوب ','manager ')+n));save();render()}
 async function backup(){await saveFile('amaya-backup-'+dayKey()+'.json',new Blob([JSON.stringify({...S,session:null})],{type:'application/json'}))}
 const _vr=vRunners;vRunners=function(){return `<div class="nb or p-4 mb-4"><h3 class="font-black mb-2"> ${T('إضافة مدير مناوب (يرسل الاستراحات ولا يحذف)','Add shift manager (no delete)')}</h3><div class="grid gap-2 sm:grid-cols-4"><input id="mn" class="inp" placeholder="${t('name')}"><input id="mu" class="inp" placeholder="${t('user')}"><input id="mp" class="inp" placeholder="${t('pass')}"><button class="btn gr" onclick="addMgr()">${t('add')}</button></div>${S.mgrs.map(m=>`<div class="flex justify-between font-bold mt-2"><span> ${esc(m.name)} @${esc(m.user)}</span><button class="btn rd !py-0" onclick="delMgr('${m.id}')">${t('del')}</button></div>`).join('')}</div>`+_vr()+`<div class="nb bl p-3 mt-4 flex gap-2 flex-wrap items-center"><b>${T('تعديل','Edit')}</b>${S.runners.map(r=>`<button class="btn !py-1" onclick="editRunner('${r.id}')">${avImg(r)} ${esc(r.name)}</button>`).join('')}${S.runners.map(r=>`<label class="btn bg-white !py-1">${esc(r.name)} (${T('صورة','photo')})<input type="file" accept="image/*" class="hidden" onchange="setRunnerPhoto('${r.id}',this)"></label>`).join('')}</div><div class="nb ye p-3 mt-4 flex gap-2 flex-wrap items-center"><button class="btn gr" onclick="backup()"> ${T('نسخة احتياطية','Backup')}</button><label class="btn bg-white"> ${T('استرجاع','Restore')}<input type="file" accept=".json" class="hidden" onchange="restore(this)"></label></div>`};
 
@@ -561,7 +565,7 @@ function DEFSH(){return [{id:'m',ord:1,name:'صباحي',from:'10:00',to:'17:00'
 const blank=lang=>({lang,runners:[],breaks:{},broken:[],delays:[],blog:[],chat:[],assign:{},mgrs:[],att:[],pts:[],log:[],sched:{},cfg:{},shifts:DEFSH(),notes:[],tokens:{},absences:[],checks:[],warns:[],session:null});
 const TOK='accounts-wipe-2026-11-02';
 if(SS.get('amaya_tok','')!==TOK){const oc=S.cfg,osh=S.shifts;S=blank(S.lang);S.cfg=oc||{};S.shifts=(osh&&osh.length)?osh:DEFSH();SS.set('amaya_tok',TOK);SS.set('amaya_state',S)}
-async function initReset(){if(!DB)return;try{const m=await(await fetch(`${DB}/amaya_meta/reset.json`)).json();if(m!==TOK){await fetch(`${DB}/amaya.json`,{method:'DELETE'});await fetch(`${DB}/amaya_photos.json`,{method:'DELETE'});await fetch(`${DB}/amaya_meta/reset.json`,{method:'PUT',body:JSON.stringify(TOK)});Rm={}}}catch(e){}}
+async function initReset(){if(!DB)return;try{const m=await(await fetch(`${DB}/amaya_meta/reset.json${AQ()}`)).json();if(m!==TOK){await fetch(`${DB}/amaya.json${AQ()}`,{method:'DELETE'});await fetch(`${DB}/amaya_photos.json${AQ()}`,{method:'DELETE'});await fetch(`${DB}/amaya_meta/reset.json${AQ()}`,{method:'PUT',body:JSON.stringify(TOK)});Rm={}}}catch(e){}}
 function setCfg(k,v){S.cfg[k]=k==='defMin'?(parseInt(v)||10):k==='grace'?(parseInt(v)||0):v;logAct('settings: '+k);save()}
 const avImg=(o,z)=>{z=z||36;const r=S.runners.find(x=>x.id===(o.rid||o.id))||S.runners.find(x=>x.name===o.name);return r&&r.photo?`<img src="${r.photo}" style="width:${z}px;height:${z}px;border-radius:50%;object-fit:cover;border:1px solid #D9DEE5;display:inline-block;vertical-align:middle">`:`<span style="width:${z}px;height:${z}px;border-radius:50%;background:#E5E7EB;display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:#4B5563;vertical-align:middle;font-size:${z*.45}px">${esc((o.name||'?').trim().charAt(0))}</span>`};
 let pendRP='';
@@ -589,7 +593,7 @@ function vDash(){const now=Date.now(),dn=new Date().getDay(),br=S.runners.filter
  <div class="grid gap-4 md:grid-cols-2"><div class="nb p-4"><h3 class="font-black mb-2">${T('الشفتات اليوم','Today shifts')}</h3><div class="grid gap-2">${roster}</div></div><div class="nb p-4"><h3 class="font-black mb-2">${T('الاستراحات الجارية','Live breaks')}</h3><div class="grid gap-2">${live||'<div class="font-bold">-</div>'}</div><button class="btn rd mt-3" onclick="endAll()">${T('إنهاء كل الاستراحات','End all breaks')}</button></div></div>
  <div class="nb ye p-4 mt-4"><h3 class="font-black mb-2">${T('إعلان عام يظهر لكل الرنرات','Announcement shown to all runners')}</h3><div class="flex gap-2"><input id="ann" class="inp" value="${esc(S.cfg.announce||'')}"><button class="btn" onclick="setCfg('announce',document.getElementById('ann').value);toast('OK')">${T('نشر','Publish')}</button><button class="btn bg-white" onclick="setCfg('announce','');render()">${T('مسح','Clear')}</button></div></div>
  <div class="flex gap-2 flex-wrap mt-4"><button class="btn ${WL?'':'bg-white'}" onclick="toggleWake()">${WL?T('الشاشة مضاءة (إيقاف)','Screen on (turn off)'):T('إبقاء الشاشة مضاءة','Keep screen on')}</button><button class="btn bg-white" onclick="askNotif()">${T('تفعيل التنبيهات','Enable notifications')}</button>${[['breaks','tBreaks'],['shifts','tShifts'],['assign','tAssign'],['scores','tScore'],['report','tReport'],['chat','tChat']].map(x=>`<button class="btn bg-white" onclick="tab='${x[0]}';render()">${t(x[1])}</button>`).join('')}</div>`}
-function vSettings(){return `<div class="nb p-4 mb-4 flex items-center justify-between gap-3"><div><div class="font-bold">${T('أصوات الأزرار','Button sounds')}</div><div class="text-sm text-gray-500">${T('نقرة خفيفة عند الضغط على الأزرار','A soft click when pressing buttons')}</div></div><button class="btn bg-white" onclick="toggleSfx()">${S.cfg.sfx===false?T('تشغيل','On'):T('إيقاف','Off')}</button></div><div class="nb p-4 mb-4"><h3 class="font-black mb-3">${T('إعدادات عامة','General settings')}</h3><div class="grid gap-3 sm:grid-cols-2"><div><label class="text-xs font-bold">${T('اسم المطعم / الفرع (يظهر في الأعلى)','Restaurant / branch name')}</label><input class="inp" value="${esc(S.cfg.name||'')}" onchange="setCfg('name',this.value);render()"></div><div><label class="text-xs font-bold">${T('سماح التأخير في الحضور (دقيقة)','Late-arrival grace (minutes)')}</label><input type="number" min="0" class="inp" value="${S.cfg.grace===undefined?10:S.cfg.grace}" onchange="setCfg('grace',this.value)"></div><div><label class="text-xs font-bold">${T('مدة الاستراحة الافتراضية (دقيقة)','Default break (minutes)')}</label><input type="number" min="1" class="inp" value="${S.cfg.defMin||10}" onchange="setCfg('defMin',this.value)"></div></div></div>
+function vSettings(){const sec=secOn();return `<div class="nb p-4 mb-4"><h3 class="font-bold mb-2">${T('الأمان','Security')}</h3><div class="mb-2"><span class="pill ${sec?'ok':'warn'}">${sec?T('محمي بتسجيل دخول Firebase','Protected by Firebase sign-in'):T('غير مفعّل بعد','Not enabled yet')}</span></div><div class="text-sm mb-3">${T('يحفظ كلمات السر مشفّرة عند Google ويغلق قاعدة البيانات أمام الغرباء.','Stores passwords encrypted at Google and closes the database to strangers.')}</div><div class="flex gap-2 flex-wrap"><button class="btn" onclick="enableSecurity()">${T('تفعيل الأمان العالي','Enable high security')}</button><button class="btn bg-white" onclick="copyRules()">${T('نسخ قواعد الحماية','Copy security rules')}</button></div></div>`+`<div class="nb p-4 mb-4 flex items-center justify-between gap-3"><div><div class="font-bold">${T('أصوات الأزرار','Button sounds')}</div><div class="text-sm text-gray-500">${T('نقرة خفيفة عند الضغط على الأزرار','A soft click when pressing buttons')}</div></div><button class="btn bg-white" onclick="toggleSfx()">${S.cfg.sfx===false?T('تشغيل','On'):T('إيقاف','Off')}</button></div><div class="nb p-4 mb-4"><h3 class="font-black mb-3">${T('إعدادات عامة','General settings')}</h3><div class="grid gap-3 sm:grid-cols-2"><div><label class="text-xs font-bold">${T('اسم المطعم / الفرع (يظهر في الأعلى)','Restaurant / branch name')}</label><input class="inp" value="${esc(S.cfg.name||'')}" onchange="setCfg('name',this.value);render()"></div><div><label class="text-xs font-bold">${T('سماح التأخير في الحضور (دقيقة)','Late-arrival grace (minutes)')}</label><input type="number" min="0" class="inp" value="${S.cfg.grace===undefined?10:S.cfg.grace}" onchange="setCfg('grace',this.value)"></div><div><label class="text-xs font-bold">${T('مدة الاستراحة الافتراضية (دقيقة)','Default break (minutes)')}</label><input type="number" min="1" class="inp" value="${S.cfg.defMin||10}" onchange="setCfg('defMin',this.value)"></div></div></div>
  <div class="nb p-4 mb-4"><h3 class="font-black mb-2">${T('حسابات الرنرات','Runner accounts')}</h3>${S.runners.map(r=>`<div class="flex items-center justify-between py-1 border-b border-slate-200"><span>${avImg(r,28)} ${esc(r.name)} <span class="text-xs text-slate-500">@${esc(r.user)}</span> ${r.off?'<b class="text-red-600">'+T('موقوف','Suspended')+'</b>':''}</span><button class="btn bg-white !py-1" onclick="toggleNotif('${r.id}')">${r.notif===false?T('تشغيل التنبيهات','Enable alerts'):T('إيقاف التنبيهات','Disable alerts')}</button><button class="btn bg-white !py-1" onclick="toggleOff('${r.id}')">${r.off?T('تفعيل','Activate'):T('إيقاف','Suspend')}</button></div>`).join('')||'<div class="font-bold">-</div>'}</div>
  <div class="nb rd p-4"><h3 class="font-black mb-2">${T('منطقة الخطر','Danger zone')}</h3><div class="font-semibold mb-2">${T('يمسح كل الرنرات والسجلات والصور نهائياً ويبقي حساب المدير فقط.','Erases all runners, records and photos; only the manager account remains.')}</div><button class="btn" style="background:#B91C1C" onclick="resetAll()">${T('تصفير البرنامج بالكامل','Reset everything')}</button></div>`}
 function meExtras(id){const dn=new Date().getDay(),sc=S.sched[id]||{},cur=S.shifts.find(x=>x.id===sc[dn]),v=ptsOf(id),w=ptsOf(id,Date.now()-6048e5),days=DAYS();
@@ -657,11 +661,11 @@ function delBroken(id){ask(T('حذف سجل المكسور','Delete breakage rec
 function delMgr(id){ask(T('حذف المدير المناوب','Delete shift manager'),()=>{S.mgrs=S.mgrs.filter(m=>m.id!==id);logAct('delete manager');save();render()})}
 function delAtt(aid){if(!isStaff())return;ask(T('إلغاء تسجيل الحضور','Undo attendance'),()=>{S.att=S.att.filter(x=>x.id!==aid);logAct('undo attendance');save();render()})}
 function manualPts(rid,v){dlg({title:(v>0?'+':'')+v+' - '+nm(rid),fields:[{id:'why',label:T('السبب (إلزامي عند الخصم)','Reason (required for deductions)')}],ok:T('حفظ','Save'),fn:f=>{const w=(f.why||'').trim();if(v<0&&!w){toast(T('اكتب السبب أولاً','Write the reason first'));return}addPts(rid,v,w);logAct((v<0?'deduct ':'bonus ')+nm(rid)+' '+v+' '+w);render()}})}
-function editRunner(id){const r=S.runners.find(x=>x.id===id);dlg({title:T('تعديل الرنر','Edit runner'),fields:[{id:'n',label:T('الاسم','Name'),value:r.name},{id:'ph',label:T('رقم الهاتف','Phone number'),value:r.phone||''},{id:'sal',label:T('الراتب (د.ع)','Salary (IQD)'),type:'number',value:r.salary||700000},{id:'p',label:T('كلمة سر جديدة (اتركها فارغة للإبقاء)','New password (blank = keep)'),type:'password'}],ok:T('حفظ','Save'),fn:f=>{r.name=(f.n||'').trim()||r.name;r.phone=(f.ph||'').trim();r.salary=parseInt(f.sal)||r.salary||700000;if(f.p&&f.p.trim())r.pass=f.p.trim();logAct('edit '+r.name);save();render()}})}
+function editRunner(id){const r=S.runners.find(x=>x.id===id);dlg({title:T('تعديل الرنر','Edit runner'),fields:[{id:'n',label:T('الاسم','Name'),value:r.name},{id:'ph',label:T('رقم الهاتف','Phone'),value:r.phone||''},{id:'sal',label:T('الراتب (دينار)','Salary (IQD)'),type:'number',value:r.salary||700000}],ok:T('حفظ','Save'),fn:f=>{r.name=(f.n||'').trim()||r.name;r.phone=(f.ph||'').trim();r.salary=parseInt(f.sal)||700000;logAct('edit '+r.name);save();render()}})}
 function restore(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{let d;try{d=JSON.parse(r.result)}catch(e){return toast('Invalid file')}ask(T('استبدال كل البيانات بالنسخة الاحتياطية؟','Replace all data with the backup?'),()=>{const ses=S.session;S={...S,...d,session:ses};['mgrs','att','pts','log','blog','chat','delays','broken','runners'].forEach(k=>S[k]=S[k]||[]);S.sched=S.sched||{};logAct('restore');save();render()})};r.readAsText(f)}
 function setDb(){dlg({title:'Firebase URL',fields:[{id:'u',label:'Realtime Database URL',value:DB}],ok:T('حفظ','Save'),fn:f=>{SS.set('amaya_db',(f.u||'').trim());location.reload()}})}
 function resetAll(){dlg({title:T('تصفير البرنامج بالكامل','Reset everything'),msg:T('يمسح كل الرنرات والسجلات والصور نهائياً ولا يمكن التراجع.','Erases all runners, records and photos permanently.'),danger:1,ok:T('مسح كل شيء','Erase everything'),fn:doReset})}
-async function doReset(){if(DB){pushing++;try{await fetch(`${DB}/amaya.json`,{method:'DELETE'});await fetch(`${DB}/amaya_photos.json`,{method:'DELETE'})}catch(e){}pushing--}
+async function doReset(){if(DB){pushing++;try{await fetch(`${DB}/amaya.json${AQ()}`,{method:'DELETE'});await fetch(`${DB}/amaya_photos.json${AQ()}`,{method:'DELETE'})}catch(e){}pushing--}
  const ses=S.session;S=blank(S.lang);S.session=ses;Rm={};Object.keys(PH).forEach(k=>delete PH[k]);SS.set('amaya_state',S);tab='dash';render();toast('OK')}
 let MORE=false,_xl;let WL=null,PROF=null;
 async function toggleWake(){try{if(WL){await WL.release();WL=null}else{WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}}catch(e){toast(T('غير مدعوم في هذا المتصفح','Not supported in this browser'))}render()}
@@ -744,7 +748,7 @@ document.addEventListener('click',e=>{if(!S.session||(S.cfg&&S.cfg.sfx===false))
 /* ---------- Runner home & sections ---------- */
 let RS=null;
 const attOpen=id=>S.att.find(a=>a.rid===id&&a.at>=day0()&&!a.out);
-const RSL=()=>({league:[T('الدوري','League'),T('ترتيبك هذا الشهر','Your rank this month')],check:[T('فحص قبل الشفت','Pre-shift check'),T('أكّد الهندام وجاهزية المحطة','Confirm dress code and station')],warns:[T('إنذاراتي','My warnings'),T('الإنذارات المسجلة عليك','Warnings on your record')],salary:[T('راتبي','My salary'),T('راتبك وخصوماتك هذا الشهر','Your salary and deductions this month')],station:[T('قسمي اليوم','Today station'),T('المحطة التي تعمل بها اليوم','The station you work at today')],rules:[T('القوانين','Rules'),T('الدستور والانضباط','Service code and discipline')],chat:[T('المحادثة','Chat'),T('تواصل مع الفريق','Talk with the team')],breaks:[T('الاستراحات','Breaks'),T('الوقت المتبقي وسجل اليوم','Remaining time and today log')],alerts:[T('التنبيهات','Alerts'),T('تشغيل أو إيقاف التنبيهات','Turn alerts on or off')],broken:[T('المكسورات','Breakage'),T('سجل المكسورات باسمك','Your breakage log')],schedule:[T('الجدول','Schedule'),T('شفتك ومهامك وحضورك','Your shift, duties and attendance')],points:[T('النقاط','Points'),T('نقاطك وخسارتك هذا الأسبوع','Your points and losses this week')]});
+const RSL=()=>({password:[T('كلمة السر','My password'),T('غيّر كلمة سرك','Change your password')],league:[T('الدوري','League'),T('ترتيبك هذا الشهر','Your rank this month')],check:[T('فحص قبل الشفت','Pre-shift check'),T('أكّد الهندام وجاهزية المحطة','Confirm dress code and station')],warns:[T('إنذاراتي','My warnings'),T('الإنذارات المسجلة عليك','Warnings on your record')],salary:[T('راتبي','My salary'),T('راتبك وخصوماتك هذا الشهر','Your salary and deductions this month')],station:[T('قسمي اليوم','Today station'),T('المحطة التي تعمل بها اليوم','The station you work at today')],rules:[T('القوانين','Rules'),T('الدستور والانضباط','Service code and discipline')],chat:[T('المحادثة','Chat'),T('تواصل مع الفريق','Talk with the team')],breaks:[T('الاستراحات','Breaks'),T('الوقت المتبقي وسجل اليوم','Remaining time and today log')],alerts:[T('التنبيهات','Alerts'),T('تشغيل أو إيقاف التنبيهات','Turn alerts on or off')],broken:[T('المكسورات','Breakage'),T('سجل المكسورات باسمك','Your breakage log')],schedule:[T('الجدول','Schedule'),T('شفتك ومهامك وحضورك','Your shift, duties and attendance')],points:[T('النقاط','Points'),T('نقاطك وخسارتك هذا الأسبوع','Your points and losses this week')]});
 function openRS(k){RS=k;render();}
 function runnerRoot(){const r=me();if(!r){logout();return ''}
  if(RS)return runnerSection(RS,r);
@@ -761,6 +765,7 @@ function runnerSection(k,r){const L2=RSL();const head=`<div class="flex items-ce
  else if(k==='points')body=runnerPoints(r);
  else if(k==='station')body=assignCard(r.id);
  else if(k==='salary')body=runnerSalary(r);
+ else if(k==='password')body=`<div class="nb p-5 text-center"><div class="font-bold mb-3">${T('كلمة السر','Password')}</div><button class="btn" onclick="changeMyPass()">${T('تغيير كلمة سري','Change my password')}</button></div>`;
  else if(k==='check')body=runnerCheck(r);
  else if(k==='league')body=vLeague(true);
  else if(k==='warns')body=runnerWarns(r);
@@ -1064,6 +1069,32 @@ function certHtml(rid,title,ym){const r=S.runners.find(x=>x.id===rid);const [y,m
  <div style="font-size:17px;margin-top:10px">${T('عن شهر','For')} ${mon}</div>
  <div style="width:100%;display:flex;justify-content:space-between;margin-top:60px;font-size:15px"><div style="border-top:1px solid #000;padding-top:8px;width:220px">${T('قائد الرنرات','Runner team leader')}</div><div style="border-top:1px solid #000;padding-top:8px;width:220px">${T('مدير المطعم','Restaurant manager')}</div></div></div></div>`}
 function makeCert(rid,title,ym){htmlToPdf(certHtml(rid,title,ym),'amaya-certificate-'+(nm(rid)||'runner').replace(/[^\w؀-ۿ-]/g,'')+'-'+ym+'.pdf',true)}
+
+/* ---------- Security: Firebase Authentication + locked database ---------- */
+let FB_TOKEN='';
+const AQ=()=>FB_TOKEN?('?auth='+encodeURIComponent(FB_TOKEN)):'';
+const fbReady=()=>!!(window.firebase&&firebase.auth&&(firebase.apps.length?firebase.app():firebase.initializeApp(FBCFG)));
+const emailOf=u=>String(u||'').trim().toLowerCase()+'@amaya.local';
+async function refreshTok(){try{if(window.firebase&&firebase.auth&&firebase.auth().currentUser)FB_TOKEN=await firebase.auth().currentUser.getIdToken()}catch(e){}}
+async function fbSignIn(u,p){try{if(!fbReady())return false;await firebase.auth().signInWithEmailAndPassword(emailOf(u),p);FB_TOKEN=await firebase.auth().currentUser.getIdToken();return true}catch(e){return false}}
+async function fbCreate(u,p){try{if(!fbReady())return 'off';if((p||'').length<6)return 'short';const w=firebase.apps.find(a=>a.name==='acctworker')||firebase.initializeApp(FBCFG,'acctworker');await w.auth().createUserWithEmailAndPassword(emailOf(u),p);await w.auth().signOut();return 'ok'}catch(e){if(e&&e.code==='auth/email-already-in-use')return 'ok';if(e&&e.code==='auth/operation-not-allowed')return 'off';return (e&&e.code)||'err'}}
+function sessionFromUser(u){if(u==='abdurhman'){S.session={role:'owner'};tab='dash';return true}const m=S.mgrs.find(x=>x.user===u);if(m){S.session={role:'mgr',id:m.id};tab='dash';return true}const r=S.runners.find(x=>x.user===u&&!x.off);if(r){S.session={role:'runner',id:r.id};tab='me';return true}return false}
+const secOn=()=>fbReady()&&!!(firebase.auth().currentUser);
+async function enableSecurity(){if(!fbReady())return toast(T('فعّل Email/Password في Firebase أولاً','Enable Email/Password in Firebase first'));
+ const items=[{u:'abdurhman',p:'121212'}];S.runners.forEach(r=>{if(r.pass)items.push({u:r.user,p:r.pass,ref:r})});S.mgrs.forEach(m=>{if(m.pass)items.push({u:m.user,p:m.pass,ref:m})});
+ let done=0;const short=[],fail=[];
+ for(const it of items){if((it.p||'').length<6){short.push(it.u);continue}const res=await fbCreate(it.u,it.p);if(res==='ok'){done++;if(it.ref)delete it.ref.pass}else if(res==='off')return toast(T('فعّل Email/Password في Firebase أولاً','Enable Email/Password in Firebase first'));else fail.push(it.u)}
+ save();
+ dlg({title:T('نتيجة تفعيل الأمان','Security setup result'),msg:T('تم إنشاء ','Created ')+done+T(' حساباً محمياً. ','secure accounts. ')+(short.length?T('كلمات سر قصيرة (أقل من 6) لم تُنقل: ','Short passwords (<6) skipped: ')+short.join(', ')+'. ':'')+(fail.length?T('فشل: ','Failed: ')+fail.join(', ')+'. ':'')+T('الخطوة الأخيرة: الصق قواعد الحماية في Firebase.','Last step: paste the security rules into Firebase.'),ok:T('تم','OK')})}
+async function changeMyPass(){const r=me();dlg({title:T('تغيير كلمة سري','Change my password'),fields:[{id:'p',label:T('كلمة سر جديدة (6 أحرف فأكثر)','New password (6+ chars)'),type:'password'}],ok:T('حفظ','Save'),fn:async f=>{const p=(f.p||'').trim();if(p.length<6)return toast(T('6 أحرف على الأقل','At least 6 characters'));try{if(fbReady()&&firebase.auth().currentUser){await firebase.auth().currentUser.updatePassword(p);toast(T('تم تغيير كلمة السر','Password changed'))}else{if(r){r.pass=p;save()}toast(T('تم','Done'))}}catch(e){toast(T('خطأ: ','Error: ')+((e&&e.code)||'')+T(' قد تحتاج تسجيل خروج ودخول','- you may need to re-login'))}}})}
+const RULES_JSON=`{
+  "rules": {
+    "amaya":        { ".read": "auth != null", ".write": "auth != null" },
+    "amaya_photos": { ".read": "auth != null", ".write": "auth != null" },
+    "amaya_meta":   { ".read": "auth != null", ".write": "auth != null" }
+  }
+}`;
+function copyRules(){try{navigator.clipboard.writeText(RULES_JSON);toast(T('تم نسخ القواعد','Rules copied'))}catch(e){toast('⚠')}}
 
 /* ---------- Render ---------- */
 function render(){

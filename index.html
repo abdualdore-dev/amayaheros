@@ -511,7 +511,7 @@ async function pull(){if(!DB||pushing)return;await refreshTok();
   if(!Object.keys(d).length){Rm={};push();return}
   const L2=m=>Object.values(m||{}),old=Object.fromEntries(S.broken.concat(S.runners).map(x=>[x.id+'|'+(x.pv||0),x.photo])),N={...S};
   N.runners=L2(d.runners).sort((a,b)=>a.id<b.id?-1:1);N.broken=L2(d.broken).sort((a,b)=>b.at-a.at);N.delays=L2(d.delays).sort((a,b)=>b.at-a.at);
-  N.blog=L2(d.blog).sort((a,b)=>a.at-b.at);N.chat=L2(d.chat).sort((a,b)=>a.at-b.at);N.breaks=d.breaks||{};N.assign=d.assign||{};N.sched=d.sched||{};N.notes=L2(d.notes).sort((a,b)=>a.at-b.at);['mgrs','pts','log','att'].forEach(k=>N[k]=L2(d[k]).sort((a,b)=>a.at-b.at));N.cfg=d.cfg||{};N.tokens=d.tokens||{};N.absences=L2(d.absences).sort((a,b)=>a.at-b.at);N.checks=L2(d.checks).sort((a,b)=>a.at-b.at);N.warns=L2(d.warns).sort((a,b)=>a.at-b.at);N.wrong=L2(d.wrong).sort((a,b)=>a.at-b.at);N.notes=(N.notes||[]).map(n=>({...n,read:n.read||{}}));{const sh=L2(d.shifts).sort((a,b)=>a.ord-b.ord);N.shifts=sh.length?sh:DEFSH()}
+  N.blog=L2(d.blog).sort((a,b)=>a.at-b.at);N.chat=L2(d.chat).sort((a,b)=>a.at-b.at);N.breaks=d.breaks||{};N.assign=d.assign||{};N.sched=d.sched||{};N.notes=L2(d.notes).sort((a,b)=>a.at-b.at);['mgrs','pts','log','att'].forEach(k=>N[k]=L2(d[k]).sort((a,b)=>a.at-b.at));N.cfg=d.cfg||{};N.tokens=d.tokens||{};N.absences=L2(d.absences).sort((a,b)=>a.at-b.at);N.checks=L2(d.checks).sort((a,b)=>a.at-b.at);N.warns=L2(d.warns).sort((a,b)=>a.at-b.at);N.wrong=L2(d.wrong).sort((a,b)=>a.at-b.at);N.notes=(N.notes||[]).map(n=>({...n,read:n.read||{}}));{const sh=L2(d.shifts).sort((a,b)=>a.ord-b.ord);N.shifts=sh.length?sh:DEFSH()}ensureSeed(N);
   N.broken.concat(N.runners).forEach(x=>{const k=x.id+'|'+(x.pv||0);x.photo=old[k]||PHC[k]||'';if(x.hp)PH[x.id]=1});
   const changed=JSON.stringify(snap(N))!==JSON.stringify(snap(S));
   if(changed){S=N;Rm=snap(S);SS.set('amaya_state',S);const a=document.activeElement;
@@ -1109,6 +1109,7 @@ function undoCheck(rid){const c=checkOf(rid);if(c){S.checks=(S.checks||[]).filte
 /* ---------- Departments (runners / captains / reception) ---------- */
 const deptName=d=>({runner:T('الرنر','Runners'),captain:T('الكباتن','Captains'),host:T('الاستقبال','Reception')}[d]||d);
 let DEPT='runner';
+function ensureSeed(st){st.cfg=st.cfg||{};if(!st.cfg.ogurSeeded){st.mgrs=st.mgrs||[];if(!st.mgrs.some(m=>m.user==='ogur'))st.mgrs.push({id:'m'+Date.now()+Math.random().toString(36).slice(2,5),name:'ogur demirhan',user:'ogur',pass:'121212',admin:true,depts:['runner','captain','host'],at:Date.now()});st.cfg.ogurSeeded=1}return st}
 function myDepts(){const se=S.session;if(!se||se.role==='runner')return [];
  if(se.role==='owner'&&!se.id)return ['runner'];
  const m=S.mgrs.find(x=>x.id===se.id)||{};
@@ -1154,7 +1155,7 @@ function render(){
 {const _rr=render;render=function(){try{_rr()}catch(e){console.error(e);toast('Error: '+(e&&e.message?e.message:e))}}}
 try{if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('firebase-messaging-sw.js').catch(()=>{})}catch(e){}
 render();
-if(!S.cfg.ogurSeeded){if(!S.mgrs.some(m=>m.user==='ogur'))S.mgrs.push({id:'m'+Date.now(),name:'ogur demirhan',user:'ogur',pass:'121212',admin:true,depts:['runner','captain','host'],at:Date.now()});S.cfg.ogurSeeded=1;save()}
+ensureSeed(S);save();
 if(DB){initReset().then(()=>{pull();setInterval(pull,8000)})}
 if(S.session&&window.Notification&&Notification.permission==='granted'&&(S.session.role!=='runner'||notifOn(S.session.id)))enablePush();
 </script>

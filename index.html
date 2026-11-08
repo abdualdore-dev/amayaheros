@@ -327,7 +327,9 @@ function showImg(id){const b=S.broken.find(x=>x.id===id);if(!b||!b.photo)return;
 const itemName=b=>b.item===4&&b.other?b.other:L[S.lang].items[b.item];
 const whoName=b=>{const r=S.runners.find(x=>x.id===b.who);return r?r.name:'-'};
 
-async function saveFile(name,blob){try{if(window.claude&&claude.use){const d=await claude.use('downloads');if(d){await d.save({filename:name,data:blob});return}}}catch(e){if(e&&e.code==='declined')return}
+const fileTag=r=>String((r&&r.user)||'').replace(/[^A-Za-z0-9_-]/g,'')||String((r&&r.id)||'x').replace(/[^A-Za-z0-9_-]/g,'');
+const safeFile=n=>{n=String(n||'amaya.xlsx');const m=/(\.[A-Za-z0-9]+)$/.exec(n),ext=m?m[1]:'',base=(ext?n.slice(0,-ext.length):n).replace(/[^A-Za-z0-9_.-]+/g,'-').replace(/-{2,}/g,'-').replace(/^-|-$/g,'')||'amaya';return base+ext};
+async function saveFile(name,blob){name=safeFile(name);try{if(window.claude&&claude.use){const d=await claude.use('downloads');if(d){await d.save({filename:name,data:blob});return}}}catch(e){if(e&&e.code==='declined')return}
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove()}
 async function exportXlsx(){
  try{await loadExcel()}catch(e){return toast('ExcelJS load failed')}
@@ -660,7 +662,7 @@ async function exportDaily(){try{await loadExcel()}catch(e){return toast('ExcelJ
   try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==='AbortError')return}
   await saveFile(name,bl);toast('OK')}catch(e){toast('Error: '+e.message)}}
 
-const DESC=()=>({ai:T('اسأله عن الدوام، أو ارفع صورة جدول ويوزّعه تلقائياً','Ask about today, or upload a schedule photo to apply it automatically'),tables:T('وزّع الطاولات وأرقامها على كل كابتن','Assign tables and their numbers to each captain'),check:T('فحص الهندام والنظافة قبل الشفت','Dress and grooming check before the shift'),league:T('ترتيب الشهر والألقاب وشهادات التقدير','Monthly ranking, titles and certificates'),mreport:T('تقرير أسبوعي جاهز للمدير بصيغة PDF','Weekly PDF report for the manager'),warns:T('الإنذارات الرسمية لكل ','Formal warnings per ')+pOne()+T(' بالتاريخ والسبب',' with date and reason'),profile:T('ملف شهري شامل لكل ','Full monthly file for each ')+pOne(),shiftcmp:T('أي شفت يحتاج تشديداً أكثر','Which shift needs more attention'),salary:T('رواتب ','Salaries of ')+pMany()+T(' والغيابات والكشوف',', absences and slips'),notes:T('رسائل من الإدارة وتنبيهات الاستراحات والحضور','Messages from management and break and attendance alerts'),dash:T('نظرة شاملة على التشغيل الآن','Live overview of operations'),breaks:T('أرسل ','Send ')+pMany()+T(' للاستراحة وتابع العدادات والتأخير',' on break and track timers and delays'),shifts:T('عرّف الشفتات ومهامها ووزّع الجدول الأسبوعي','Define shifts, duties and the weekly schedule'),assign:T('وزّع مهام اليوم على الرنرات','Assign today stations to runners'),scores:T('النقاط والمخالفات وملفات ','Points, violations and profiles of ')+pMany(),stats:T('تحليل التأخير والنقاط والمكسورات','Late, points and breakage analytics'),report:T('تقرير الاستراحات المصوّر','Daily breaks report as an image'),daily:T('الحضور والانصراف وتقرير Excel اليومي','Attendance and the daily Excel report'),chat:T('محادثة الفريق','Team chat'),notes:T('الرسائل والتنبيهات','Messages and alerts'),broken:T('سجل المكسورات والتالف','Breakage and damage log'),runners:T('إدارة ','Manage ')+pMany()+T(' والمديرين والصور',', managers and photos'),settings:T('إعدادات النظام والحسابات','System settings and accounts'),log:T('من فعل ماذا ومتى','Who did what and when'),rules:T('دستور الخدمة والانضباط','Service and discipline rules'),me:T('شفتك ومهمتك ونقاطك','Your shift, station and points')});
+const DESC=()=>({ai:T('اسأله عن أي شي بالنظام، اطلب تقرير لأي شخص أو قسم (يومي، أسبوعي، شهري) مع Excel، أو ارفع صورة جدول','Ask anything, get a daily/weekly/monthly report for anyone with Excel, or upload a schedule photo'),tables:T('وزّع الطاولات وأرقامها على كل كابتن','Assign tables and their numbers to each captain'),check:T('فحص الهندام والنظافة قبل الشفت','Dress and grooming check before the shift'),league:T('ترتيب الشهر والألقاب وشهادات التقدير','Monthly ranking, titles and certificates'),mreport:T('تقرير أسبوعي جاهز للمدير بصيغة PDF','Weekly PDF report for the manager'),warns:T('الإنذارات الرسمية لكل ','Formal warnings per ')+pOne()+T(' بالتاريخ والسبب',' with date and reason'),profile:T('ملف شهري شامل لكل ','Full monthly file for each ')+pOne(),shiftcmp:T('أي شفت يحتاج تشديداً أكثر','Which shift needs more attention'),salary:T('رواتب ','Salaries of ')+pMany()+T(' والغيابات والكشوف',', absences and slips'),notes:T('رسائل من الإدارة وتنبيهات الاستراحات والحضور','Messages from management and break and attendance alerts'),dash:T('نظرة شاملة على التشغيل الآن','Live overview of operations'),breaks:T('أرسل ','Send ')+pMany()+T(' للاستراحة وتابع العدادات والتأخير',' on break and track timers and delays'),shifts:T('عرّف الشفتات ومهامها ووزّع الجدول الأسبوعي','Define shifts, duties and the weekly schedule'),assign:T('وزّع مهام اليوم على الرنرات','Assign today stations to runners'),scores:T('النقاط والمخالفات وملفات ','Points, violations and profiles of ')+pMany(),stats:T('تحليل التأخير والنقاط والمكسورات','Late, points and breakage analytics'),report:T('تقرير الاستراحات المصوّر','Daily breaks report as an image'),daily:T('الحضور والانصراف وتقرير Excel اليومي','Attendance and the daily Excel report'),chat:T('محادثة الفريق','Team chat'),notes:T('الرسائل والتنبيهات','Messages and alerts'),broken:T('سجل المكسورات والتالف','Breakage and damage log'),runners:T('إدارة ','Manage ')+pMany()+T(' والمديرين والصور',', managers and photos'),settings:T('إعدادات النظام والحسابات','System settings and accounts'),log:T('من فعل ماذا ومتى','Who did what and when'),rules:T('دستور الخدمة والانضباط','Service and discipline rules'),me:T('شفتك ومهمتك ونقاطك','Your shift, station and points')});
 let DLG=null;
 const dlg=o=>{DLG=o;render()};
 const ask=(title,fn,msg)=>dlg({title,msg,danger:1,ok:T('تأكيد','Confirm'),fn});
@@ -895,7 +897,7 @@ async function exportSalaries(rid){try{await loadExcel()}catch(e){return toast(T
  hdr(wa,T([pThe(),'التاريخ','وقت التسجيل','اليوم'],[pThe(),'Date','Recorded at','Day']));
  rows.forEach(x=>x.ab.forEach(a=>{const dt=new Date(a.at),dd=new Date(a.day+'T00:00:00');wa.addRow([x.r.name,a.day,dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' '+dt.toLocaleDateString('en-CA'),DAYS()[dd.getDay()]]).alignment={horizontal:'center'}}));
  rows.forEach(x=>addReceipt(wb,x,rtl,stamp));
- const name='amaya-salary-'+SM+(rid?'-'+nm(rid):'')+'.xlsx',buf=await wb.xlsx.writeBuffer(),bl=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),f=new File([bl],name,{type:bl.type});
+ const name='amaya-salary-'+SM+(rid?'-'+fileTag(S.runners.find(x=>x.id===rid)):'')+'.xlsx',buf=await wb.xlsx.writeBuffer(),bl=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),f=new File([bl],name,{type:bl.type});
  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==='AbortError')return}
  await saveFile(name,bl);toast(T('تم تصدير الملف','File exported'));}
 
@@ -991,7 +993,7 @@ function vProfile(){const ym=PRM||new Date().toLocaleDateString('en-CA').slice(0
  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">${box(T('أيام الحضور','Days present'),p.att.length)}${box(T('مرات التأخر','Late arrivals'),p.late.length,p.late.length?'bg-red-50':'')}${box(T('دقائق التأخر','Late minutes'),p.lateMin)}${box(T('أيام الغياب','Absences'),p.abs.length,p.abs.length?'bg-red-50':'')}${box(T('تأخير الاستراحات (د)','Break late (min)'),p.brLate)}${box(T('المكسورات (قطعة)','Breakage (pcs)'),p.bkQty)}${box(T('الإنذارات','Warnings'),p.ws.length,p.ws.length?'bg-red-50':'')}${box(T('التقييم (النقاط)','Rating (points)'),p.ptsSum)}</div>
  <div class="grid gap-3 md:grid-cols-2">${rows(T('الغيابات','Absences'),p.abs.map(a=>`<div class="py-1 border-b border-gray-100">${a.day}${a.reason?' - '+esc(a.reason):''}</div>`))}${rows(T('الإنذارات','Warnings'),p.ws.map(w=>`<div class="py-1 border-b border-gray-100">${WLV()[w.level]}: ${esc(w.reason)} <span class="text-xs">(${fmt(w.at)})</span></div>`))}${rows(T('المكسورات','Breakage'),p.bk.map(b=>`<div class="py-1 border-b border-gray-100">${esc(itemName(b))} x${b.qty||1} <span class="text-xs">(${fmt(b.at)})</span></div>`))}${rows(T('خصم وإضافة النقاط','Point changes'),p.pts.map(x=>`<div class="py-1 border-b border-gray-100">${x.v>0?'+':''}${x.v} ${esc(loc(x.why))} <span class="text-xs">(${fmt(x.at)})</span></div>`))}</div>
  <div class="text-sm mt-3">${T('فحوصات ما قبل الشفت المرسلة','Pre-shift checks sent')}: <b>${p.ck.length}</b></div>`}
-async function shareXlsx(wb,name){const buf=await wb.xlsx.writeBuffer(),bl=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),f=new File([bl],name,{type:bl.type});
+async function shareXlsx(wb,name){name=safeFile(name);const buf=await wb.xlsx.writeBuffer(),bl=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),f=new File([bl],name,{type:bl.type});
  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==='AbortError')return}
  await saveFile(name,bl);toast(T('تم تصدير الملف','File exported'))}
 function hdr(row){row.eachCell(c=>{c.font={bold:true,color:{argb:'FFFFFFFF'}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF2B2950'}};c.alignment={horizontal:'center'}})}
@@ -1006,7 +1008,7 @@ async function exportProfile(rid,ym){try{await loadExcel()}catch(e){return toast
  sheet(T('الإنذارات','Warnings'),T(['التاريخ','المستوى','السبب'],['Date','Level','Reason']),p.ws.map(w=>[fmt(w.at),WLV()[w.level],w.reason]));
  sheet(T('المكسورات','Breakage'),T(['التاريخ','الصنف','العدد'],['Date','Item','Qty']),p.bk.map(b=>[fmt(b.at),itemName(b),b.qty||1]));
  sheet(T('النقاط','Points'),T(['التاريخ','النقاط','السبب'],['Date','Points','Reason']),p.pts.map(x=>[fmt(x.at),x.v,loc(x.why)]));
- await shareXlsx(wb,'amaya-file-'+r.name.replace(/[^\w؀-ۿ-]/g,'')+'-'+ym+'.xlsx')}
+ await shareXlsx(wb,'amaya-file-'+fileTag(r)+'-'+ym+'.xlsx')}
 
 let CMM=null;
 function cmpData(ym){const inM=ts=>ymOf(ts)===ym,shOn=(rid,ts)=>((S.sched||{})[rid]||{})[new Date(ts).getDay()]||'';
@@ -1255,22 +1257,122 @@ function aiIntent(q){q=(q||'').toLowerCase();
  if(/غاي|غائب|غياب|absent|ما حضر|محد حضر/.test(q))return 'absent';if(/يخلص|ينتهي|يطلع|انصراف|finish|ending/.test(q))return 'ending';
  if(/موجود|حاضر|بالدوام|داوم|present|on shift/.test(q))return 'present';if(/ملخص|summary/.test(q))return 'summary';return ''}
 let AIC=[],AIBUSY=false,IMP=null;
-function aiSnapshot(){const now=Date.now(),from30=now-30*864e5,rows=aiRows();
- return {now:new Date(now).toISOString(),today_weekday:DAYS()[new Date().getDay()],rules:{shift_hours:SHH(),late_penalty_after_min:LTRIG(),late_penalty_min:LPEN(),grace_min:grace()},
-  staff:rows.map(o=>{const r=o.r,p30=(S.pts||[]).filter(p=>p.rid===r.id&&p.at>=from30).reduce((a,p)=>a+p.v,0),att30=(S.att||[]).filter(a=>a.rid===r.id&&a.at>=from30);
-   return {name:r.name,dept:r.dept||'runner',today_shift:o.sh?o.sh.from+'-'+o.sh.to:(o.st==='off'?'OFF':''),status:o.st,checkin:o.a?hm(o.a.at):'',late_min:o.late||o.lateNow||0,penalty_min:o.pen||0,shift_ends:o.end?hm(o.end):'',checked_out:o.out?hm(o.out):'',on_break:!!S.breaks[r.id],
-    last30:{days_present:att30.length,late_days:att30.filter(a=>a.late).length,late_minutes:att30.reduce((s,a)=>s+(a.late||0),0),points:p30,warnings:(S.warns||[]).filter(w=>w.rid===r.id).length,wrong_items:(S.wrong||[]).filter(w=>w.cid===r.id&&w.at>=from30).length,tables:r.tbl||''}}})}}
+/* ---- Assistant reports: any person or section, any period, chat + Excel ---- */
+const dkOf=ts=>new Date(ts).toLocaleDateString('en-CA');
+function perRange(p){const n=new Date(),d0=new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime(),D=864e5,lbl=(a,f,t)=>a+' ('+dkOf(f)+(t-f>D?' → '+dkOf(t-1):'')+')';
+ if(p==='yesterday')return {p,from:d0-D,to:d0,label:lbl(T('أمس','Yesterday'),d0-D,d0)};
+ if(p==='week')return {p,from:d0-6*D,to:d0+D,label:lbl(T('آخر 7 أيام','Last 7 days'),d0-6*D,d0+D)};
+ if(p==='lastweek')return {p,from:d0-13*D,to:d0-6*D,label:lbl(T('الأسبوع الماضي','Previous week'),d0-13*D,d0-6*D)};
+ if(p==='month'){const f=new Date(n.getFullYear(),n.getMonth(),1).getTime();return {p,from:f,to:d0+D,ym:ymOf(f),label:lbl(T('هذا الشهر','This month'),f,d0+D)}}
+ if(p==='lastmonth'){const f=new Date(n.getFullYear(),n.getMonth()-1,1).getTime(),t=new Date(n.getFullYear(),n.getMonth(),1).getTime();return {p,from:f,to:t,ym:ymOf(f),label:lbl(T('الشهر الماضي','Last month'),f,t)}}
+ return {p:'today',from:d0,to:d0+D,label:lbl(T('اليوم','Today'),d0,d0+D)}}
+function repData(r,R){const inR=t=>t>=R.from&&t<R.to,k0=dkOf(R.from),k1=dkOf(R.to),inK=k=>!!k&&k>=k0&&k<k1,id=r.id,sum=(a,f)=>a.reduce((s,x)=>s+(f(x)||0),0);
+ const att=(S.att||[]).filter(a=>a.rid===id&&inR(a.at)).sort((a,b)=>a.at-b.at),late=att.filter(a=>a.late>0);
+ const abs=(S.absences||[]).filter(a=>a.rid===id&&inK(a.day)).sort((a,b)=>a.day<b.day?-1:1);
+ const bl=(S.blog||[]).filter(b=>b.rid===id&&inR(b.at)),cb=S.breaks[id]&&inR(S.breaks[id].start)?brCalc(S.breaks[id],Date.now()):null;
+ const pts=(S.pts||[]).filter(p=>p.rid===id&&inR(p.at));
+ let sched=0,off=0;const sc=(S.sched||{})[id]||{};if(R.p!=='lastmonth'&&R.p!=='lastweek')for(let t=R.from;t<Math.min(R.to,day0()+864e5);t+=864e5){const v=sc[new Date(t).getDay()];if(v==='o')off++;else if(v&&S.shifts.some(s=>s.id===v))sched++}
+ let sal=null;if(R.ym){const s0=Number(r.salary)||700000,n=(S.absences||[]).filter(a=>a.rid===id&&(a.day||'').startsWith(R.ym)).length,ded=Math.round(s0*n*100/SAL_DIV)/100;sal={sal:s0,abs:n,ded,net:Math.max(0,Math.round((s0-ded)*100)/100)}}
+ return {r,att,late,lateMin:sum(late,a=>a.late),pen:sum(att,a=>a.pen),abs,bl,brCount:bl.length+(cb?1:0),brLate:sum(bl,b=>b.late)+(cb?cb.late:0),brUsed:sum(bl,b=>b.used)+(cb?cb.used:0),
+  pts,plus:sum(pts.filter(p=>p.v>0),p=>p.v),minus:sum(pts.filter(p=>p.v<0),p=>p.v),ws:(S.warns||[]).filter(w=>w.rid===id&&inR(w.at)),wr:(S.wrong||[]).filter(w=>w.cid===id&&inR(w.at)),
+  bk:(S.broken||[]).filter(b=>b.who===id&&inR(b.at)),ck:(S.checks||[]).filter(c=>c.rid===id&&inR(c.at)),sched,off,sal}}
+const money=v=>Math.round(v).toLocaleString('en-US');
+function repPersonText(r,R){const d=repData(r,R),L=[];
+ L.push('📄 '+T('تقرير ','Report: ')+r.name+' ('+deptOne(r.dept||'runner')+') — '+R.label);
+ if(R.p==='today'){const o=aiRows().find(x=>x.r.id===r.id)||{};const st={late:T('حضر متأخر','Arrived late'),present:T('حاضر بالوقت','On time'),missing:T('ما حضر لحد هسة','Not here yet'),grace:T('ضمن وقت السماح','Within grace'),upcoming:T('شفته ما بدأ بعد','Shift not started'),off:T('إجازة اليوم','Day off'),noshift:T('ما عنده شفت اليوم','No shift today'),suspended:T('موقوف','Suspended')}[o.st]||'-';
+  L.push('• '+T('الحالة: ','Status: ')+st+(o.sh?T(' — الشفت ',' — shift ')+o.sh.from+'-'+o.sh.to:''));
+  if(o.a)L.push('• '+T('الحضور ','Checked in ')+hm(o.a.at)+(o.late?T('، متأخر ',', late ')+mins(o.late):'')+(o.pen?T('، عقوبة ',', penalty ')+mins(o.pen):'')+T('، ينتهي دوامه ',', ends ')+hm(o.end)+(o.out?T('، انصرف ',', left ')+hm(o.out):''));
+  else if(o.st==='missing'){const pen=o.lateNow>=LTRIG()?LPEN():0;L.push('• '+T('متأخر لحد هسة ','Late so far ')+mins(o.lateNow)+T('. إذا حضر هسة ينتهي ','. If he comes now he ends ')+hm(Date.now()+(SHH()*60+pen)*6e4)+(pen?T(' (مع عقوبة ',' (incl. ')+mins(pen)+')':''))}
+  if(S.breaks[r.id]){const b=S.breaks[r.id],left=Math.round((b.start+b.mins*6e4-Date.now())/6e4);L.push('• '+T('باستراحة هسة — ','On a break now — ')+(left>=0?T('باقي ','left ')+mins(left):T('متأخر ','overdue ')+mins(-left)))}}
+ else L.push('• '+T('الحضور: ','Attendance: ')+d.att.length+T(' يوم',' days')+(d.sched?T(' من ',' of ')+d.sched+T(' يوم مجدول',' scheduled'):''));
+ L.push('• '+T('التأخير: ','Late: ')+d.late.length+T(' مرة، ',' times, ')+mins(d.lateMin)+(d.pen?T(' (عقوبات ',' (penalties ')+mins(d.pen)+')':''));
+ L.push('• '+T('الغياب: ','Absences: ')+d.abs.length+(d.abs.length?' — '+d.abs.map(a=>a.day+(a.reason?' ('+a.reason+')':'')).join('، '):''));
+ L.push('• '+T('الاستراحات: ','Breaks: ')+d.brCount+(d.brCount?T('، المستخدم ',', used ')+mins(d.brUsed)+(d.brLate?T('، تأخير ',', late ')+mins(d.brLate):''):''));
+ L.push('• '+T('النقاط: ','Points: ')+'+'+d.plus+' / '+d.minus+' = '+(d.plus+d.minus));
+ if(d.ws.length)L.push('• '+T('الإنذارات: ','Warnings: ')+d.ws.length+' — '+d.ws.map(w=>WLV()[w.level]+(w.reason?': '+w.reason:'')).join('، '));
+ if((r.dept||'runner')==='captain'){L.push('• '+T('أكلات بالخطأ: ','Wrong items: ')+d.wr.length+(d.wr.length?' — '+d.wr.slice(-5).map(w=>w.item).join('، '):''));if(r.tbl)L.push('• '+T('طاولاته: ','Tables: ')+r.tbl)}
+ if(d.bk.length)L.push('• '+T('المكسورات: ','Breakage: ')+d.bk.reduce((a,b)=>a+(b.qty||1),0));
+ if(d.sal)L.push('• '+T('الراتب: ','Salary: ')+money(d.sal.sal)+(d.sal.abs?T(' − خصم ',' − deduction ')+money(d.sal.ded)+' ('+d.sal.abs+T(' يوم غياب',' absent days')+')':'')+T(' = الصافي ',' = net ')+money(d.sal.net));
+ return L.join('\n')}
+function repTeamText(list,R,title){if(!list.length)return T('ماكو أشخاص بهذا القسم.','No people in this section.');
+ const ds=list.map(r=>repData(r,R)).sort((a,b)=>b.lateMin-a.lateMin||b.abs.length-a.abs.length),tot=k=>ds.reduce((s,d)=>s+(typeof d[k]==='number'?d[k]:d[k].length),0);
+ const L=['📊 '+T('تقرير ','Report: ')+title+' — '+R.label,T('المجموع: حضور ','Totals: attendance ')+tot('att')+T('، تأخير ',', late ')+tot('late')+T(' مرة (',' times (')+mins(tot('lateMin'))+T(')، غياب ','), absences ')+tot('abs')+T('، إنذارات ',', warnings ')+tot('ws'),''];
+ ds.forEach(d=>L.push('• '+d.r.name+': '+T('حضور ','in ')+d.att.length+(R.p!=='today'&&d.sched?'/'+d.sched:'')+T('، تأخير ',', late ')+d.late.length+(d.lateMin?' ('+mins(d.lateMin)+')':'')+(d.abs.length?T('، غياب ',', absent ')+d.abs.length:'')+T('، نقاط ',', pts ')+(d.plus+d.minus>0?'+':'')+(d.plus+d.minus)+(d.ws.length?T('، إنذار ',', warn ')+d.ws.length:'')));
+ return L.join('\n')}
+async function repExport(rids,R,title){try{await loadExcel()}catch(e){return toast(T('تعذّر تحميل ملف Excel','Could not load Excel'))}
+ const list=rids.map(id=>S.runners.find(r=>r.id===id)).filter(Boolean);if(!list.length)return toast(T('لا يوجد أشخاص','No people'));
+ const rtl=S.lang==='ar',wb=new ExcelJS.Workbook(),ds=list.map(r=>repData(r,R));
+ const sheet=(name,head,rows,w)=>{const s=wb.addWorksheet(name,{views:[{rightToLeft:rtl,state:'frozen',ySplit:3}]});s.columns=head.map((_,i)=>({width:(w&&w[i])||16}));const t=s.addRow(['Amaya Heroes — '+title+' — '+R.label]);t.font={bold:true,size:13};s.addRow([]);hdr(s.addRow(head));rows.forEach(x=>s.addRow(x));if(!rows.length)s.addRow(['-']);return s};
+ const head=[T('الاسم','Name'),T('القسم','Section'),T('أيام مجدولة','Scheduled days'),T('أيام الحضور','Days present'),T('مرات التأخير','Late times'),T('دقائق التأخير','Late minutes'),T('دقائق العقوبة','Penalty minutes'),T('الغياب','Absences'),T('الاستراحات','Breaks'),T('تأخير الاستراحات (د)','Break late (min)'),T('نقاط +','Points +'),T('نقاط −','Points −'),T('صافي النقاط','Net points'),T('الإنذارات','Warnings'),T('أكلات بالخطأ','Wrong items'),T('المكسورات','Breakage')].concat(R.ym?[T('الراتب','Salary'),T('الخصم','Deduction'),T('الصافي','Net salary')]:[]);
+ sheet(T('الملخص','Summary'),head,ds.map(d=>[d.r.name,deptOne(d.r.dept||'runner'),d.sched,d.att.length,d.late.length,d.lateMin,d.pen,d.abs.length,d.brCount,d.brLate,d.plus,d.minus,d.plus+d.minus,d.ws.length,d.wr.length,d.bk.reduce((a,b)=>a+(b.qty||1),0)].concat(d.sal?[d.sal.sal,d.sal.ded,d.sal.net]:[])),[24,12]);
+ const shN=id=>{const s=S.shifts.find(x=>x.id===id);return s?shName(s)+' '+s.from+'-'+s.to:'-'};
+ sheet(T('الحضور','Attendance'),[T('الاسم','Name'),T('التاريخ','Date'),T('الشفت','Shift'),T('الحضور','In'),T('الانصراف','Out'),T('التأخير (د)','Late (min)'),T('العقوبة (د)','Penalty (min)'),T('الانتهاء المقرر','Due end')],ds.flatMap(d=>d.att.map(a=>[d.r.name,dkOf(a.at),shN(a.sh),hm(a.at),a.out?hm(a.out):'-',a.late||0,a.pen||0,hm(dutyOf(a).end)])),[24,12,22]);
+ sheet(T('الغياب','Absences'),[T('الاسم','Name'),T('التاريخ','Date'),T('السبب','Reason')],ds.flatMap(d=>d.abs.map(a=>[d.r.name,a.day,a.reason||'-'])),[24,12,40]);
+ sheet(T('الاستراحات','Breaks'),[T('الاسم','Name'),T('الوقت','Time'),T('المدة المعطاة','Given'),T('المستخدم','Used'),T('التأخير','Late')],ds.flatMap(d=>d.bl.map(b=>[d.r.name,fmt(b.at),b.mins||0,b.used||0,b.late||0])),[24,22]);
+ sheet(T('النقاط','Points'),[T('الاسم','Name'),T('الوقت','Time'),T('النقاط','Points'),T('السبب','Reason')],ds.flatMap(d=>d.pts.map(p=>[d.r.name,fmt(p.at),p.v,loc(p.why)])),[24,22,10,40]);
+ sheet(T('الإنذارات','Warnings'),[T('الاسم','Name'),T('الوقت','Time'),T('المستوى','Level'),T('السبب','Reason')],ds.flatMap(d=>d.ws.map(w=>[d.r.name,fmt(w.at),WLV()[w.level],w.reason||''])),[24,22,18,40]);
+ if(ds.some(d=>d.wr.length))sheet(T('أكلات بالخطأ','Wrong items'),[T('الكابتن','Captain'),T('الوقت','Time'),T('الأكلة','Item'),T('ملاحظة','Note')],ds.flatMap(d=>d.wr.map(w=>[d.r.name,fmt(w.at),w.item,w.note||''])),[24,22,24,30]);
+ const dps=[...new Set(list.map(r=>r.dept||'runner'))],nm2=rids.length===1?fileTag(list[0]):(dps.length===1?dps[0]:'all');
+ await shareXlsx(wb,'amaya-report-'+nm2+'-'+dkOf(R.from)+(R.to-R.from>864e5?'_'+dkOf(R.to-1):'')+'.xlsx')}
+/* understanding the request (free, no AI) */
+const normAr=s=>String(s||'').toLowerCase().replace(/[ً-ْـ]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي');
+const tokVar=t=>{const v=[t];for(const p of ['وال','بال','لل','ال','و','ب','ل','ك','ف'])if(t.startsWith(p)&&t.length-p.length>=3)v.push(t.slice(p.length));return v};
+function findPeople(q){const nq=normAr(q).replace(/[^\w\u0600-\u06FF]+/g,' ').trim(),qt=new Set(),out=[];nq.split(/\s+/).forEach(t=>tokVar(t).forEach(x=>qt.add(x)));
+ aiPeople().forEach(r=>{const full=normAr(r.name).replace(/[^\w\u0600-\u06FF]+/g,' ').trim(),toks=full.split(/\s+/).filter(t=>t.length>=3);let sc=0;
+  if(full.length>=4&&(' '+nq+' ').includes(full))sc=100+full.length;else{toks.forEach(t=>{if(qt.has(t))sc+=10+t.length});if(r.user&&qt.has(normAr(r.user)))sc+=15}
+  if(sc)out.push({r,sc})});
+ out.sort((a,b)=>b.sc-a.sc);if(!out.length)return [];const top=out[0].sc;return out.filter(x=>x.sc===top).map(x=>x.r)}
+function parsePeriod(q){q=normAr(q);
+ if(/الشهر الماضي|الشهر السابق|شهر الماضي|last month/.test(q))return 'lastmonth';
+ if(/الاسبوع الماضي|الاسبوع السابق|اسبوع الماضي|last week/.test(q))return 'lastweek';
+ if(/امس|البارحه|البارح|yesterday/.test(q))return 'yesterday';
+ if(/شهر|month/.test(q))return 'month';if(/اسبوع|week/.test(q))return 'week';
+ if(/يوم|اليوم|هسه|today|daily/.test(q))return 'today';return ''}
+function parseScope(q){q=' '+normAr(q).replace(/[؟?!.,،]/g,' ')+' ';if(/\s(الكل|للكل|لكل|بالكل|الجميع|للجميع|جميع|كلهم)\s|كل الموظفين|كل الاقسام|\sall\s/.test(q))return 'all';if(/كابتن|كباتن|captain/.test(q))return 'captain';if(/استقبال|reception|host/.test(q))return 'host';if(/رنر|رنرات|runner/.test(q))return 'runner';return ''}
+const wantsXlsx=q=>/اكسل|إكسل|excel|xlsx|ملف|تصدير|صدر|نزل|حمل/.test(normAr(q));
+const wantsReport=q=>/تقرير|تقارير|report|كشف|ملخص|سجل/.test(normAr(q));
+function scopePeople(sc){const ds=myDepts();if(sc==='all')return aiPeople();const d=sc&&ds.includes(sc)?sc:(ds.includes(DEPT)?DEPT:ds[0]);return S.runners.filter(r=>(r.dept||'runner')===d)}
+function scopeTitle(sc){const ds=myDepts();if(sc==='all')return T('كل الأقسام','All sections');const d=sc&&ds.includes(sc)?sc:(ds.includes(DEPT)?DEPT:ds[0]);return T('قسم ','Section: ')+deptName(d)}
+function rankAns(q,R){const nq=normAr(q),list=aiPeople().map(r=>repData(r,R));let k,lbl,desc=true;
+ if(/غياب|غايب/.test(nq)){k=d=>d.abs.length;lbl=T('الغياب','absences')}else if(/نقاط|نقطه|points/.test(nq)){k=d=>d.plus+d.minus;lbl=T('النقاط','points');desc=!/اقل|اسوا|worst|least/.test(nq)}
+ else if(/استراح/.test(nq)){k=d=>d.brLate;lbl=T('تأخير الاستراحات','break lateness')}else if(/افضل|احسن|best/.test(nq)){k=d=>d.plus+d.minus-d.lateMin/10-d.abs.length*5;lbl=T('الالتزام','commitment')}else{k=d=>d.lateMin;lbl=T('التأخير','lateness')}
+ const s=list.map(d=>({d,v:k(d)})).filter(x=>desc?x.v>0:true).sort((a,b)=>desc?b.v-a.v:a.v-b.v).slice(0,10);
+ if(!s.length)return T('ماكو بيانات ','No data ')+'('+lbl+') — '+R.label;
+ return ['🏆 '+T('الترتيب حسب ','Ranking by ')+lbl+' — '+R.label].concat(s.map((x,i)=>(i+1)+'. '+x.d.r.name+' ('+deptOne(x.d.r.dept||'runner')+') — '+(lbl===T('التأخير','lateness')?mins(x.d.lateMin)+T(' في ',' in ')+x.d.late.length+T(' مرة',' times'):lbl===T('الغياب','absences')?x.d.abs.length:lbl===T('النقاط','points')?x.d.plus+x.d.minus:lbl===T('تأخير الاستراحات','break lateness')?mins(x.d.brLate):Math.round(x.v)))).join('\n')}
+/* returns true when the request was answered locally */
+function localAnswer(q){const ppl=findPeople(q),per=parsePeriod(q),sc=parseScope(q),xl=wantsXlsx(q),rep=wantsReport(q)||xl,nq=normAr(q);
+ if(/اكثر|اقل|ترتيب|افضل|احسن|اسوا|most|least|best|worst|rank/.test(nq)&&!ppl.length){AIC.push({t:rankAns(q,perRange(per||'month'))});return true}
+ if(ppl.length>1){AIC.push({t:T('لگيت أكثر من شخص بهذا الاسم، حدّد منو:\n','I found more than one person, which one?\n')+ppl.map(r=>'• '+r.name+' ('+deptOne(r.dept||'runner')+')').join('\n')});return true}
+ if(ppl.length===1){const R=perRange(per||'today');AIC.push({t:repPersonText(ppl[0],R),act:{rids:[ppl[0].id],p:R.p,title:ppl[0].name},auto:xl});return true}
+ if(rep||(per&&!aiIntent(q))){const R=perRange(per||'today'),list=scopePeople(sc),title=scopeTitle(sc);AIC.push({t:repTeamText(list,R,title),act:{rids:list.map(r=>r.id),p:R.p,title},auto:xl});return true}
+ return false}
+function repBtn(i){const m=AIC[i];if(!m||!m.act)return;repExport(m.act.rids,perRange(m.act.p),m.act.title)}
+function aiSnapshot(){const now=Date.now(),rows=aiRows(),W=perRange('week'),M=perRange('month');
+ const agg=(r,R)=>{const d=repData(r,R);return {present_days:d.att.length,scheduled_days:d.sched,late_times:d.late.length,late_min:d.lateMin,penalty_min:d.pen,absences:d.abs.map(a=>a.day+(a.reason?' ('+a.reason+')':'')),breaks:d.brCount,break_late_min:d.brLate,points_plus:d.plus,points_minus:d.minus,warnings:d.ws.map(w=>(WLV()[w.level]||'')+': '+(w.reason||'')),wrong_items:d.wr.map(w=>w.item),breakage:d.bk.reduce((a,b)=>a+(b.qty||1),0),salary:d.sal?{salary:d.sal.sal,deduction:d.sal.ded,net:d.sal.net}:undefined}};
+ return {now:new Date(now).toISOString(),today:dkOf(now),today_weekday:DAYS()[new Date().getDay()],rules:{shift_hours:SHH(),late_penalty_after_min:LTRIG(),late_penalty_min:LPEN(),grace_min:grace(),salary_divisor_days:SAL_DIV},
+  periods:{last_7_days:W.label,this_month:M.label},
+  shifts:S.shifts.map(s=>({name:shName(s),from:s.from,to:s.to})),
+  staff:rows.map(o=>{const r=o.r,sc=(S.sched||{})[r.id]||{};return {name:r.name,dept:r.dept||'runner',phone:r.phone||'',base_salary:Number(r.salary)||700000,tables:r.tbl||'',
+   week_schedule:DAYS().map((d,i)=>{const v=sc[i],s=S.shifts.find(x=>x.id===v);return d+': '+(v==='o'?'OFF':s?s.from+'-'+s.to:'-')}).join(' | '),
+   today:{shift:o.sh?o.sh.from+'-'+o.sh.to:(o.st==='off'?'OFF':''),status:o.st,checkin:o.a?hm(o.a.at):'',late_min:o.late||o.lateNow||0,penalty_min:o.pen||0,shift_ends:o.end?hm(o.end):'',checked_out:o.out?hm(o.out):'',on_break:!!S.breaks[r.id]},
+   last_7_days:agg(r,W),this_month:agg(r,M)}})}}
+function aiAction(txt){const s=String(txt||'');if(!/"action"\s*:\s*"report"/.test(s))return null;try{const j=aiParseJSON(s);return j&&j.action==='report'?j:null}catch(e){return null}}
 async function aiAsk(qIn){const el=document.getElementById('aiq'),q=(qIn||(el&&el.value)||'').trim();if(!q||AIBUSY)return;if(el)el.value='';
- AIC.push({me:1,t:q});const it=aiIntent(q);
- if(it&&!aiOn()){AIC.push({t:AIF[it]()});return render()}
- if(it&&q.length<40){AIC.push({t:AIF[it]()});return render()}
- if(!aiOn()){AIC.push({t:T('أگدر أجاوب فوراً على الأسئلة اللي بالأزرار. للأسئلة الحرة وقراءة صور الجداول فعّل الذكاء الاصطناعي من الإعدادات.','I can answer the questions on the buttons right away. For free questions and reading schedule photos, enable AI in Settings.')});return render()}
+ AIC.push({me:1,t:q});
+ if(localAnswer(q)){const i=AIC.length-1,m=AIC[i];render();if(m.auto){m.auto=false;repBtn(i)}return}
+ const it=aiIntent(q);
+ if(it&&(!aiOn()||q.length<40)){AIC.push({t:AIF[it]()});return render()}
+ if(!aiOn()){AIC.push({t:T('ما فهمت السؤال. جرّب:\n• اسم الشخص (مثل: سيف) لتقرير يومي عنه\n• "تقرير شهري لسيف" أو "تقرير أسبوعي للكباتن اكسل"\n• "منو أكثر واحد تأخر هذا الشهر؟"\nوللأسئلة الحرة بأي صيغة فعّل الذكاء الاصطناعي من الإعدادات.','I did not understand. Try:\n• a person\'s name for a daily report\n• "monthly report for Saif" or "weekly report captains excel"\n• "who was late the most this month?"\nFor free-form questions, enable AI in Settings.')});return render()}
  AIBUSY=true;render();
  try{const r=await aiCall([{type:'text',text:'DATA (JSON):\n'+JSON.stringify(aiSnapshot())+'\n\nQUESTION:\n'+q}],
-  'You are the smart assistant inside "Amaya Heroes", the staff app of Amaya restaurant (Baghdad). Answer the manager\'s question using ONLY the DATA provided (it is computed live by the app). Reply in the same language as the question (Iraqi Arabic is fine), short and practical, using names and exact times. If the data does not contain the answer, say so plainly. Never invent people, times or numbers. Status meanings: late=checked in late, present=checked in on time, missing=shift started and not checked in, grace=shift started but still within grace time, upcoming=shift not started, off=day off, noshift=no shift today, suspended=suspended account.',1200);
-  AIC.push({t:r.text||T('لا يوجد رد.','No answer.')})}
+  'You are the smart assistant inside "Amaya Heroes", the staff app of Amaya restaurant (Baghdad). You can see live data for every staff member the manager is responsible for: today, last 7 days and this month (attendance, lateness, penalties, absences, breaks, points, warnings, wrong items, breakage, schedule, salary). Answer using ONLY this DATA. Reply in the same language as the question (Iraqi Arabic is fine), short and practical, with names, exact numbers and times. If the data does not contain the answer, say so plainly. Never invent people, times or numbers. Status meanings: late=checked in late, present=checked in on time, missing=shift started and not checked in, grace=within grace time, upcoming=shift not started, off=day off, noshift=no shift today, suspended=suspended.\nREPORTS: if the manager asks for a report, a file, an Excel export, or a daily/weekly/monthly summary of a person or a section, reply ONLY with this JSON and nothing else: {"action":"report","person":"<staff name exactly as in DATA, or empty for a section>","scope":"runner|captain|host|all|","period":"today|yesterday|week|lastweek|month|lastmonth","excel":true|false}',1500);
+  const a=aiAction(r.text);
+  if(a){const per=['today','yesterday','week','lastweek','month','lastmonth'].includes(a.period)?a.period:'today',R=perRange(per),p=a.person?findPeople(a.person):[];
+   if(p.length===1)AIC.push({t:repPersonText(p[0],R),act:{rids:[p[0].id],p:R.p,title:p[0].name},auto:!!a.excel});
+   else{const list=scopePeople(a.scope||''),title=scopeTitle(a.scope||'');AIC.push({t:repTeamText(list,R,title),act:{rids:list.map(x=>x.id),p:R.p,title},auto:!!a.excel})}}
+  else AIC.push({t:r.text||T('لا يوجد رد.','No answer.')})}
  catch(e){AIC.push({t:'⚠️ '+e.message,err:1})}
- AIBUSY=false;render()}
+ AIBUSY=false;render();const i=AIC.length-1,m=AIC[i];if(m&&m.auto){m.auto=false;repBtn(i)}}
 function aiQuick(k){AIC.push({me:1,t:(AIQ().find(x=>x[0]===k)||[,''])[1]});AIC.push({t:AIF[k]()});render()}
 /* ---- schedule photo -> system ---- */
 const DK=['sun','mon','tue','wed','thu','fri','sat'];
@@ -1316,14 +1418,14 @@ function impView(){if(!IMP)return '';if(IMP.busy)return `<div class="nb ye p-4 m
  ${nw?`<div class="mt-3 grid gap-1 sm:max-w-xs"><label class="text-xs font-bold">${T('كلمة سر مؤقتة للأشخاص الجدد (','Temporary password for new people (')+nw})</label><input class="inp" value="${esc(IMP.pass)}" onchange="IMP.pass=this.value"></div>`:''}
  <div class="mt-3 flex gap-2 flex-wrap"><button class="btn gr" onclick="impApply()">${T('✅ طبّق الجدول على ','✅ Apply to ')+cnt+T(' شخص',' people')}</button></div></div>`}
 function vAI(){const on=aiOn();
- const chips=AIQ().map(q=>`<button class="btn bg-white !py-2" onclick="aiQuick('${q[0]}')">${q[1]}</button>`).join('');
- const msgs=AIC.slice(-30).map(m=>`<div class="flex ${m.me?'justify-end':'justify-start'} mb-2"><div class="nb ${m.me?'ye font-bold':''} p-3" style="max-width:92%;white-space:pre-wrap;${m.err?'border-color:#ef9aac':''}">${esc(m.t)}</div></div>`).join('');
+ const chips=AIQ().map(q=>`<button class="btn bg-white !py-2" onclick="aiQuick('${q[0]}')">${q[1]}</button>`).join(''),RQ=[[T('تقرير اليوم','Today report'),'تقرير اليوم'],[T('تقرير الأسبوع','Weekly report'),'تقرير اسبوعي'],[T('تقرير الشهر','Monthly report'),'تقرير شهري'],[T('الأكثر تأخيراً هذا الشهر','Most late this month'),'منو اكثر واحد تأخر هذا الشهر'],[T('ترتيب النقاط هذا الشهر','Points ranking this month'),'ترتيب النقاط هذا الشهر']],rchips=RQ.map(x=>`<button class="btn bg-white !py-2" onclick="aiAsk('${x[1]}')">📊 ${x[0]}</button>`).join('');
+ const st0=Math.max(0,AIC.length-30),msgs=AIC.slice(st0).map((m,j)=>`<div class="flex ${m.me?'justify-end':'justify-start'} mb-2"><div class="nb ${m.me?'ye font-bold':''} p-3" style="max-width:92%;white-space:pre-wrap;${m.err?'border-color:#ef9aac':''}">${esc(m.t)}${m.act?`<div class="mt-2" style="white-space:normal"><button class="btn gr !py-1" onclick="repBtn(${st0+j})">${T('📥 تحميل التقرير Excel','📥 Download Excel report')}</button></div>`:''}</div></div>`).join('');
  return `${on?'':`<div class="nb ye p-3 mb-4 text-sm font-semibold">${T('الأسئلة اللي بالأزرار تشتغل هسة ومجاناً. لقراءة صور الجداول والأسئلة الحرة، فعّل الذكاء الاصطناعي من الإعدادات.','The button questions work now for free. To read schedule photos and ask free questions, enable AI in Settings.')}${isOwner()?` <button class="underline" onclick="go('settings')">${T('الإعدادات','Settings')}</button>`:''}</div>`}
  <div class="nb p-4 mb-4"><div class="flex items-center justify-between flex-wrap gap-2"><div><h3 class="font-black">${T('📷 وزّع جدول من صورة','📷 Schedule from a photo')}</h3><div class="text-sm">${T('ارفع صورة الجدول الأسبوعي، والمساعد يقرأها ويوزّع الشفتات على الأشخاص بالنظام. تراجعها قبل التطبيق.','Upload the weekly schedule photo; the assistant reads it and assigns shifts to people in the app. You review before applying.')}</div></div><label class="btn ${on?'':'opacity-60'}" style="cursor:pointer">${T('رفع صورة الجدول','Upload schedule photo')}<input type="file" accept="image/*" class="hidden" onchange="aiSchedPick(this)" ${AIBUSY?'disabled':''}></label></div></div>
  ${impView()}
- <div class="nb p-4"><h3 class="font-black mb-2">${T('💬 اسأل المساعد','💬 Ask the assistant')}</h3><div class="flex gap-2 flex-wrap mb-3">${chips}</div>
+ <div class="nb p-4"><h3 class="font-black mb-2">${T('💬 اسأل المساعد','💬 Ask the assistant')}</h3><div class="flex gap-2 flex-wrap mb-2">${chips}</div><div class="flex gap-2 flex-wrap mb-3">${rchips}</div><div class="text-sm mb-3">${T('اكتب اسم أي شخص يطلعلك تقريره، أو مثلاً: «تقرير شهري لسيف اكسل»، «تقرير أسبوعي للكباتن»، «تقرير الشهر الماضي للكل».','Type any person\'s name for their report, or e.g. "monthly report for Saif excel", "weekly report captains", "last month report all".')}</div>
  <div id="aimsgs" class="mb-3">${msgs||`<div class="text-sm text-gray-500">${T('اضغط سؤال من فوق، أو اكتب سؤالك.','Tap a question above or type your own.')}</div>`}${AIBUSY&&!(IMP&&IMP.busy)?`<div class="nb p-3 mb-2 font-bold">${T('⏳ يفكر...','⏳ Thinking...')}</div>`:''}</div>
- <div class="flex gap-2"><input id="aiq" class="inp flex-1" placeholder="${T('مثال: منو متأخر اليوم وشكد؟','e.g. who is late today and by how much?')}" onkeydown="if(event.key==='Enter')aiAsk()"><button class="btn" onclick="aiAsk()" ${AIBUSY?'disabled':''}>${T('اسأل','Ask')}</button>${AIC.length?`<button class="btn bg-white" onclick="AIC=[];render()">${T('مسح','Clear')}</button>`:''}</div></div>`}
+ <div class="flex gap-2"><input id="aiq" class="inp flex-1" placeholder="${T('مثال: سيف — أو: تقرير شهري للكباتن اكسل','e.g. Saif — or: monthly report captains excel')}" onkeydown="if(event.key==='Enter')aiAsk()"><button class="btn" onclick="aiAsk()" ${AIBUSY?'disabled':''}>${T('اسأل','Ask')}</button>${AIC.length?`<button class="btn bg-white" onclick="AIC=[];render()">${T('مسح','Clear')}</button>`:''}</div></div>`}
 function aiSetCard(){if(isLocalEd()){const on=aiOn(),pv=(typeof SRV!=='undefined'&&SRV&&SRV.aiProvider)==='gemini'?'Gemini':'Claude';return `<div class="nb p-4 mb-4"><h3 class="font-bold mb-2">${T('الذكاء الاصطناعي','AI assistant')}</h3><span class="pill ${on?'ok':''}">${on?T('مفعّل على سيرفر المطعم','Enabled on the restaurant server')+' · '+pv:T('غير مفعّل — يضيفه التقني في config.json ← ai','Not enabled — the technician adds it in config.json → ai')}</span></div>`}
  const prov=aiProv(),key=prov==='gemini'?aiGKey():aiKey(),gm=SS.get('amaya_ai_gmodel','');
  const tabs=`<div class="flex gap-2 flex-wrap mb-3"><button class="btn ${prov==='gemini'?'':'bg-white'}" onclick="SS.set('amaya_ai_provider','gemini');render()">${T('Gemini — مجاني','Gemini — free')}</button><button class="btn ${prov==='claude'?'':'bg-white'}" onclick="SS.set('amaya_ai_provider','claude');render()">${T('Claude — مدفوع وأدق','Claude — paid, more accurate')}</button></div>`;

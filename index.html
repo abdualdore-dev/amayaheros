@@ -1185,18 +1185,35 @@ function switcher(){const mds=myDepts();if(mds.length<2)return '';return `<div c
 /* ---------- Smart assistant (المساعد الذكي) ---------- */
 const AI_MODEL_DEF='claude-sonnet-5-5';
 const isLocalEd=()=>typeof LOCAL!=='undefined'&&LOCAL;
+function aiProv(){return SS.get('amaya_ai_provider','')||(SS.get('amaya_ai_gkey','')?'gemini':'claude')}
 function aiKey(){return SS.get('amaya_ai_key','')||''}
-function aiOn(){return isLocalEd()?!!(typeof SRV!=='undefined'&&SRV&&SRV.ai):!!aiKey()}
+function aiGKey(){return SS.get('amaya_ai_gkey','')||''}
+function aiOn(){return isLocalEd()?!!(typeof SRV!=='undefined'&&SRV&&SRV.ai):(aiProv()==='gemini'?!!aiGKey():!!aiKey())}
+const GEM='https://generativelanguage.googleapis.com/v1beta';
+function gemBest(names){const ok=names.map(n=>String(n).replace(/^models\//,'')).filter(n=>/^gemini-/.test(n)&&!/(image|tts|live|audio|embed|robotics|computer|native)/i.test(n));
+ const ver=n=>{const m=/gemini-(\d+(?:\.\d+)?)/.exec(n);return m?parseFloat(m[1]):0};
+ const rank=n=>(/-flash$/.test(n)?4:/-flash-latest$/.test(n)?3:/flash(?!-lite)/.test(n)?2:/flash-lite/.test(n)?1:/-pro/.test(n)?0.5:0)*100+ver(n)-(/preview|exp/.test(n)?40:0);
+ return ok.sort((a,b)=>rank(b)-rank(a))[0]||''}
+async function gemPickModel(k){const r=await fetch(GEM+'/models?pageSize=200',{headers:{'x-goog-api-key':k}});const j=await r.json().catch(()=>({}));
+ if(!r.ok)throw new Error(r.status===400||r.status===401||r.status===403?'badkey':((j.error&&j.error.message)||('HTTP '+r.status)));
+ const m=gemBest((j.models||[]).filter(x=>(x.supportedGenerationMethods||[]).includes('generateContent')).map(x=>x.name));
+ if(!m)throw new Error(T('ما لگيت نموذج متاح بهذا المفتاح','No usable model for this key'));return m}
+const toGemini=content=>content.map(b=>b.type==='image'?{inline_data:{mime_type:b.source.media_type,data:b.source.data}}:{text:b.text});
 async function aiCall(content,system,maxTok){
- let r,j;
+ let r,j;const gem=!isLocalEd()&&aiProv()==='gemini';
  try{
   if(isLocalEd()){r=await fetch('/api/ai'+AQ(),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({system,content,max_tokens:maxTok||2000})});j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return {text:j.text||'',stop:j.stop||''}}
+  if(gem){const k=aiGKey();if(!k)throw new Error('nokey');let model=SS.get('amaya_ai_gmodel','');if(!model){model=await gemPickModel(k);SS.set('amaya_ai_gmodel',model)}
+   r=await fetch(GEM+'/models/'+encodeURIComponent(model)+':generateContent',{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':k},body:JSON.stringify({system_instruction:{parts:[{text:system}]},contents:[{role:'user',parts:toGemini(content)}],generationConfig:{maxOutputTokens:Math.max((maxTok||2000)*2,8192)}})});
+   j=await r.json().catch(()=>({}));
+   if(!r.ok){const m=(j.error&&j.error.message)||('HTTP '+r.status);if(r.status===404)SS.set('amaya_ai_gmodel','');throw new Error(r.status===429?'limit':(r.status===403||(r.status===400&&/api key/i.test(m)))?'badkey':r.status===404?'model':m)}
+   const c=(j.candidates||[])[0]||{};return {text:((c.content||{}).parts||[]).filter(p=>!p.thought&&p.text).map(p=>p.text).join(''),stop:c.finishReason==='MAX_TOKENS'?'max_tokens':(c.finishReason||'')}}
   const k=aiKey();if(!k)throw new Error('nokey');
   r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:SS.get('amaya_ai_model','')||AI_MODEL_DEF,max_tokens:maxTok||2000,system,messages:[{role:'user',content}]})});
   j=await r.json().catch(()=>({}));
   if(!r.ok){const m=(j.error&&j.error.message)||('HTTP '+r.status);throw new Error(r.status===401?'badkey':r.status===429?'limit':m)}
   return {text:(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(''),stop:j.stop_reason||''}
- }catch(e){const m=String(e&&e.message||e);throw new Error(m==='nokey'?T('الذكاء الاصطناعي غير مفعّل. أضف المفتاح من الإعدادات.','AI is not enabled. Add the key in Settings.'):m==='badkey'?T('مفتاح الذكاء الاصطناعي غير صحيح.','The AI key is not valid.'):m==='limit'?T('تم تجاوز حد الاستخدام أو الرصيد. حاول لاحقاً.','Usage limit or credit reached. Try later.'):/Failed to fetch|NetworkError|Load failed/i.test(m)?T('تعذّر الاتصال بخدمة الذكاء الاصطناعي (تحقق من الإنترنت).','Cannot reach the AI service (check the internet).'):m)}
+ }catch(e){const m=String(e&&e.message||e);throw new Error(m==='nokey'?T('الذكاء الاصطناعي غير مفعّل. أضف المفتاح من الإعدادات.','AI is not enabled. Add the key in Settings.'):m==='badkey'?T('مفتاح الذكاء الاصطناعي غير صحيح.','The AI key is not valid.'):m==='limit'?(gem?T('وصلت الحد المجاني لليوم من Gemini. جرّب باجر، أو استخدم Claude.','Gemini free daily limit reached. Try tomorrow, or use Claude.'):T('تم تجاوز حد الاستخدام أو الرصيد. حاول لاحقاً.','Usage limit or credit reached. Try later.')):m==='model'?T('نموذج الذكاء الاصطناعي تغيّر. حاول مرة ثانية.','The AI model changed. Try again.'):/Failed to fetch|NetworkError|Load failed/i.test(m)?T('تعذّر الاتصال بخدمة الذكاء الاصطناعي (تحقق من الإنترنت).','Cannot reach the AI service (check the internet).'):m)}
 }
 function aiPeople(){const ds=myDepts();return S.runners.filter(r=>ds.includes(r.dept||'runner'))}
 const deptOne=d=>({runner:T('رنر','Runner'),captain:T('كابتن','Captain'),host:T('استقبال','Reception')}[d]||d);
@@ -1307,12 +1324,19 @@ function vAI(){const on=aiOn();
  <div class="nb p-4"><h3 class="font-black mb-2">${T('💬 اسأل المساعد','💬 Ask the assistant')}</h3><div class="flex gap-2 flex-wrap mb-3">${chips}</div>
  <div id="aimsgs" class="mb-3">${msgs||`<div class="text-sm text-gray-500">${T('اضغط سؤال من فوق، أو اكتب سؤالك.','Tap a question above or type your own.')}</div>`}${AIBUSY&&!(IMP&&IMP.busy)?`<div class="nb p-3 mb-2 font-bold">${T('⏳ يفكر...','⏳ Thinking...')}</div>`:''}</div>
  <div class="flex gap-2"><input id="aiq" class="inp flex-1" placeholder="${T('مثال: منو متأخر اليوم وشكد؟','e.g. who is late today and by how much?')}" onkeydown="if(event.key==='Enter')aiAsk()"><button class="btn" onclick="aiAsk()" ${AIBUSY?'disabled':''}>${T('اسأل','Ask')}</button>${AIC.length?`<button class="btn bg-white" onclick="AIC=[];render()">${T('مسح','Clear')}</button>`:''}</div></div>`}
-function aiSetCard(){if(isLocalEd()){const on=aiOn();return `<div class="nb p-4 mb-4"><h3 class="font-bold mb-2">${T('الذكاء الاصطناعي','AI assistant')}</h3><span class="pill ${on?'ok':''}">${on?T('مفعّل على سيرفر المطعم','Enabled on the restaurant server'):T('غير مفعّل — يضيفه التقني في config.json ← ai.apiKey','Not enabled — the technician adds it in config.json → ai.apiKey')}</span></div>`}
- const k=aiKey();return `<div class="nb p-4 mb-4"><h3 class="font-bold mb-2">${T('الذكاء الاصطناعي (قراءة صور الجداول والأسئلة الحرة)','AI (schedule photos and free questions)')}</h3>
- <div class="text-sm mb-2">${T('يحتاج مفتاح API من Anthropic (console.anthropic.com). المفتاح ينحفظ على هذا الجهاز فقط ولا يُرسل لأي موظف. تكلفة تقريبية: قراءة جدول ٥–١٠ سنت، سؤال أقل من سنت.','Needs an Anthropic API key (console.anthropic.com). The key stays on this device only and is never shared with staff. Approx. cost: a schedule read 5–10 cents, a question under 1 cent.')}</div>
- ${k?`<div class="flex items-center gap-2 flex-wrap"><span class="pill ok">${T('مفعّل على هذا الجهاز','Enabled on this device')} (…${esc(k.slice(-4))})</span><button class="btn bg-white" onclick="aiTest()">${T('اختبار','Test')}</button><button class="btn bg-white" onclick="SS.set('amaya_ai_key','');toast(T('تم حذف المفتاح','Key removed'));render()">${T('حذف المفتاح','Remove key')}</button></div>`
- :`<div class="flex gap-2 flex-wrap"><input id="aikey" type="password" class="inp flex-1" placeholder="sk-ant-..." autocomplete="off"><button class="btn" onclick="aiSaveKey()">${T('حفظ وتفعيل','Save & enable')}</button></div>`}</div>`}
-function aiSaveKey(){const v=(document.getElementById('aikey').value||'').trim();if(!/^sk-ant-/.test(v))return toast(T('المفتاح يبدأ بـ sk-ant-','The key starts with sk-ant-'));SS.set('amaya_ai_key',v);render();aiTest()}
+function aiSetCard(){if(isLocalEd()){const on=aiOn(),pv=(typeof SRV!=='undefined'&&SRV&&SRV.aiProvider)==='gemini'?'Gemini':'Claude';return `<div class="nb p-4 mb-4"><h3 class="font-bold mb-2">${T('الذكاء الاصطناعي','AI assistant')}</h3><span class="pill ${on?'ok':''}">${on?T('مفعّل على سيرفر المطعم','Enabled on the restaurant server')+' · '+pv:T('غير مفعّل — يضيفه التقني في config.json ← ai','Not enabled — the technician adds it in config.json → ai')}</span></div>`}
+ const prov=aiProv(),key=prov==='gemini'?aiGKey():aiKey(),gm=SS.get('amaya_ai_gmodel','');
+ const tabs=`<div class="flex gap-2 flex-wrap mb-3"><button class="btn ${prov==='gemini'?'':'bg-white'}" onclick="SS.set('amaya_ai_provider','gemini');render()">${T('Gemini — مجاني','Gemini — free')}</button><button class="btn ${prov==='claude'?'':'bg-white'}" onclick="SS.set('amaya_ai_provider','claude');render()">${T('Claude — مدفوع وأدق','Claude — paid, more accurate')}</button></div>`;
+ const info=prov==='gemini'?T('مجاني من Google بحد يومي محدود (تقريباً 20 قراءة جدول باليوم). المفتاح من aistudio.google.com ← Get API key، ويبدأ بـ AIza. ملاحظة: بالنسخة المجانية ممكن Google تستخدم البيانات المرسلة (الأسماء والجداول) لتحسين خدماتها.','Free from Google with a limited daily quota (about 20 schedule reads/day). Key from aistudio.google.com → Get API key, starts with AIza. Note: on the free tier Google may use the data sent (names, schedules) to improve its products.'):T('يحتاج مفتاح من console.anthropic.com ويبدأ بـ sk-ant-. تكلفة تقريبية: قراءة جدول ٥–١٠ سنت، سؤال أقل من سنت.','Needs a key from console.anthropic.com, starts with sk-ant-. Approx. cost: a schedule read 5–10 cents, a question under 1 cent.');
+ const body=key?`<div class="flex items-center gap-2 flex-wrap"><span class="pill ok">${T('مفعّل على هذا الجهاز','Enabled on this device')} (…${esc(key.slice(-4))})${prov==='gemini'&&gm?' · '+esc(gm):''}</span><button class="btn bg-white" onclick="aiTest()">${T('اختبار','Test')}</button><button class="btn bg-white" onclick="aiRemoveKey()">${T('حذف المفتاح','Remove key')}</button></div>`
+  :`<div class="flex gap-2 flex-wrap"><input id="aikey" type="password" class="inp flex-1" placeholder="${prov==='gemini'?'AIza...':'sk-ant-...'}" autocomplete="off"><button class="btn" onclick="aiSaveKey()">${T('حفظ وتفعيل','Save & enable')}</button></div>`;
+ return `<div class="nb p-4 mb-4"><h3 class="font-bold mb-2">${T('الذكاء الاصطناعي (قراءة صور الجداول والأسئلة الحرة)','AI (schedule photos and free questions)')}</h3>${tabs}<div class="text-sm mb-2">${info} ${T('المفتاح ينحفظ على هذا الجهاز فقط ولا يُرسل لأي موظف.','The key stays on this device only and is never shared with staff.')}</div>${body}</div>`}
+async function aiSaveKey(){const v=(document.getElementById('aikey').value||'').trim(),prov=aiProv();
+ if(prov==='gemini'){if(!/^AIza/.test(v))return toast(T('مفتاح Gemini يبدأ بـ AIza','A Gemini key starts with AIza'));toast(T('جاري التحقق من المفتاح...','Checking the key...'));
+  try{const m=await gemPickModel(v);SS.set('amaya_ai_gkey',v);SS.set('amaya_ai_gmodel',m);SS.set('amaya_ai_provider','gemini');render();aiTest()}
+  catch(e){toast('⚠️ '+(e.message==='badkey'?T('مفتاح Gemini غير صحيح.','The Gemini key is not valid.'):/Failed to fetch|NetworkError|Load failed/i.test(e.message)?T('تعذّر الاتصال بـ Google (تحقق من الإنترنت).','Cannot reach Google (check the internet).'):e.message))}return}
+ if(!/^sk-ant-/.test(v))return toast(T('المفتاح يبدأ بـ sk-ant-','The key starts with sk-ant-'));SS.set('amaya_ai_key',v);SS.set('amaya_ai_provider','claude');render();aiTest()}
+function aiRemoveKey(){if(aiProv()==='gemini'){SS.set('amaya_ai_gkey','');SS.set('amaya_ai_gmodel','')}else SS.set('amaya_ai_key','');toast(T('تم حذف المفتاح','Key removed'));render()}
 async function aiTest(){toast(T('جاري الاختبار...','Testing...'));try{const r=await aiCall([{type:'text',text:'Reply with the single word: OK'}],'Reply exactly as asked.',10);toast(/ok/i.test(r.text)?T('✅ الذكاء الاصطناعي يشتغل','✅ AI works'):T('رد غير متوقع','Unexpected reply'))}catch(e){toast('⚠️ '+e.message)}}
 
 /* ---------- Render ---------- */

@@ -1243,19 +1243,22 @@ const gemThink=m=>/gemini-3/.test(m)?{thinkingLevel:'low'}:/flash/.test(m)?{thin
 async function aiCall(content,system,maxTok,fast){
  let r,j;const sig=()=>typeof AbortSignal!=='undefined'&&AbortSignal.timeout?AbortSignal.timeout(fast?40e3:150e3):undefined;const gem=!isLocalEd()&&aiProv()==='gemini';
  try{
-  if(isLocalEd()){r=await fetch('/api/ai'+AQ(),{signal:sig(),method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({system,content,max_tokens:maxTok||2000,fast:!!fast})});j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return {text:j.text||'',stop:j.stop||''}}
+  if(isLocalEd()){r=await fetch('/api/ai'+AQ(),{signal:sig(),method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({system,content,max_tokens:maxTok||2000,fast:!!fast})});j=await r.json().catch(()=>({}));if(!r.ok)throw new Error([500,502,503,504,529].includes(r.status)||/high demand|overloaded/i.test(j.error||'')?'busy':(j.error||('HTTP '+r.status)));return {text:j.text||'',stop:j.stop||''}}
   if(gem){const k=aiGKey();if(!k)throw new Error('nokey');let model=SS.get('amaya_ai_gmodel','');if(!model){model=await gemPickModel(k);SS.set('amaya_ai_gmodel',model)}
-   const gq=th=>fetch(GEM+'/models/'+encodeURIComponent(model)+':generateContent',{signal:sig(),method:'POST',headers:{'content-type':'application/json','x-goog-api-key':k},body:JSON.stringify({system_instruction:{parts:[{text:system}]},contents:[{role:'user',parts:toGemini(content)}],generationConfig:Object.assign({maxOutputTokens:Math.max((maxTok||2000)*2,8192)},th?{thinkingConfig:gemThink(model)}:{})})});
+   let gq;gq=th=>fetch(GEM+'/models/'+encodeURIComponent(model)+':generateContent',{signal:sig(),method:'POST',headers:{'content-type':'application/json','x-goog-api-key':k},body:JSON.stringify({system_instruction:{parts:[{text:system}]},contents:[{role:'user',parts:toGemini(content)}],generationConfig:Object.assign({maxOutputTokens:Math.max((maxTok||2000)*2,8192)},th?{thinkingConfig:gemThink(model)}:{})})});
    r=await gq(fast);if(fast&&r.status===400)r=await gq(false);
+   if([500,502,503,504].includes(r.status)){await new Promise(x=>setTimeout(x,1200));r=await gq(fast);const m0=model;
+    for(const alt of ['gemini-2.5-flash','gemini-flash-latest','gemini-2.5-flash-lite','gemini-flash-lite-latest','gemini-2.0-flash'].filter(x=>x!==m0)){if(![500,502,503,504,404].includes(r.status))break;model=alt;r=await gq(fast);if(r.status===400)r=await gq(false)}
+    if(r.ok&&model!==m0)model=m0}
    j=await r.json().catch(()=>({}));
-   if(!r.ok){const m=(j.error&&j.error.message)||('HTTP '+r.status);if(r.status===404)SS.set('amaya_ai_gmodel','');throw new Error(r.status===429?'limit':(r.status===403||(r.status===400&&/api key/i.test(m)))?'badkey':r.status===404?'model':m)}
+   if(!r.ok){const m=(j.error&&j.error.message)||('HTTP '+r.status);if(r.status===404)SS.set('amaya_ai_gmodel','');throw new Error([500,502,503,504,529].includes(r.status)||/high demand|overloaded/i.test(m)?'busy':r.status===429?'limit':(r.status===403||(r.status===400&&/api key/i.test(m)))?'badkey':r.status===404?'model':m)}
    const c=(j.candidates||[])[0]||{};return {text:((c.content||{}).parts||[]).filter(p=>!p.thought&&p.text).map(p=>p.text).join(''),stop:c.finishReason==='MAX_TOKENS'?'max_tokens':(c.finishReason||'')}}
   const k=aiKey();if(!k)throw new Error('nokey');
   r=await fetch('https://api.anthropic.com/v1/messages',{signal:sig(),method:'POST',headers:{'content-type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:SS.get('amaya_ai_model','')||AI_MODEL_DEF,max_tokens:maxTok||2000,system,messages:[{role:'user',content}]})});
   j=await r.json().catch(()=>({}));
-  if(!r.ok){const m=(j.error&&j.error.message)||('HTTP '+r.status);throw new Error(r.status===401?'badkey':r.status===429?'limit':m)}
+  if(!r.ok){const m=(j.error&&j.error.message)||('HTTP '+r.status);throw new Error([500,502,503,504,529].includes(r.status)||/overloaded|high demand/i.test(m)?'busy':r.status===401?'badkey':r.status===429?'limit':m)}
   return {text:(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(''),stop:j.stop_reason||''}
- }catch(e){const m=String(e&&e.message||e);throw new Error(m==='nokey'?T('الذكاء الاصطناعي غير مفعّل. أضف المفتاح من الإعدادات.','AI is not enabled. Add the key in Settings.'):m==='badkey'?T('مفتاح الذكاء الاصطناعي غير صحيح.','The AI key is not valid.'):m==='limit'?(gem?T('وصلت الحد المجاني لليوم من Gemini. جرّب باجر، أو استخدم Claude.','Gemini free daily limit reached. Try tomorrow, or use Claude.'):T('تم تجاوز حد الاستخدام أو الرصيد. حاول لاحقاً.','Usage limit or credit reached. Try later.')):m==='model'?T('نموذج الذكاء الاصطناعي تغيّر. حاول مرة ثانية.','The AI model changed. Try again.'):/timeout|timed out|aborted/i.test(m)||(e&&/TimeoutError|AbortError/.test(e.name))?T('الذكاء الاصطناعي تأخر بالرد، جرّب مرة ثانية.','The AI took too long to answer. Try again.'):/Failed to fetch|NetworkError|Load failed/i.test(m)?T('تعذّر الاتصال بخدمة الذكاء الاصطناعي (تحقق من الإنترنت).','Cannot reach the AI service (check the internet).'):m)}
+ }catch(e){const m=String(e&&e.message||e);throw new Error(m==='busy'?T('خدمة الذكاء الاصطناعي مزدحمة هسة. جرّبت أكثر من نموذج وما رد، أعد السؤال بعد دقيقة.','The AI service is busy right now. I tried other models too; ask again in a minute.'):m==='nokey'?T('الذكاء الاصطناعي غير مفعّل. أضف المفتاح من الإعدادات.','AI is not enabled. Add the key in Settings.'):m==='badkey'?T('مفتاح الذكاء الاصطناعي غير صحيح.','The AI key is not valid.'):m==='limit'?(gem?T('وصلت الحد المجاني لليوم من Gemini. جرّب باجر، أو استخدم Claude.','Gemini free daily limit reached. Try tomorrow, or use Claude.'):T('تم تجاوز حد الاستخدام أو الرصيد. حاول لاحقاً.','Usage limit or credit reached. Try later.')):m==='model'?T('نموذج الذكاء الاصطناعي تغيّر. حاول مرة ثانية.','The AI model changed. Try again.'):/timeout|timed out|aborted/i.test(m)||(e&&/TimeoutError|AbortError/.test(e.name))?T('الذكاء الاصطناعي تأخر بالرد، جرّب مرة ثانية.','The AI took too long to answer. Try again.'):/Failed to fetch|NetworkError|Load failed/i.test(m)?T('تعذّر الاتصال بخدمة الذكاء الاصطناعي (تحقق من الإنترنت).','Cannot reach the AI service (check the internet).'):m)}
 }
 function aiPeople(){const ds=myDepts();return S.runners.filter(r=>ds.includes(r.dept||'runner'))}
 const deptOne=d=>({runner:T('رنر','Runner'),captain:T('كابتن','Captain'),host:T('استقبال','Reception')}[d]||d);
@@ -1523,6 +1526,19 @@ function aiSmall(q){const n=normAr(q).replace(/[^\w\u0600-\u06FF ]+/g,' ').repla
  if(/^(شكرا|مشكور|تسلم|تسلمين|عاشت ايدك|thanks|thank you|thx)/.test(n))return T('العفو، بالخدمة.','You are welcome.');
  if(/^(منو انت|شنو انت|من انت|who are you)/.test(n))return T('أنا مساعد Amaya Heroes: أجاوب أسئلتك، أطلع تقارير، وأنفذ أوامرك بالتطبيق بعد ما تأكدها.','I am the Amaya Heroes assistant: I answer questions, make reports and run your orders in the app after you confirm.');
  return ''}
+const mStem=t=>{t=normAr(t).replace(/^(وال|بال|لل|ال)(?=..)/,'');t=t.replace(/(يات|ات|يه|ين|ه|ي)$/,'');return t};
+function aiMenuAnswer(q){const n=normAr(aiDigits(q)).replace(/[^\w\u0600-\u06FF ]+/g,' ').trim();if(/(مبيع|شكو|مدح|بالخطا|غلط|اخصم|سجل|غير|عدل)/.test(n))return '';
+ const kw=/(منيو|المنيو|بالمنيو|menu|عدنا|عدكم|عندكم|اسعار|سعر|بكم|بيش|شكد سعر|price)/.test(n),stop=new Set(['منيو','menu','عدنا','عدكم','عندكم','اسعار','سعر','بكم','بيش','شكد','كم','شنو','اكو','اكل','طعام','اطباق','طبق','شي','الي','اللي','عدهم','في','من','على','بي','the','what','is','in','of','price','بالمنيو','المنيو','موجود','موجوده','لو','هل','نوع','انواع','كل']);
+ const toks=n.split(/\s+/).map(mStem).filter(t=>t.length>=2&&!stop.has(t));if(!toks.length&&!kw)return '';
+ const all=menuAll().filter(i=>!i.hide),words=x=>normAr(x).replace(/[^\w\u0600-\u06FF ]+/g,' ').split(/\s+/).map(mStem).filter(Boolean),hit=(x,t)=>words(x).some(w=>w===t||(t.length>=3&&w.startsWith(t))||(w.length>=4&&t.startsWith(w)));
+ if(!toks.length){const secs=[...new Set(all.map(i=>mSec(i)))];return T('أقسام المنيو: ','Menu sections: ')+secs.join(T('، ',', '))+T('. اكتب اسم القسم أو الطبق حتى أطلعلك الأسعار.','. Type a section or item to see prices.')}
+ const best=f=>{const sc=all.map(i=>[i,toks.filter(t=>hit(f(i),t)).length]),mx=Math.max(0,...sc.map(x=>x[1]));return mx?sc.filter(x=>x[1]===mx).map(x=>x[0]):[]};
+ const secHit=best(i=>i.sec.ar+' '+i.sec.en+' '+(typeof AR_SEC!=='undefined'?AR_SEC[i.sec.en]||'':'')),nmHit=best(i=>i.name.ar+' '+i.name.en);
+ const cov=(L,f)=>L.length&&toks.every(t=>hit(f(L[0]),t)),sf=i=>i.sec.ar+' '+i.sec.en+' '+(typeof AR_SEC!=='undefined'?AR_SEC[i.sec.en]||'':''),nf=i=>i.name.ar+' '+i.name.en;
+ const L=secHit.length&&(cov(secHit,sf)||!cov(nmHit,nf))?secHit:nmHit;if(!L.length)return kw?T('ما لگيت هذا بالمنيو.','Not found in the menu.'):'';
+ if(!kw&&!secHit.length&&(findPeople(q).length||n.split(' ').length>4))return '';
+ const by={};L.slice(0,40).forEach(i=>{(by[mSec(i)]=by[mSec(i)]||[]).push(i)});
+ return Object.entries(by).map(([sc,it])=>sc+' ('+it.length+'):\n'+it.map(i=>'• '+mName(i)+' — '+mPriceTxt(i)).join('\n')).join('\n\n')+(L.length>40?'\n…':'')}
 function aiInApp(q){const n=normAr(q);return !!findPeople(q).length||/(تقرير|حضور|حاضر|غياب|غايب|استراح|نقاط|نقطه|انذار|شفت|دوام|تاخ|تأخ|كابتن|كباتن|رنر|استقبال|منيو|طبق|اطباق|اكله|اكلات|مشروب|نركيل|سعر|اسعار|شكو|مدح|طاول|اجتماع|مبيع|موظف|راتب|رواتب|خصم|فحص|كسر|جدول|اليوم|امس|الاسبوع|الشهر|report|staff|shift|late|break|points|warning|menu|price|table|meeting|salary)/.test(n)}
 async function aiGeneral(q){AIBUSY=true;render();try{const r=await aiCall([{type:'text',text:q}],'You are the friendly assistant inside "Amaya Heroes", the staff app of Amaya restaurant in Baghdad. The user is a manager. Answer any question, including general ones outside the app, briefly and practically, in the same language as the question (Iraqi Arabic is fine). Never use emojis.',600,true);AIC.push({t:noEmo(r.text)||T('ما عندي جواب.','No answer.')})}catch(e){AIC.push({t:''+e.message,err:1})}AIBUSY=false;render()}
 function aiLooksCmd(q){const n=normAr(aiDigits(q)).replace(/[؟?!]/g,' ');if(/(^| )(كم|شكد|منو|شنو|ليش|وين|تقرير|ملخص|اكسل|excel|report|how many|who|what)( |$)/.test(n))return false;return /(^| )(اخصم|خصم|انطي|اعطي|نطي|سجل|سجلي|دز|ارسل|بلغ|ابلغ|غير|عدل|وزع|حط|انهي|ضيف|اضف|زيد|سوي|سويلي|خلي|خليه|give|add|deduct|send|set|change|record|assign|make)( |$)/.test(n)||/(انذار|استراح|طاولات|اجتماع|سعر)/.test(n)&&/(سجل|انطي|اعطي|خلي|غير|سوي|حط|وزع)/.test(n)}
@@ -1549,6 +1565,7 @@ async function aiAsk(qIn){const el=document.getElementById('aiq'),q=(qIn||(el&&e
  AIC.push({me:1,t:q});
  const sm=aiSmall(q);if(sm){AIC.push({t:sm});return render()}
  const cmd=isStaff()&&aiLooksCmd(q);
+ if(!cmd){const ma=aiMenuAnswer(q);if(ma){AIC.push({t:ma});return render()}}
  if(isStaff()){const c=aiLocalMulti(q);if(c&&c.length>=aiVerbs(q)&&c.length>=aiNames(q)&&(!aiOn()||c.every(x=>!aiStep(x).err))){aiPlan(c);return render()}if(cmd&&aiOn())return aiCmdAI(q);if(c){aiPlan(c);return render()}}
  if(cmd&&!aiOn()){AIC.push({t:T('ما فهمت الأمر بالضبط. جرّب صيغة قصيرة مثل:\n• اخصم نقطة من سيف بسبب التأخير\n• انطي علي استراحة 20 دقيقة\n• سجل حضور سيف 16:05\n• انذار كتابي لسيف بسبب التلفون\n• غير سعر حمص الى 7000\n• دز للكباتن: اجتماع بعد الشفت\n• سيف طاولات 12 13 14 من 4 لل 2\nوالأوامر الطويلة أو المركبة تحتاج تفعيل الذكاء الاصطناعي من الإعدادات.','I did not get the order. Try a short form like:\n• deduct a point from Saif because late\n• give Ali a 20 minute break\n• check in Saif 16:05\n• written warning for Saif because of the phone\n• change price of hummus to 7000\n• send to captains: meeting after the shift\nLong or compound orders need AI enabled in Settings.')});return render()}
  if(!(cmd&&aiOn())&&localAnswer(q)){const i=AIC.length-1,m=AIC[i];render();if(m.auto){m.auto=false;repBtn(i)}return}
@@ -1657,6 +1674,7 @@ function menuAll(){const key=JSON.stringify(S.menu||[]);if(MCACHE&&MCKEY===key)r
  MCACHE=base.concat(custom);MCKEY=key;return MCACHE}
 const mOne=id=>menuAll().find(i=>i.id===id);
 const mName=i=>i?(S.lang==='ar'?i.name.ar:i.name.en):'';
+const mSec=i=>i?(S.lang==='ar'?(i.sec.ar||i.sec.en):(i.sec.en||i.sec.ar)):'';
 const mDesc=i=>i?(S.lang==='ar'?i.desc.ar:i.desc.en)||'':'';
 const wItem=w=>{const i=w&&w.mid&&mOne(w.mid);return i?mName(i):(w?w.item:'')};
 const mPrice1=i=>{const p=(i&&i.prices||[]).find(x=>x.v>0);return p?p.v:0};

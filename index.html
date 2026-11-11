@@ -883,7 +883,7 @@ const NT={info:'info',ok:'ok',warn:'warn',bad:'bad'};
 function notify(to,kind,title,body){if(!to)return;const LB=x=>(x&&typeof x==='object')?x:{ar:String(x||''),en:String(x||'')};
  const n={id:'n'+Date.now()+Math.random().toString(36).slice(2,5),at:Date.now(),to,kind,title:LB(title),body:LB(body||''),read:{}};S.notes=S.notes||[];S.notes.push(n);S.notes=S.notes.slice(-400);pushNote(n);pushKick();return n}
 /* instant phone notifications: ask the push service to send new notes right after they are saved */
-const PUSH_WORKER='';let PKT=0;
+const PUSH_WORKER='https://restless-salad-2a4b.abdualdore.workers.dev';let PKT=0;
 function pushKick(){const u=(S.cfg&&S.cfg.pushUrl)||PUSH_WORKER;if(!u||typeof isLocalEd==='function'&&isLocalEd())return;clearTimeout(PKT);PKT=setTimeout(()=>{try{fetch(u.replace(/\/+$/,'')+'/kick',{method:'POST',keepalive:true}).catch(()=>{})}catch(e){}},2500)}
 const notesFor=()=>{if(!S.session)return[];const k=me2Key();return(S.notes||[]).filter(n=>n.to==='all'||n.to===k||(n.to==='staff'&&isStaff()))};
 const unread=()=>notesFor().filter(n=>!(n.read||{})[me2Key()]).length;

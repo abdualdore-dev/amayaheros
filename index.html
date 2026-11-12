@@ -2467,9 +2467,9 @@ function ordAdd(key,d){const c=ORD.cart[key]=ORD.cart[key]||{qty:0,note:''};c.qt
 function ordPlus(mid){const i=mOne(mid);if(isCoffee(i)){ORD.ask=ORD.ask===mid?'':mid;return render()}ordAdd(mid,1)}
 function ordMinus(mid){const ks=Object.keys(ORD.cart).filter(k=>kMid(k)===mid);if(ks.length)ordAdd(ks[ks.length-1],-1)}
 function ordSec(k){const inG=menuAll().filter(i=>!i.hide&&i.ok!==false&&ordGrp(i)===ORD.g),secs=[...new Map(inG.map(i=>[i.sec.en,i])).values()];ORD.sec=secs[k]?secs[k].sec.en:'';ORD.ask='';NAVA=1;render()}
-function ordSend(){const s=tsOpen(ORD.table),r=me();if(!s||!r)return;const items=Object.entries(ORD.cart).filter(([k,v])=>v.qty>0).map(([k,v])=>{const mid=kMid(k),i=mOne(mid),o={mid,qty:v.qty,note:String(v.note||'').trim().slice(0,200),g:i?ordGrp(i):'kitchen'};if(kOpt(k))o.opt=kOpt(k);return o});
+function ordSend(){const s=tsOpen(ORD.table),r=me();if(!s||!r)return;const items=Object.entries(ORD.cart).filter(([k,v])=>v.qty>0).map(([k,v])=>{const mid=kMid(k),i=mOne(mid),o={mid,qty:v.qty,note:String(v.note||'').trim().slice(0,200),g:i?ordGrp(i):'kitchen'};if(i)o.n={ar:i.name.ar||'',en:i.name.en||''};if(kOpt(k))o.opt=kOpt(k);return o});
  if(!items.length)return toast(T("اختر صنفاً واحداً على الأقل",'Pick at least one item',"En az bir ürün seçin"));
- S.orders=S.orders||[];S.orders.push({id:'or'+Date.now()+Math.random().toString(36).slice(2,5),sess:s.id,table:s.table,rid:r.id,at:Date.now(),day:dayKey(),items,note:String(ORD.note||'').trim().slice(0,300)});
+ S.orders=S.orders||[];S.orders.push({id:'or'+Date.now()+Math.random().toString(36).slice(2,5),sess:s.id,table:s.table,rid:r.id,cn:r.name,gs:s.guests,at:Date.now(),day:dayKey(),items,note:String(ORD.note||'').trim().slice(0,300)});
  ORD.cart={};ORD.note='';ORD.v='';ORD.sec='';save();render();toast(T("تم تسجيل الطلب",'Order recorded',"Sipariş kaydedildi"))}
 function ordDel(id){if(!isStaff())return;if(!confirm(T('حذف هذا الطلب؟','Delete this order?',"Bu sipariş silinsin mi?")))return;const o=(S.orders||[]).find(x=>x.id===id);if(!o)return;if(!isStaff()&&(!me()||o.rid!==me().id))return;S.orders=S.orders.filter(x=>x.id!==id);save();render()}
 /* order slip: one slip per station, preview then system print */

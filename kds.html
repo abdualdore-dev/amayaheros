@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="KDS">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<title>Amaya KDS</title>
+<style>
+:root{--bg:#000;--fg:#fff;--dim:#9a9a9a;--line:#2b2b2b}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:-apple-system,"SF Pro Text","Segoe UI",Tahoma,"Noto Sans Arabic","Noto Sans",sans-serif;overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#top{height:54px;display:flex;align-items:center;gap:18px;padding:0 16px;border-bottom:2px solid var(--fg)}
+#top .st{font-size:15px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+#top .k{display:flex;align-items:baseline;gap:6px}#top .k b{font-size:26px;font-variant-numeric:tabular-nums}#top .k span{font-size:13px;color:var(--dim)}
+#top .sp{flex:1}
+#clock{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+#net{font-size:12px;font-weight:700;padding:3px 8px;border:1.5px solid var(--fg);border-radius:4px}
+#net.off{background:var(--fg);color:var(--bg)}
+#grid{height:calc(100% - 54px);overflow:hidden;display:grid;gap:10px;padding:10px}
+#over{font-size:14px;font-weight:800;padding:3px 8px;background:var(--fg);color:var(--bg);border-radius:4px;display:none}
+.tk{border:2px solid var(--fg);border-radius:10px;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.tk .h{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:10px 12px 8px;border-bottom:2px solid var(--fg)}
+.tk .tb{font-size:13px;color:var(--dim)}.tk .tn{font-size:clamp(32px,5vw,48px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.tk .tm{font-size:clamp(22px,3.6vw,32px);font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.tk .meta{display:flex;justify-content:space-between;gap:8px;padding:6px 12px;font-size:14px;color:var(--dim);border-bottom:1px solid var(--line)}
+.tk .meta b{color:var(--fg);font-weight:700}
+.tk .its{flex:1;overflow:hidden;padding:4px 12px}
+.it{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:clamp(17px,2.6vw,24px);line-height:1.25}
+.it .q{min-width:42px;font-weight:800;font-variant-numeric:tabular-nums}
+.it .n{font-weight:600;overflow-wrap:anywhere}
+.it .o{display:block;font-size:17px;font-weight:700;margin-top:2px}
+.it .x{display:block;font-size:17px;font-style:normal;margin-top:2px;padding:2px 6px;border:1.5px dashed var(--fg);border-radius:4px;width:fit-content}
+.tk .nt{padding:8px 12px;font-size:17px;font-weight:700;border-top:2px dashed var(--fg)}
+.tk .more{padding:4px 12px 8px;font-size:15px;color:var(--dim)}
+.tk.late{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.tk.late .h,.tk.late .nt{border-color:var(--bg)}.tk.late .tb,.tk.late .meta,.tk.late .more{color:#333}.tk.late .meta b{color:var(--bg)}
+.tk.late .it{border-color:#ccc}.tk.late .x{border-color:var(--bg)}
+.tk.late.blink{animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{background:var(--bg);color:var(--fg)}}
+.tk.new{animation:nw .6s ease 3}@keyframes nw{50%{transform:scale(.97)}}
+.tk.hold{outline:4px solid var(--fg);outline-offset:-8px}
+#empty{position:absolute;inset:54px 0 0 0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px}
+#empty b{font-size:34px}#empty span{color:var(--dim);font-size:16px}
+#gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;z-index:9;text-align:center;padding:24px}
+#gate b{font-size:30px}#gate span{color:var(--dim);font-size:17px;max-width:520px;line-height:1.6}
+#gate i{font-style:normal;border:2px solid var(--fg);padding:14px 28px;border-radius:10px;font-size:22px;font-weight:800}
+#err{position:fixed;left:10px;right:10px;bottom:10px;background:var(--fg);color:var(--bg);font-weight:700;font-size:15px;padding:10px 14px;border-radius:8px;display:none;z-index:8}
+#top .st{white-space:nowrap}
+@media (max-width:520px){#top{gap:10px;padding:0 10px}#top .k span{display:none}#clock{font-size:20px}}
+</style>
+</head>
+<body>
+<div id="top"><span class="st" id="st"></span><div class="k"><b id="kOpen">0</b><span id="lOpen"></span></div><div class="k"><b id="kLate">0</b><span id="lLate"></span></div><span id="over"></span><div class="sp"></div><span id="net">...</span><span id="clock">--:--</span></div>
+<div id="grid"></div>
+<div id="empty"><b id="eT"></b><span id="eS"></span></div>
+<div id="err"></div>
+<div id="gate"><b>Amaya KDS</b><span id="gS"></span><i id="gB"></i></div>
+<script>
+/*
+ Amaya KDS — single-file kitchen display.
+ URL options (all optional):
+   st=kitchen | bev | all     station to show (default kitchen)
+   late=20                    minutes before an order turns late
+   lang=ar | en | tr          interface language (default ar)
+   poll=4                     seconds between refreshes
+   tap=1                      long-press a ticket for 1.5 s to mark it delivered (writes to the database)
+   dead=x1,y1,x2,y2           ignore touches inside this rectangle (screen percentages, for a cracked area)
+   demo=1                     fake orders, no database
+   db=https://...             database base URL (default: the restaurant Firebase Realtime Database)
+   auth=TOKEN                 database auth token if the database rules require it
+*/
+const Q=new URLSearchParams(location.search);
+const CFG={st:Q.get('st')||'kitchen',late:Math.max(1,+Q.get('late')||20),lang:['ar','en','tr'].includes(Q.get('lang'))?Q.get('lang'):'ar',poll:Math.max(2,+Q.get('poll')||4),tap:Q.get('tap')==='1',demo:Q.get('demo')==='1',
+ db:(Q.get('db')||'https://amaya-runner-default-rtdb.europe-west1.firebasedatabase.app').replace(/\/+$/,''),auth:Q.get('auth')||'',dead:(Q.get('dead')||'').split(',').map(Number).filter(n=>!isNaN(n))};
+const TX={
+ ar:{kitchen:'المطبخ',bev:'البار',all:'كل الأقسام',open:'طلبات',late:'متأخرة',table:'طاولة',guests:'أشخاص',empty:'لا توجد طلبات',emptyS:'الشاشة تتحدث تلقائياً',gate:'اضغط مرة واحدة لتشغيل الصوت',gateB:'تشغيل',on:'متصل',off:'غير متصل',demo:'تجربة',more:'أصناف أخرى',note:'ملاحظة',sugar:{sweet:'حلوة',medium:'وسط',none:'بدون سكر'},auth:'قاعدة البيانات تطلب تسجيل دخول (auth)',done:'تم التسليم'},
+ en:{kitchen:'Kitchen',bev:'Bar',all:'All stations',open:'orders',late:'late',table:'Table',guests:'guests',empty:'No orders',emptyS:'The screen updates by itself',gate:'Tap once to enable sound',gateB:'Start',on:'Online',off:'Offline',demo:'Demo',more:'more items',note:'Note',sugar:{sweet:'Sweet',medium:'Medium',none:'No sugar'},auth:'The database requires sign-in (auth)',done:'Delivered'},
+ tr:{kitchen:'Mutfak',bev:'Bar',all:'Tüm istasyonlar',open:'sipariş',late:'gecikmiş',table:'Masa',guests:'misafir',empty:'Sipariş yok',emptyS:'Ekran kendiliğinden güncellenir',gate:'Sesi açmak için bir kez dokunun',gateB:'Başlat',on:'Çevrimiçi',off:'Çevrimdışı',demo:'Deneme',more:'ürün daha',note:'Not',sugar:{sweet:'Şekerli',medium:'Orta',none:'Şekersiz'},auth:'Veritabanı oturum açma istiyor (auth)',done:'Teslim edildi'}};
+const L=TX[CFG.lang];document.documentElement.lang=CFG.lang;document.documentElement.dir=CFG.lang==='ar'?'rtl':'ltr';
+const $=id=>document.getElementById(id);
+$('st').textContent=L[CFG.st]||L.kitchen;$('lOpen').textContent=L.open;$('lLate').textContent=L.late;$('eT').textContent=L.empty;$('eS').textContent=L.emptyS;$('gS').textContent=L.gate;$('gB').textContent=L.gateB;
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const dayKey=d=>{d=d||new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+
+/* ---------- sound (Web Audio, no files) ---------- */
+let AC=null;
+function audioOn(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();tone(880,.08,0)}catch(e){}}
+function tone(f,d,at,type,vol){if(!AC)return;const t=AC.currentTime+(at||0),o=AC.createOscillator(),g=AC.createGain();o.type=type||'square';o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol||0.35,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+0.02)}
+const chimeNew=()=>{tone(988,.14,0);tone(1319,.14,.16);tone(1568,.22,.32)};
+const chimeLate=()=>{tone(440,.22,0,'sawtooth',.3);tone(440,.22,.3,'sawtooth',.3)};
+$('gate').addEventListener('click',()=>{audioOn();$('gate').style.display='none';wake()});
+
+/* keep the screen on where supported */
+let WL=null;async function wake(){try{if('wakeLock' in navigator){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){wake();if(AC&&AC.state==='suspended')AC.resume()}});
+
+/* block touches inside a cracked area */
+if(CFG.dead.length===4){const [x1,y1,x2,y2]=CFG.dead;const d=document.createElement('div');d.style.cssText=`position:fixed;left:${Math.min(x1,x2)}%;top:${Math.min(y1,y2)}%;width:${Math.abs(x2-x1)}%;height:${Math.abs(y2-y1)}%;z-index:20`;['touchstart','touchend','click','pointerdown'].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation()},{passive:false}));document.body.appendChild(d)}
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+
+/* ---------- data ---------- */
+let ORDERS=[],SESS={},SEEN=null,LATEWARN={},ONLINE=false;
+const aq=()=>CFG.auth?('auth='+encodeURIComponent(CFG.auth)):'';
+const dayStart=()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime()};
+async function getJSON(path,query){const q=[query,aq()].filter(Boolean).join('&');const r=await fetch(CFG.db+path+(q?'?'+q:''),{cache:'no-store'});const j=await r.json();if(!r.ok||(j&&j.error)){const e=new Error((j&&j.error)||('HTTP '+r.status));e.auth=r.status===401||/permission|auth/i.test(String(j&&j.error));throw e}return j}
+const vals=o=>Object.entries(o||{}).map(([k,v])=>{if(typeof v==='string'){try{v=JSON.parse(v)}catch(e){return null}}if(v&&typeof v==='object')v._k=k;return v}).filter(Boolean);
+async function load(){
+ if(CFG.demo){demoTick();return}
+ try{
+  const startKey='"or'+(dayStart()-36e5)+'"';
+  const [o,s]=await Promise.all([getJSON('/amaya/orders.json','orderBy="$key"&startAt='+encodeURIComponent(startKey)),getJSON('/amaya/tsess.json','orderBy="$key"&startAt='+encodeURIComponent('"ts'+(dayStart()-12*36e5)+'"'))]);
+  SESS={};vals(s).forEach(x=>{SESS[x.id]=x});ORDERS=vals(o);setNet(true);$('err').style.display='none';
+ }catch(e){setNet(false);if(e.auth){$('err').textContent=L.auth;$('err').style.display='block'}}
+ draw();
+}
+function setNet(v){ONLINE=v;const n=$('net');n.textContent=CFG.demo?L.demo:v?L.on:L.off;n.classList.toggle('off',!v&&!CFG.demo)}
+
+/* ---------- demo ---------- */
+const DM={ar:[['تكة لحم','kitchen'],['كباب عراقي','kitchen'],['مشاوي مشكلة','kitchen'],['حمص','kitchen'],['سلطة سيزر','kitchen'],['شوربة عدس','kitchen'],['قهوة تركية','bev'],['شاي','bev'],['موهيتو','bev'],['عصير برتقال','bev']],en:[['Lamb tikka','kitchen'],['Iraqi kebab','kitchen'],['Mixed grill','kitchen'],['Hummus','kitchen'],['Caesar salad','kitchen'],['Lentil soup','kitchen'],['Turkish coffee','bev'],['Tea','bev'],['Mojito','bev'],['Orange juice','bev']]};
+let demoN=0;function demoTick(){const now=Date.now();if(!ORDERS.length){[[12,26],[6,19],[9,11],[21,6],[3,2]].forEach(([t,m],i)=>ORDERS.push(demoOrder(t,now-m*6e4,i)))}
+ if(Math.random()<.12)ORDERS.push(demoOrder(30+(++demoN),now,demoN+7));ORDERS=ORDERS.filter(o=>now-o.at<45*6e4);setNet(true);draw()}
+function demoOrder(t,at,seed){const M=DM[CFG.lang==='ar'?'ar':'en'],items=[];for(let k=0;k<2+seed%3;k++){const m=M[(seed*3+k*4)%M.length];items.push({mid:'d'+k,qty:1+(seed+k)%3,g:m[1],n:{ar:m[0],en:m[0]},opt:m[0].includes('قهوة')||m[0].includes('coffee')?'medium':'',note:k===0&&seed%2?(CFG.lang==='ar'?'بدون بصل':'no onion'):''})}
+ const sid='ds'+t;SESS[sid]={id:sid,table:String(t),guests:2+seed%5,at:at-5*6e4};return {id:'do'+t+'_'+at,_k:'do'+t,sess:sid,table:String(t),cn:CFG.lang==='ar'?['حيدر','زيد','محمد'][seed%3]:['Haider','Zaid','Mohammed'][seed%3],at,items,note:seed===1?(CFG.lang==='ar'?'العائلة مستعجلة':'family in a hurry'):''}}
+
+/* ---------- render ---------- */
+const itemName=x=>{const n=x.n||{};return CFG.lang==='ar'?(n.ar||n.en||x.mid):(n.en||n.ar||x.mid)};
+function visible(){const today=dayKey(),now=Date.now();return ORDERS.filter(o=>!o.done&&(CFG.demo||o.day===today||now-o.at<12*36e5)).filter(o=>{const s=SESS[o.sess];return CFG.demo||!s||!s.end}).map(o=>({o,items:(o.items||[]).filter(x=>CFG.st==='all'||(x.g||'kitchen')===CFG.st)})).filter(x=>x.items.length).sort((a,b)=>a.o.at-b.o.at)}
+function fmt(ms){const s=Math.max(0,Math.floor(ms/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),r=s%60;return (h?h+':'+pad(m):pad(m))+':'+pad(r)}
+let SIG='';
+function draw(){const V=visible(),now=Date.now(),lim=CFG.late*6e4;
+ const ids=V.map(v=>v.o.id);if(SEEN===null)SEEN=new Set(ids);let fresh=false;ids.forEach(id=>{if(!SEEN.has(id)){SEEN.add(id);fresh=true}});if(fresh)chimeNew();
+ V.forEach(v=>{if(now-v.o.at>lim&&!LATEWARN[v.o.id]){LATEWARN[v.o.id]=1;if(SEEN.size)chimeLate()}});
+ $('kOpen').textContent=V.length;$('kLate').textContent=V.filter(v=>now-v.o.at>lim).length;
+ $('empty').style.display=V.length?'none':'flex';
+ const G=$('grid'),W=G.clientWidth,H=G.clientHeight,cols=Math.max(1,Math.floor((W+10)/(W<520?190:250))),rows=H>W*1.2?2:1,cap=cols*rows,shown=V.slice(0,cap),hid=V.length-shown.length;
+ $('over').style.display=hid?'inline-block':'none';$('over').textContent='+'+hid;
+ const sig=JSON.stringify([cols,rows,shown.map(v=>[v.o.id,v.items.length])]);
+ if(sig!==SIG){SIG=sig;G.style.gridTemplateColumns=`repeat(${cols},minmax(0,1fr))`;G.style.gridTemplateRows=`repeat(${rows},minmax(0,1fr))`;
+  G.innerHTML=shown.map(v=>{const o=v.o,s=SESS[o.sess]||{},max=rows>1?5:9,its=v.items.slice(0,max),late=now-o.at>lim;
+   return `<div class="tk${late?' late':''}${now-o.at<15e3?' new':''}" data-id="${esc(o.id)}" data-k="${esc(o._k||o.id)}" data-at="${o.at}"><div class="h"><div><div class="tb">${L.table}</div><div class="tn">${esc(o.table)}</div></div><div class="tm" data-t="${o.at}">${fmt(now-o.at)}</div></div>
+   <div class="meta"><span>${esc(o.cn||'')}</span><span><b>${esc(o.gs||s.guests||'')}</b> ${L.guests}</span></div>
+   <div class="its">${its.map(x=>`<div class="it"><span class="q">${x.qty}×</span><span class="n">${esc(itemName(x))}${x.opt?`<span class="o">${esc(L.sugar[x.opt]||x.opt)}</span>`:''}${x.note?`<span class="x">${esc(x.note)}</span>`:''}</span></div>`).join('')}</div>
+   ${v.items.length>max?`<div class="more">+${v.items.length-max} ${L.more}</div>`:''}${o.note?`<div class="nt">${esc(o.note)}</div>`:''}</div>`}).join('')}
+ tickTimers()}
+function tickTimers(){const now=Date.now(),lim=CFG.late*6e4;document.querySelectorAll('.tm[data-t]').forEach(el=>{const at=+el.dataset.t;el.textContent=fmt(now-at);const tk=el.closest('.tk');const late=now-at>lim;tk.classList.toggle('late',late);tk.classList.toggle('blink',late&&now-at<lim+60e3)});
+ const d=new Date();$('clock').textContent=pad(d.getHours())+':'+pad(d.getMinutes())}
+
+/* ---------- optional: long-press to mark delivered ---------- */
+if(CFG.tap){let tmr=null,el=null;const clear=()=>{clearTimeout(tmr);if(el)el.classList.remove('hold');el=null};
+ $('grid').addEventListener('touchstart',e=>{const t=e.target.closest('.tk');if(!t)return;el=t;t.classList.add('hold');tmr=setTimeout(()=>markDone(t),1500)},{passive:true});
+ $('grid').addEventListener('mousedown',e=>{const t=e.target.closest('.tk');if(!t)return;el=t;t.classList.add('hold');tmr=setTimeout(()=>markDone(t),1500)});
+ ['touchend','touchcancel','mouseup','mouseleave'].forEach(ev=>$('grid').addEventListener(ev,clear));
+ async function markDone(t){clear();const id=t.dataset.id,k=t.dataset.k,o=ORDERS.find(x=>x.id===id);if(!o)return;o.done=Date.now();SIG='';draw();tone(660,.1,0);
+  if(CFG.demo)return;try{const q=aq();const r=await fetch(CFG.db+'/amaya/orders/'+encodeURIComponent(k)+'.json'+(q?'?'+q:''),{method:'PATCH',body:JSON.stringify({done:o.done})});if(!r.ok)throw 0}catch(e){delete o.done;SIG='';draw()}}}
+
+/* ---------- start ---------- */
+load();setInterval(load,CFG.poll*1000);setInterval(tickTimers,1000);
+window.addEventListener('resize',()=>{SIG='';draw()});
+window.addEventListener('online',load);
+</script>
+</body>
+</html>

@@ -2261,7 +2261,7 @@ const OGS=()=>['kitchen','bev'];
 const SUGAR=()=>[['sweet',T('حلوة','Sweet')],['medium',T('وسط','Medium')],['none',T('بدون سكر','No sugar')]];
 const sugName=k=>(SUGAR().find(x=>x[0]===k)||[0,''])[1];
 const kMid=k=>String(k).split('|')[0],kOpt=k=>String(k).split('|')[1]||'';
-const isCoffee=i=>!!i&&i.g==='bev'&&(/تركي/.test(i.name.ar||'')||/turkish/i.test(i.name.en||''));
+const isCoffee=i=>!!i&&i.g==='bev'&&(/قهو\S*\s+تركي/.test(i.name.ar||'')||/turkish\s+(cafe|coffee)/i.test(i.name.en||''));
 const midQty=mid=>Object.entries(ORD.cart).filter(([k])=>kMid(k)===mid).reduce((a,[k,v])=>a+v.qty,0);
 function ordAdd(key,d){const c=ORD.cart[key]=ORD.cart[key]||{qty:0,note:''};c.qty=Math.max(0,Math.min(99,c.qty+d));if(!c.qty)delete ORD.cart[key];ORD.ask='';render()}
 function ordPlus(mid){const i=mOne(mid);if(isCoffee(i)){ORD.ask=ORD.ask===mid?'':mid;return render()}ordAdd(mid,1)}

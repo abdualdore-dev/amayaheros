@@ -77,6 +77,10 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 .bt.done{opacity:.45}
 .bt .bl{padding:2px 12px 8px}
 .bt .nt2{padding:6px 12px;font-weight:700;border-top:2px dashed currentColor}
+#lg{display:none;flex-direction:column;gap:10px;width:min(360px,90vw)}
+#lg input{height:52px;border:2px solid var(--fg);border-radius:8px;background:var(--bg);color:var(--fg);font-size:18px;padding:0 14px;-webkit-user-select:text;user-select:text}
+#lg button{height:54px;border:0;border-radius:8px;background:var(--fg);color:var(--bg);font-size:19px;font-weight:800}
+#lgE{color:var(--fg);font-weight:700;min-height:20px;font-size:15px}
 #top .st{white-space:nowrap}
 @media (max-width:520px){#top{gap:10px;padding:0 10px}#top .k span{display:none}#clock{font-size:20px}}
 </style>
@@ -87,7 +91,7 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 <div id="empty"><b id="eT"></b><span id="eS"></span></div>
 <div id="det"><div class="dh"><div><div class="ln" id="dL"></div><div class="tn" id="dT"></div></div><div class="ln" id="dM"></div><div class="sp"></div><button class="x" id="dX"></button></div><div class="db" id="dB"></div></div>
 <div id="err"></div>
-<div id="gate"><b>Amaya KDS</b><span id="gS"></span><i id="gB"></i></div>
+<div id="gate"><b>Amaya KDS</b><span id="gS"></span><i id="gB"></i><form id="lg" onsubmit="return false"><input id="lu" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"><input id="lp" type="password" autocomplete="current-password"><button id="lb" type="submit"></button><div id="lgE"></div></form></div>
 <script>
 /*
  Amaya KDS — single-file kitchen display.
@@ -107,9 +111,9 @@ const Q=new URLSearchParams(location.search);
 const CFG={view:Q.get('view')==='orders'?'orders':'tables',st:Q.get('st')||'all',late:Math.max(1,+Q.get('late')||20),lang:['ar','en','tr'].includes(Q.get('lang'))?Q.get('lang'):'ar',poll:Math.max(2,+Q.get('poll')||4),tap:Q.get('tap')==='1',demo:Q.get('demo')==='1',
  db:(Q.get('db')||'https://amaya-runner-default-rtdb.europe-west1.firebasedatabase.app').replace(/\/+$/,''),auth:Q.get('auth')||'',dead:(Q.get('dead')||'').split(',').map(Number).filter(n=>!isNaN(n))};
 const TX={
- ar:{tables:'طاولات',sent:'أُرسل',ago:'منذ',lateBy:'متأخر',min:'د',batch:'الدفعة',close:'إغلاق',opened:'فُتحت',waiting:'بالانتظار',items:'أصناف',noOrd:'لا توجد طلبات بعد',kitchen:'المطبخ',bev:'البار',all:'كل الأقسام',open:'طلبات',late:'متأخرة',table:'طاولة',guests:'أشخاص',empty:'لا توجد طلبات',emptyS:'الشاشة تتحدث تلقائياً',gate:'اضغط مرة واحدة لتشغيل الصوت',gateB:'تشغيل',on:'متصل',off:'غير متصل',demo:'تجربة',more:'أصناف أخرى',note:'ملاحظة',sugar:{sweet:'حلوة',medium:'وسط',none:'بدون سكر'},auth:'قاعدة البيانات تطلب تسجيل دخول (auth)',done:'تم التسليم'},
- en:{tables:'tables',sent:'Sent',ago:'',lateBy:'Late',min:'min',batch:'Batch',close:'Close',opened:'Opened',waiting:'waiting',items:'items',noOrd:'No orders yet',kitchen:'Kitchen',bev:'Bar',all:'All stations',open:'orders',late:'late',table:'Table',guests:'guests',empty:'No orders',emptyS:'The screen updates by itself',gate:'Tap once to enable sound',gateB:'Start',on:'Online',off:'Offline',demo:'Demo',more:'more items',note:'Note',sugar:{sweet:'Sweet',medium:'Medium',none:'No sugar'},auth:'The database requires sign-in (auth)',done:'Delivered'},
- tr:{tables:'masa',sent:'Gönderildi',ago:'',lateBy:'Gecikme',min:'dk',batch:'Sipariş',close:'Kapat',opened:'Açılış',waiting:'bekliyor',items:'ürün',noOrd:'Henüz sipariş yok',kitchen:'Mutfak',bev:'Bar',all:'Tüm istasyonlar',open:'sipariş',late:'gecikmiş',table:'Masa',guests:'misafir',empty:'Sipariş yok',emptyS:'Ekran kendiliğinden güncellenir',gate:'Sesi açmak için bir kez dokunun',gateB:'Başlat',on:'Çevrimiçi',off:'Çevrimdışı',demo:'Deneme',more:'ürün daha',note:'Not',sugar:{sweet:'Şekerli',medium:'Orta',none:'Şekersiz'},auth:'Veritabanı oturum açma istiyor (auth)',done:'Teslim edildi'}};
+ ar:{login:'تسجيل الدخول لقاعدة البيانات',user:'اسم المستخدم',pass:'كلمة السر',signin:'دخول',bad:'اسم المستخدم أو كلمة السر غير صحيحة',loginS:'سجّل الدخول مرة واحدة بحساب مدير أو كابتن، وستبقى الشاشة متصلة.',logout:'خروج',tables:'طاولات',sent:'أُرسل',ago:'منذ',lateBy:'متأخر',min:'د',batch:'الدفعة',close:'إغلاق',opened:'فُتحت',waiting:'بالانتظار',items:'أصناف',noOrd:'لا توجد طلبات بعد',kitchen:'المطبخ',bev:'البار',all:'كل الأقسام',open:'طلبات',late:'متأخرة',table:'طاولة',guests:'أشخاص',empty:'لا توجد طلبات',emptyS:'الشاشة تتحدث تلقائياً',gate:'اضغط مرة واحدة لتشغيل الصوت',gateB:'تشغيل',on:'متصل',off:'غير متصل',demo:'تجربة',more:'أصناف أخرى',note:'ملاحظة',sugar:{sweet:'حلوة',medium:'وسط',none:'بدون سكر'},auth:'قاعدة البيانات تطلب تسجيل دخول (auth)',done:'تم التسليم'},
+ en:{login:'Sign in to the database',user:'Username',pass:'Password',signin:'Sign in',bad:'Wrong username or password',loginS:'Sign in once with a manager or captain account; the screen stays signed in.',logout:'Sign out',tables:'tables',sent:'Sent',ago:'',lateBy:'Late',min:'min',batch:'Batch',close:'Close',opened:'Opened',waiting:'waiting',items:'items',noOrd:'No orders yet',kitchen:'Kitchen',bev:'Bar',all:'All stations',open:'orders',late:'late',table:'Table',guests:'guests',empty:'No orders',emptyS:'The screen updates by itself',gate:'Tap once to enable sound',gateB:'Start',on:'Online',off:'Offline',demo:'Demo',more:'more items',note:'Note',sugar:{sweet:'Sweet',medium:'Medium',none:'No sugar'},auth:'The database requires sign-in (auth)',done:'Delivered'},
+ tr:{login:'Veritabanına giriş',user:'Kullanıcı adı',pass:'Şifre',signin:'Giriş',bad:'Kullanıcı adı veya şifre hatalı',loginS:'Bir yönetici veya kaptan hesabıyla bir kez giriş yapın; ekran oturumu açık tutar.',logout:'Çıkış',tables:'masa',sent:'Gönderildi',ago:'',lateBy:'Gecikme',min:'dk',batch:'Sipariş',close:'Kapat',opened:'Açılış',waiting:'bekliyor',items:'ürün',noOrd:'Henüz sipariş yok',kitchen:'Mutfak',bev:'Bar',all:'Tüm istasyonlar',open:'sipariş',late:'gecikmiş',table:'Masa',guests:'misafir',empty:'Sipariş yok',emptyS:'Ekran kendiliğinden güncellenir',gate:'Sesi açmak için bir kez dokunun',gateB:'Başlat',on:'Çevrimiçi',off:'Çevrimdışı',demo:'Deneme',more:'ürün daha',note:'Not',sugar:{sweet:'Şekerli',medium:'Orta',none:'Şekersiz'},auth:'Veritabanı oturum açma istiyor (auth)',done:'Teslim edildi'}};
 const L=TX[CFG.lang];document.documentElement.lang=CFG.lang;document.documentElement.dir=CFG.lang==='ar'?'rtl':'ltr';
 const $=id=>document.getElementById(id);
 $('st').textContent=L[CFG.st]||L.kitchen;$('lOpen').textContent=L.open;$('lLate').textContent=L.late;$('eT').textContent=L.empty;$('eS').textContent=L.emptyS;$('gS').textContent=L.gate;$('gB').textContent=L.gateB;
@@ -134,19 +138,30 @@ if(CFG.dead.length===4){const [x1,y1,x2,y2]=CFG.dead;const d=document.createElem
 document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('touchmove',e=>{if(!e.target.closest('#det .db'))e.preventDefault()},{passive:false});
 
+
+/* ---------- sign-in (Firebase Auth REST, same accounts as the app) ---------- */
+const AKEY='AIzaSyBrin3-ise3Lsd7zOM5cog9SaZ4SCiMPPg';
+const LS={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}};
+let TOKEN=CFG.auth,TEXP=CFG.auth?9e15:0,NEEDLOGIN=false;
+async function refreshTok(){const rt=LS.get('kds_rt');if(!rt)return false;try{const r=await fetch('https://securetoken.googleapis.com/v1/token?key='+AKEY,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(rt)});const j=await r.json();if(!r.ok||!j.id_token)return false;TOKEN=j.id_token;TEXP=Date.now()+((+j.expires_in||3600)-300)*1000;if(j.refresh_token)LS.set('kds_rt',j.refresh_token);return true}catch(e){return false}}
+async function signIn(u,p){const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+AKEY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:String(u).trim().toLowerCase()+'@amaya.local',password:p,returnSecureToken:true})});const j=await r.json();if(!r.ok||!j.idToken)throw new Error('bad');TOKEN=j.idToken;TEXP=Date.now()+((+j.expiresIn||3600)-300)*1000;LS.set('kds_rt',j.refreshToken)}
+function showLogin(){NEEDLOGIN=true;$('gate').style.display='flex';$('gB').style.display='none';$('gS').textContent=L.loginS;$('lg').style.display='flex';$('lu').placeholder=L.user;$('lp').placeholder=L.pass;$('lb').textContent=L.signin;document.querySelector('#gate b').textContent=L.login}
+$('lg').addEventListener('submit',async()=>{$('lgE').textContent='';$('lb').disabled=true;try{await signIn($('lu').value,$('lp').value);$('lp').value='';NEEDLOGIN=false;$('lg').style.display='none';$('gate').style.display='none';audioOn();wake();load()}catch(e){$('lgE').textContent=L.bad}finally{$('lb').disabled=false}});
+
 /* ---------- data ---------- */
 let ORDERS=[],SESS={},SEEN=null,LATEWARN={},ONLINE=false;
-const aq=()=>CFG.auth?('auth='+encodeURIComponent(CFG.auth)):'';
+const aq=()=>TOKEN?('auth='+encodeURIComponent(TOKEN)):'';
 const dayStart=()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime()};
 async function getJSON(path,query){const q=[query,aq()].filter(Boolean).join('&');const r=await fetch(CFG.db+path+(q?'?'+q:''),{cache:'no-store'});const j=await r.json();if(!r.ok||(j&&j.error)){const e=new Error((j&&j.error)||('HTTP '+r.status));e.auth=r.status===401||/permission|auth/i.test(String(j&&j.error));throw e}return j}
 const vals=o=>Object.entries(o||{}).map(([k,v])=>{if(typeof v==='string'){try{v=JSON.parse(v)}catch(e){return null}}if(v&&typeof v==='object')v._k=k;return v}).filter(Boolean);
 async function load(){
  if(CFG.demo){demoTick();return}
- try{
-  const startKey='"or'+(dayStart()-36e5)+'"';
-  const [o,s]=await Promise.all([getJSON('/amaya/orders.json','orderBy="$key"&startAt='+encodeURIComponent(startKey)),getJSON('/amaya/tsess.json','orderBy="$key"&startAt='+encodeURIComponent('"ts'+(dayStart()-12*36e5)+'"'))]);
+ if(NEEDLOGIN)return;
+ if(LS.get('kds_rt')&&!CFG.auth&&Date.now()>TEXP)await refreshTok();
+ const pull=()=>{const startKey='"or'+(dayStart()-36e5)+'"';return Promise.all([getJSON('/amaya/orders.json','orderBy="$key"&startAt='+encodeURIComponent(startKey)),getJSON('/amaya/tsess.json','orderBy="$key"&startAt='+encodeURIComponent('"ts'+(dayStart()-12*36e5)+'"'))])};
+ try{let o,s;try{[o,s]=await pull()}catch(e){if(e.auth&&!CFG.auth&&await refreshTok())[o,s]=await pull();else throw e}
   SESS={};vals(s).forEach(x=>{SESS[x.id]=x});ORDERS=vals(o);setNet(true);$('err').style.display='none';
- }catch(e){setNet(false);if(e.auth){$('err').textContent=L.auth;$('err').style.display='block'}}
+ }catch(e){setNet(false);if(e.auth){if(!CFG.auth){showLogin();return}$('err').textContent=L.auth;$('err').style.display='block'}}
  draw();
 }
 function setNet(v){ONLINE=v;const n=$('net');n.textContent=CFG.demo?L.demo:v?L.on:L.off;n.classList.toggle('off',!v&&!CFG.demo)}

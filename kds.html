@@ -51,6 +51,32 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 #gate b{font-size:30px}#gate span{color:var(--dim);font-size:17px;max-width:520px;line-height:1.6}
 #gate i{font-style:normal;border:2px solid var(--fg);padding:14px 28px;border-radius:10px;font-size:22px;font-weight:800}
 #err{position:fixed;left:10px;right:10px;bottom:10px;background:var(--fg);color:var(--bg);font-weight:700;font-size:15px;padding:10px 14px;border-radius:8px;display:none;z-index:8}
+
+.tg{border:2px solid var(--fg);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;min-height:0;overflow:hidden}
+.tg .r1{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.tg .tn{font-size:clamp(34px,6vw,54px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.tg .tm{font-size:clamp(20px,3.4vw,30px);font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.tg .ln{font-size:15px;color:var(--dim)}.tg .ln b{color:var(--fg)}
+.tg .bd{margin-top:auto;font-size:16px;font-weight:700}
+.tg.late{background:var(--fg);color:var(--bg)}.tg.late .ln{color:#333}.tg.late .ln b{color:var(--bg)}
+.tg.late.blink{animation:bl 1s steps(1) infinite}
+.tg.calm{border-style:dashed;opacity:.75}
+#det{position:fixed;inset:0;background:var(--bg);z-index:7;display:none;flex-direction:column}
+#det.on{display:flex}
+#det .dh{display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:2px solid var(--fg)}
+#det .dh .tn{font-size:40px;font-weight:800;line-height:1}
+#det .dh .ln{font-size:15px;color:var(--dim)}
+#det .dh .sp{flex:1}
+#det .x{border:2px solid var(--fg);border-radius:8px;padding:8px 16px;font-size:18px;font-weight:800;background:var(--bg);color:var(--fg)}
+#det .db{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;align-content:start}
+.bt{border:2px solid var(--fg);border-radius:10px;overflow:hidden}
+.bt .bh{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-bottom:2px solid var(--fg)}
+.bt .bh .t{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.bt .bh .s{font-size:14px;font-weight:800;padding:3px 8px;border:2px solid currentColor;border-radius:4px;font-variant-numeric:tabular-nums}
+.bt.late{background:var(--fg);color:var(--bg)}.bt.late .bh{border-color:var(--bg)}.bt.late .it{border-color:#ccc}.bt.late .x2{border-color:var(--bg)}
+.bt.done{opacity:.45}
+.bt .bl{padding:2px 12px 8px}
+.bt .nt2{padding:6px 12px;font-weight:700;border-top:2px dashed currentColor}
 #top .st{white-space:nowrap}
 @media (max-width:520px){#top{gap:10px;padding:0 10px}#top .k span{display:none}#clock{font-size:20px}}
 </style>
@@ -59,13 +85,15 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 <div id="top"><span class="st" id="st"></span><div class="k"><b id="kOpen">0</b><span id="lOpen"></span></div><div class="k"><b id="kLate">0</b><span id="lLate"></span></div><span id="over"></span><div class="sp"></div><span id="net">...</span><span id="clock">--:--</span></div>
 <div id="grid"></div>
 <div id="empty"><b id="eT"></b><span id="eS"></span></div>
+<div id="det"><div class="dh"><div><div class="ln" id="dL"></div><div class="tn" id="dT"></div></div><div class="ln" id="dM"></div><div class="sp"></div><button class="x" id="dX"></button></div><div class="db" id="dB"></div></div>
 <div id="err"></div>
 <div id="gate"><b>Amaya KDS</b><span id="gS"></span><i id="gB"></i></div>
 <script>
 /*
  Amaya KDS — single-file kitchen display.
  URL options (all optional):
-   st=kitchen | bev | all     station to show (default kitchen)
+   view=tables | orders       tables grid, tap a table for its orders (default) / one ticket per order
+   st=kitchen | bev | all     station to show (default all)
    late=20                    minutes before an order turns late
    lang=ar | en | tr          interface language (default ar)
    poll=4                     seconds between refreshes
@@ -76,12 +104,12 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
    auth=TOKEN                 database auth token if the database rules require it
 */
 const Q=new URLSearchParams(location.search);
-const CFG={st:Q.get('st')||'kitchen',late:Math.max(1,+Q.get('late')||20),lang:['ar','en','tr'].includes(Q.get('lang'))?Q.get('lang'):'ar',poll:Math.max(2,+Q.get('poll')||4),tap:Q.get('tap')==='1',demo:Q.get('demo')==='1',
+const CFG={view:Q.get('view')==='orders'?'orders':'tables',st:Q.get('st')||'all',late:Math.max(1,+Q.get('late')||20),lang:['ar','en','tr'].includes(Q.get('lang'))?Q.get('lang'):'ar',poll:Math.max(2,+Q.get('poll')||4),tap:Q.get('tap')==='1',demo:Q.get('demo')==='1',
  db:(Q.get('db')||'https://amaya-runner-default-rtdb.europe-west1.firebasedatabase.app').replace(/\/+$/,''),auth:Q.get('auth')||'',dead:(Q.get('dead')||'').split(',').map(Number).filter(n=>!isNaN(n))};
 const TX={
- ar:{kitchen:'المطبخ',bev:'البار',all:'كل الأقسام',open:'طلبات',late:'متأخرة',table:'طاولة',guests:'أشخاص',empty:'لا توجد طلبات',emptyS:'الشاشة تتحدث تلقائياً',gate:'اضغط مرة واحدة لتشغيل الصوت',gateB:'تشغيل',on:'متصل',off:'غير متصل',demo:'تجربة',more:'أصناف أخرى',note:'ملاحظة',sugar:{sweet:'حلوة',medium:'وسط',none:'بدون سكر'},auth:'قاعدة البيانات تطلب تسجيل دخول (auth)',done:'تم التسليم'},
- en:{kitchen:'Kitchen',bev:'Bar',all:'All stations',open:'orders',late:'late',table:'Table',guests:'guests',empty:'No orders',emptyS:'The screen updates by itself',gate:'Tap once to enable sound',gateB:'Start',on:'Online',off:'Offline',demo:'Demo',more:'more items',note:'Note',sugar:{sweet:'Sweet',medium:'Medium',none:'No sugar'},auth:'The database requires sign-in (auth)',done:'Delivered'},
- tr:{kitchen:'Mutfak',bev:'Bar',all:'Tüm istasyonlar',open:'sipariş',late:'gecikmiş',table:'Masa',guests:'misafir',empty:'Sipariş yok',emptyS:'Ekran kendiliğinden güncellenir',gate:'Sesi açmak için bir kez dokunun',gateB:'Başlat',on:'Çevrimiçi',off:'Çevrimdışı',demo:'Deneme',more:'ürün daha',note:'Not',sugar:{sweet:'Şekerli',medium:'Orta',none:'Şekersiz'},auth:'Veritabanı oturum açma istiyor (auth)',done:'Teslim edildi'}};
+ ar:{tables:'طاولات',sent:'أُرسل',ago:'منذ',lateBy:'متأخر',min:'د',batch:'الدفعة',close:'إغلاق',opened:'فُتحت',waiting:'بالانتظار',items:'أصناف',noOrd:'لا توجد طلبات بعد',kitchen:'المطبخ',bev:'البار',all:'كل الأقسام',open:'طلبات',late:'متأخرة',table:'طاولة',guests:'أشخاص',empty:'لا توجد طلبات',emptyS:'الشاشة تتحدث تلقائياً',gate:'اضغط مرة واحدة لتشغيل الصوت',gateB:'تشغيل',on:'متصل',off:'غير متصل',demo:'تجربة',more:'أصناف أخرى',note:'ملاحظة',sugar:{sweet:'حلوة',medium:'وسط',none:'بدون سكر'},auth:'قاعدة البيانات تطلب تسجيل دخول (auth)',done:'تم التسليم'},
+ en:{tables:'tables',sent:'Sent',ago:'',lateBy:'Late',min:'min',batch:'Batch',close:'Close',opened:'Opened',waiting:'waiting',items:'items',noOrd:'No orders yet',kitchen:'Kitchen',bev:'Bar',all:'All stations',open:'orders',late:'late',table:'Table',guests:'guests',empty:'No orders',emptyS:'The screen updates by itself',gate:'Tap once to enable sound',gateB:'Start',on:'Online',off:'Offline',demo:'Demo',more:'more items',note:'Note',sugar:{sweet:'Sweet',medium:'Medium',none:'No sugar'},auth:'The database requires sign-in (auth)',done:'Delivered'},
+ tr:{tables:'masa',sent:'Gönderildi',ago:'',lateBy:'Gecikme',min:'dk',batch:'Sipariş',close:'Kapat',opened:'Açılış',waiting:'bekliyor',items:'ürün',noOrd:'Henüz sipariş yok',kitchen:'Mutfak',bev:'Bar',all:'Tüm istasyonlar',open:'sipariş',late:'gecikmiş',table:'Masa',guests:'misafir',empty:'Sipariş yok',emptyS:'Ekran kendiliğinden güncellenir',gate:'Sesi açmak için bir kez dokunun',gateB:'Başlat',on:'Çevrimiçi',off:'Çevrimdışı',demo:'Deneme',more:'ürün daha',note:'Not',sugar:{sweet:'Şekerli',medium:'Orta',none:'Şekersiz'},auth:'Veritabanı oturum açma istiyor (auth)',done:'Teslim edildi'}};
 const L=TX[CFG.lang];document.documentElement.lang=CFG.lang;document.documentElement.dir=CFG.lang==='ar'?'rtl':'ltr';
 const $=id=>document.getElementById(id);
 $('st').textContent=L[CFG.st]||L.kitchen;$('lOpen').textContent=L.open;$('lLate').textContent=L.late;$('eT').textContent=L.empty;$('eS').textContent=L.emptyS;$('gS').textContent=L.gate;$('gB').textContent=L.gateB;
@@ -104,7 +132,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 /* block touches inside a cracked area */
 if(CFG.dead.length===4){const [x1,y1,x2,y2]=CFG.dead;const d=document.createElement('div');d.style.cssText=`position:fixed;left:${Math.min(x1,x2)}%;top:${Math.min(y1,y2)}%;width:${Math.abs(x2-x1)}%;height:${Math.abs(y2-y1)}%;z-index:20`;['touchstart','touchend','click','pointerdown'].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation()},{passive:false}));document.body.appendChild(d)}
 document.addEventListener('gesturestart',e=>e.preventDefault());
-document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+document.addEventListener('touchmove',e=>{if(!e.target.closest('#det .db'))e.preventDefault()},{passive:false});
 
 /* ---------- data ---------- */
 let ORDERS=[],SESS={},SEEN=null,LATEWARN={},ONLINE=false;
@@ -135,7 +163,7 @@ const itemName=x=>{const n=x.n||{};return CFG.lang==='ar'?(n.ar||n.en||x.mid):(n
 function visible(){const today=dayKey(),now=Date.now();return ORDERS.filter(o=>!o.done&&(CFG.demo||o.day===today||now-o.at<12*36e5)).filter(o=>{const s=SESS[o.sess];return CFG.demo||!s||!s.end}).map(o=>({o,items:(o.items||[]).filter(x=>CFG.st==='all'||(x.g||'kitchen')===CFG.st)})).filter(x=>x.items.length).sort((a,b)=>a.o.at-b.o.at)}
 function fmt(ms){const s=Math.max(0,Math.floor(ms/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),r=s%60;return (h?h+':'+pad(m):pad(m))+':'+pad(r)}
 let SIG='';
-function draw(){const V=visible(),now=Date.now(),lim=CFG.late*6e4;
+function draw(){if(CFG.view==='tables')return drawTables();const V=visible(),now=Date.now(),lim=CFG.late*6e4;
  const ids=V.map(v=>v.o.id);if(SEEN===null)SEEN=new Set(ids);let fresh=false;ids.forEach(id=>{if(!SEEN.has(id)){SEEN.add(id);fresh=true}});if(fresh)chimeNew();
  V.forEach(v=>{if(now-v.o.at>lim&&!LATEWARN[v.o.id]){LATEWARN[v.o.id]=1;if(SEEN.size)chimeLate()}});
  $('kOpen').textContent=V.length;$('kLate').textContent=V.filter(v=>now-v.o.at>lim).length;
@@ -150,8 +178,44 @@ function draw(){const V=visible(),now=Date.now(),lim=CFG.late*6e4;
    <div class="its">${its.map(x=>`<div class="it"><span class="q">${x.qty}×</span><span class="n">${esc(itemName(x))}${x.opt?`<span class="o">${esc(L.sugar[x.opt]||x.opt)}</span>`:''}${x.note?`<span class="x">${esc(x.note)}</span>`:''}</span></div>`).join('')}</div>
    ${v.items.length>max?`<div class="more">+${v.items.length-max} ${L.more}</div>`:''}${o.note?`<div class="nt">${esc(o.note)}</div>`:''}</div>`}).join('')}
  tickTimers()}
-function tickTimers(){const now=Date.now(),lim=CFG.late*6e4;document.querySelectorAll('.tm[data-t]').forEach(el=>{const at=+el.dataset.t;el.textContent=fmt(now-at);const tk=el.closest('.tk');const late=now-at>lim;tk.classList.toggle('late',late);tk.classList.toggle('blink',late&&now-at<lim+60e3)});
+function tickTimers(){const now=Date.now(),lim=CFG.late*6e4;document.querySelectorAll('.tm[data-t]').forEach(el=>{const at=+el.dataset.t;el.textContent=fmt(now-at);const tk=el.closest('.tk,.tg');if(el.dataset.l==='0'){tk.classList.remove('late','blink');return}const late=now-at>lim;tk.classList.toggle('late',late);tk.classList.toggle('blink',late&&now-at<lim+60e3)});
  const d=new Date();$('clock').textContent=pad(d.getHours())+':'+pad(d.getMinutes())}
+
+
+/* ---------- tables view ---------- */
+let OPEN='';
+function tablesData(){const now=Date.now(),lim=CFG.late*6e4,today=dayKey();const by={};
+ ORDERS.forEach(o=>{if(!CFG.demo&&o.day!==today&&now-o.at>12*36e5)return;const s=SESS[o.sess];if(!CFG.demo&&s&&s.end)return;const its=(o.items||[]).filter(x=>CFG.st==='all'||(x.g||'kitchen')===CFG.st);if(!its.length)return;(by[o.sess]=by[o.sess]||[]).push(o)});
+ Object.values(SESS).forEach(s=>{if(!s.end&&(CFG.demo||s.day===today)&&!by[s.id])by[s.id]=[]});
+ return Object.entries(by).map(([sid,oo])=>{const s=SESS[sid]||{},o0=oo[0]||{};oo.sort((a,b)=>a.at-b.at);const pend=oo.filter(o=>!o.done),oldest=pend.length?pend[0].at:0;
+  const cnt=o=>(o.items||[]).filter(x=>CFG.st==='all'||(x.g||'kitchen')===CFG.st).reduce((a,x)=>a+(+x.qty||0),0);
+  return {sid,table:s.table||o0.table||'?',cn:o0.cn||'',gs:s.guests||o0.gs||'',opened:s.at||o0.at,oo,items:oo.reduce((a,o)=>a+cnt(o),0),wait:pend.reduce((a,o)=>a+cnt(o),0),oldest,late:!!oldest&&now-oldest>lim}})
+  .sort((a,b)=>(b.late-a.late)||((a.oldest||9e15)-(b.oldest||9e15))||String(a.table).localeCompare(String(b.table),undefined,{numeric:true}))}
+function drawTables(){const D=tablesData(),now=Date.now(),lim=CFG.late*6e4;
+ const ids=[];D.forEach(t=>t.oo.forEach(o=>ids.push(o.id)));if(SEEN===null)SEEN=new Set(ids);let fresh=false;ids.forEach(id=>{if(!SEEN.has(id)){SEEN.add(id);fresh=true}});if(fresh)chimeNew();
+ D.forEach(t=>t.oo.forEach(o=>{if(!o.done&&now-o.at>lim&&!LATEWARN[o.id]){LATEWARN[o.id]=1;chimeLate()}}));
+ $('kOpen').textContent=D.length;$('lOpen').textContent=L.tables;$('kLate').textContent=D.filter(t=>t.late).length;
+ $('empty').style.display=D.length?'none':'flex';
+ const G=$('grid'),W=G.clientWidth,H=G.clientHeight,cols=Math.max(2,Math.floor((W+10)/(W<520?170:210))),rows=Math.max(1,Math.floor((H+10)/(W<520?150:170))),cap=cols*rows,shown=D.slice(0,cap),hid=D.length-shown.length;
+ $('over').style.display=hid?'inline-block':'none';$('over').textContent='+'+hid;
+ const sig=JSON.stringify([cols,rows,shown.map(t=>[t.sid,t.items,t.wait,t.late,t.oo.length])]);
+ if(sig!==SIG){SIG=sig;G.style.gridTemplateColumns=`repeat(${cols},minmax(0,1fr))`;G.style.gridTemplateRows=`repeat(${rows},minmax(0,1fr))`;
+  G.innerHTML=shown.map(t=>`<div class="tg${t.late?' late':''}${t.oldest?'':' calm'}" data-sid="${esc(t.sid)}"><div class="r1"><div><div class="ln">${L.table}</div><div class="tn">${esc(t.table)}</div></div><div class="tm" data-t="${t.oldest||t.opened}" data-l="${t.oldest?1:0}">--</div></div>
+  <div class="ln">${esc(t.cn)}${t.gs?` · <b>${esc(t.gs)}</b> ${L.guests}`:''}</div><div class="bd">${t.items} ${L.items}${t.wait?` · ${t.wait} ${L.waiting}`:''}</div></div>`).join('')}
+ if(OPEN)drawDetail();tickTimers()}
+function minTxt(ms){return Math.max(0,Math.floor(ms/6e4))}
+function drawDetail(){const t=tablesData().find(x=>x.sid===OPEN);if(!t){closeDet();return}const now=Date.now(),lim=CFG.late*6e4;
+ $('dL').textContent=L.table;$('dT').textContent=t.table;$('dM').textContent=[t.cn,t.gs?t.gs+' '+L.guests:'',L.opened+' '+hhmm(t.opened)].filter(Boolean).join(' · ');$('dX').textContent=L.close;
+ const html=t.oo.length?t.oo.map((o,i)=>{const its=(o.items||[]).filter(x=>CFG.st==='all'||(x.g||'kitchen')===CFG.st),age=now-o.at,late=!o.done&&age>lim;
+  const st=o.done?L.done:late?`${L.lateBy} ${minTxt(age-lim)} ${L.min}`:`${L.ago?L.ago+' ':''}${minTxt(age)} ${L.min}`;
+  return `<div class="bt${late?' late':''}${o.done?' done':''}"><div class="bh"><span class="t">${L.batch} ${i+1} · ${L.sent} ${hhmm(o.at)}</span><span class="s">${st}</span></div><div class="bl">${its.map(x=>`<div class="it"><span class="q">${x.qty}×</span><span class="n">${esc(itemName(x))}${x.opt?`<span class="o">${esc(L.sugar[x.opt]||x.opt)}</span>`:''}${x.note?`<span class="x x2">${esc(x.note)}</span>`:''}</span></div>`).join('')}</div>${o.note?`<div class="nt2">${esc(o.note)}</div>`:''}</div>`}).join(''):`<div class="ln" style="font-size:20px;padding:20px 0">${L.noOrd}</div>`;
+ const h=JSON.stringify([t.oo.map(o=>[o.id,!!o.done,o.done||now-o.at>lim]),minTxt(now)]);if($('dB').dataset.h!==h){$('dB').dataset.h=h;$('dB').innerHTML=html}}
+const hhmm=ts=>{const d=new Date(ts);return pad(d.getHours())+':'+pad(d.getMinutes())};
+function openDet(sid){OPEN=sid;$('det').classList.add('on');$('dB').dataset.h='';drawDetail()}
+function closeDet(){OPEN='';$('det').classList.remove('on')}
+$('grid').addEventListener('click',e=>{const t=e.target.closest('.tg');if(t)openDet(t.dataset.sid)});
+$('dX').addEventListener('click',closeDet);
+setInterval(()=>{if(OPEN)drawDetail()},15000);
 
 /* ---------- optional: long-press to mark delivered ---------- */
 if(CFG.tap){let tmr=null,el=null;const clear=()=>{clearTimeout(tmr);if(el)el.classList.remove('hold');el=null};

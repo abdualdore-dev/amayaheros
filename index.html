@@ -385,6 +385,34 @@ body.auth .lg .lg-err{background:#fdecef;border-color:#f3b6c2;color:#9b1c36!impo
 .lg-d:focus-visible,.lg-btn:focus-visible,.lg-back:focus-visible,.lg-lang:focus-visible{outline-color:#8c6fcf}
 /* no icons inside the app */
 .pgh{display:block}.side .nav{gap:0}.tile{display:block!important}.kpi::before{display:none}
+
+/* ===== Order slip (80mm thermal) ===== */
+#tkOv{position:fixed;inset:0;z-index:90;background:rgba(30,22,52,.55);display:flex;flex-direction:column;align-items:center;overflow:auto;padding:16px 10px 30px;animation:fadeIn .2s ease both}
+#tkOv .tkbar{position:sticky;top:0;z-index:2;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;background:#fff;border-radius:14px;padding:10px;margin-bottom:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:100%}
+.tk{width:72mm;max-width:100%;background:#fff;color:#000;padding:4mm 3mm 6mm;margin:0 auto 14px;font-family:'Segoe UI',Tahoma,Arial,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.25);animation:pgUp .35s cubic-bezier(.2,.8,.2,1) both}
+.tk *{color:#000!important}
+.tk-brand{text-align:center;font-size:15px;font-weight:700;letter-spacing:2px}
+.tk-st{text-align:center;font-size:26px;font-weight:900;border:2px solid #000;margin:2mm 0;padding:1mm 0}
+.tk-tb{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dashed #000;padding-bottom:1.5mm}
+.tk-tb span{font-size:14px;font-weight:700}.tk-tb b{font-size:40px;font-weight:900;line-height:1}
+.tk-meta{font-size:12px;line-height:1.6;padding:1.5mm 0;border-bottom:1px dashed #000}
+.tk-meta div{display:flex;justify-content:space-between;gap:6px}
+.tk-it{display:flex;gap:2mm;align-items:baseline;padding-top:2.2mm;font-size:17px;font-weight:800;line-height:1.25}
+.tk-it .q{flex:none;min-width:11mm;font-size:20px;font-weight:900}
+.tk-en{font-size:11px;font-weight:500;direction:ltr;text-align:start;padding-inline-start:13mm}
+.tk-nt{font-size:14px;font-weight:700;padding-inline-start:13mm;margin-top:.5mm}
+.tk-nt::before{content:"* "}
+.tk-on{margin-top:3mm;border:1.5px solid #000;padding:1.5mm 2mm;font-size:14px;font-weight:700}
+.tk-ft{margin-top:3mm;border-top:1px dashed #000;padding-top:1.5mm;display:flex;justify-content:space-between;font-size:11px}
+#printArea{display:none}
+@page tkpage{size:80mm auto;margin:0}
+@media print{
+ body.tkprint>*:not(#printArea){display:none!important}
+ body.tkprint{background:#fff!important}
+ body.tkprint #printArea{display:block!important;page:tkpage}
+ body.tkprint .tk{box-shadow:none;margin:0;animation:none;width:72mm;break-after:page;page-break-after:always}
+ body.tkprint .tk:last-child{break-after:auto;page-break-after:auto}
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script></head>
 <body class="min-h-screen splashing">
@@ -2233,9 +2261,27 @@ function ordAdd(mid,d){const c=ORD.cart[mid]=ORD.cart[mid]||{qty:0,note:''};c.qt
 function ordSend(){const s=tsOpen(ORD.table),r=me();if(!s||!r)return;const items=Object.entries(ORD.cart).filter(([k,v])=>v.qty>0).map(([mid,v])=>{const i=mOne(mid);return {mid,qty:v.qty,note:String(v.note||'').trim().slice(0,200),g:i?ordGrp(i):'kitchen'}});
  if(!items.length)return toast(T('اختار صنف واحد على الأقل','Pick at least one item'));
  S.orders=S.orders||[];S.orders.push({id:'or'+Date.now()+Math.random().toString(36).slice(2,5),sess:s.id,table:s.table,rid:r.id,at:Date.now(),day:dayKey(),items,note:String(ORD.note||'').trim().slice(0,300)});
- ORD.cart={};ORD.note='';ORD.v='';ORD.sec='';save();render();toast(T('انسجل الطلب','Order recorded'))}
+ ORD.cart={};ORD.note='';ORD.v='';ORD.sec='';save();render();toast(T('انسجل الطلب','Order recorded'));tkShow(S.orders[S.orders.length-1].id)}
 function ordDel(id){if(!confirm(T('حذف هذا الطلب؟','Delete this order?')))return;const o=(S.orders||[]).find(x=>x.id===id);if(!o)return;if(!isStaff()&&(!me()||o.rid!==me().id))return;S.orders=S.orders.filter(x=>x.id!==id);save();render()}
-function ordLine(o){return `<div class="nb p-3 mb-2"><div class="flex justify-between items-center gap-2"><div class="font-bold">${hm(o.at)} · ${ordQty(o)} ${T('قطعة','pcs')}</div>${(isStaff()||(me()&&o.rid===me().id))?`<button class="btn bg-white !py-1 text-sm" onclick="ordDel('${o.id}')">${T('حذف','Delete')}</button>`:''}</div>
+/* order slip: one slip per station, preview then system print */
+const ordNo=o=>(S.orders||[]).filter(x=>x.day===o.day&&x.at<=o.at).length;
+function tkHtml(o,g){const L=(o.items||[]).filter(x=>x.g===g);if(!L.length)return '';const s=(S.tsess||[]).find(x=>x.id===o.sess)||{};
+ return `<div class="tk" dir="${S.lang==='ar'?'rtl':'ltr'}"><div class="tk-brand">amaya</div><div class="tk-st">${ordGName(g)}</div>
+ <div class="tk-tb"><span>${T('طاولة','Table')}</span><b>${esc(o.table)}</b></div>
+ <div class="tk-meta"><div><span>${T('عدد الأشخاص','Guests')}</span><b>${s.guests||'-'}</b></div><div><span>${T('الكابتن','Captain')}</span><b>${esc(nm(o.rid)||'-')}</b></div><div><span>${T('الوقت','Time')}</span><b>${hm(o.at)}</b></div><div><span>${T('التاريخ','Date')}</span><b>${dkOf(o.at)}</b></div><div><span>${T('رقم الطلب','Order no.')}</span><b>#${ordNo(o)}</b></div></div>
+ ${L.map(x=>{const i=mOne(x.mid),ar=i?i.name.ar:'?',en=i?i.name.en:'';return `<div class="tk-it"><span class="q">${x.qty} ×</span><span>${esc(S.lang==='ar'?ar:(en||ar))}</span></div>${S.lang==='ar'&&en&&en!==ar?`<div class="tk-en">${esc(en)}</div>`:''}${x.note?`<div class="tk-nt">${esc(x.note)}</div>`:''}`}).join('')}
+ ${o.note?`<div class="tk-on">${T('ملاحظة: ','Note: ')}${esc(o.note)}</div>`:''}
+ <div class="tk-ft"><span>${T('عدد القطع: ','Items: ')}${L.reduce((a,x)=>a+(+x.qty||0),0)}</span><span>Amaya Heroes</span></div></div>`}
+let TKO={id:'',g:''};
+function tkShow(id,g){const o=(S.orders||[]).find(x=>x.id===id);if(!o)return;TKO={id,g:g||''};let ov=document.getElementById('tkOv');if(!ov){ov=document.createElement('div');ov.id='tkOv';document.body.appendChild(ov)}
+ const gs=['kitchen','bev','shisha'].filter(x=>(o.items||[]).some(i=>i.g===x)),sel=TKO.g&&gs.includes(TKO.g)?[TKO.g]:gs;
+ ov.innerHTML=`<div class="tkbar"><button class="btn gr" onclick="tkPrint()">${T('طباعة','Print')}</button>${gs.length>1?`<button class="btn ${TKO.g?'bg-white':''}" onclick="tkShow('${id}','')">${T('الكل','All')} (${gs.length})</button>`+gs.map(x=>`<button class="btn ${TKO.g===x?'':'bg-white'}" onclick="tkShow('${id}','${x}')">${ordGName(x)}</button>`).join(''):''}<button class="btn bg-white" onclick="tkClose()">${T('إغلاق','Close')}</button></div>`+sel.map(x=>tkHtml(o,x)).join('');
+ ov.onclick=e=>{if(e.target===ov)tkClose()}}
+function tkClose(){const ov=document.getElementById('tkOv');if(ov)ov.remove();TKO={id:'',g:''}}
+function tkPrint(){const o=(S.orders||[]).find(x=>x.id===TKO.id);if(!o)return;const gs=['kitchen','bev','shisha'].filter(x=>(o.items||[]).some(i=>i.g===x)),sel=TKO.g&&gs.includes(TKO.g)?[TKO.g]:gs;
+ let pa=document.getElementById('printArea');if(!pa){pa=document.createElement('div');pa.id='printArea';document.body.appendChild(pa)}pa.innerHTML=sel.map(x=>tkHtml(o,x)).join('');
+ document.body.classList.add('tkprint');const done=()=>{document.body.classList.remove('tkprint');removeEventListener('afterprint',done)};addEventListener('afterprint',done);setTimeout(()=>{try{window.print()}catch(e){toast(T('الطباعة غير متاحة على هذا الجهاز','Printing is not available on this device'))}setTimeout(done,60000)},80)}
+function ordLine(o){return `<div class="nb p-3 mb-2"><div class="flex justify-between items-center gap-2"><div class="font-bold">${hm(o.at)} · ${ordQty(o)} ${T('قطعة','pcs')}</div><span class="flex gap-2"><button class="btn !py-1 text-sm" onclick="event.stopPropagation();tkShow('${o.id}')">${T('الوصل','Slip')}</button>${(isStaff()||(me()&&o.rid===me().id))?`<button class="btn bg-white !py-1 text-sm" onclick="event.stopPropagation();ordDel('${o.id}')">${T('حذف','Delete')}</button>`:''}</span></div>
  ${['kitchen','bev','shisha'].map(g=>{const L=(o.items||[]).filter(x=>x.g===g);return L.length?`<div class="text-xs text-gray-500 mt-2">${ordGName(g)}</div>`+L.map(x=>`<div class="text-sm"><b>${x.qty}</b> × ${esc(dN(x.mid))}${x.note?` <span class="text-gray-500">— ${esc(x.note)}</span>`:''}</div>`).join(''):''}).join('')}
  ${o.note?`<div class="text-sm mt-2"><b>${T('ملاحظة: ','Note: ')}</b>${esc(o.note)}</div>`:''}</div>`}
 /* captain: tables list -> guest count -> menu by station -> cart with notes */

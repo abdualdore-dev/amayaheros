@@ -959,8 +959,11 @@ async function askNotif(){try{
  try{enablePush()}catch(e){}
  render();
 }catch(e){toast(T('خطأ: ','Error: ')+(e&&e.message||''))}}
-function sysNote(title,body,urgent){try{if(!('Notification'in window)||Notification.permission!=='granted')return;const o={body:body||'',tag:'amaya-'+Date.now(),renotify:true,requireInteraction:!!urgent};try{new Notification(title||'Amaya Heroes',o);return}catch(e){}try{if('serviceWorker'in navigator&&navigator.serviceWorker){navigator.serviceWorker.ready.then(reg=>{try{reg.showNotification(title||'Amaya Heroes',o)}catch(e){}}).catch(()=>{})}}catch(e){}}catch(e){}}
+function sysNote(title,body,urgent){try{if(!('Notification'in window)||Notification.permission!=='granted')return;const o={body:body||'',tag:'amaya-'+Date.now(),renotify:true,requireInteraction:!!urgent};try{const n=new Notification(title||'Amaya Heroes',o);n.onclick=()=>{try{window.focus();if(window.amayaDesktop&&amayaDesktop.show)amayaDesktop.show()}catch(e){}};return}catch(e){}try{if('serviceWorker'in navigator&&navigator.serviceWorker){navigator.serviceWorker.ready.then(reg=>{try{reg.showNotification(title||'Amaya Heroes',o)}catch(e){}}).catch(()=>{})}}catch(e){}}catch(e){}}
 /* ---------- Push setup check (iPhone needs the app on the home screen) ---------- */
+function deskDiag(){const ok=('Notification'in window)&&Notification.permission==='granted';return `<div class="nb p-4 mb-4"><div class="font-bold mb-2">${T('الإشعارات على الكمبيوتر','Notifications on this computer')}</div><div class="flex justify-between items-center py-1 border-b border-gray-100 text-sm"><span>${T('صلاحية الإشعارات','Notification permission')}</span><span class="pill ${ok?'ok':'bad'}">${ok?T('تمام','OK'):T('لا','No')}</span></div>
+ <div class="text-sm mt-3" style="line-height:1.8">${T('على الكمبيوتر الإشعار يطلع طالما التطبيق شغال. إذا سكّرت النافذة يبقى شغال يم الساعة ويوصلك الإشعار، وينفتح لحاله ويه تشغيل الكمبيوتر. للإيقاف النهائي: كليك يمين على أيقونته يم الساعة ثم «إيقاف التطبيق نهائياً».','On a computer, notifications arrive while the app runs. Closing the window keeps it running next to the clock, and it starts with Windows. To stop it: right-click its icon near the clock, then Quit.')}</div>
+ <div class="flex gap-2 flex-wrap mt-3">${ok?'':`<button class="btn" onclick="askNotif()">${T('تفعيل','Enable')}</button>`}<button class="btn bg-white" onclick="pushTest()">${T('أرسل إشعار تجربة','Send a test notification')}</button></div></div>`}
 const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const isStandalone=()=>{try{return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true}catch(e){return false}};
 const pushTok=()=>SS.get('amaya_ptok','');
@@ -972,7 +975,7 @@ function iosGuide(){return `<div class="nb ye p-4 mb-4"><div class="font-bold mb
  <li>${T('سد Safari وافتح التطبيق من الأيقونة اللي انضافت','Close Safari and open the app from the new icon')}</li>
  <li>${T('سجل دخول واضغط «تفعيل الإشعارات» ووافق','Sign in, tap "Enable notifications" and allow')}</li></ol>
  <div class="text-xs text-gray-500 mt-2">${T('يحتاج iOS 16.4 أو أحدث.','Needs iOS 16.4 or later.')}</div></div>`}
-function pushDiag(){if(!S.session)return '';const ok=v=>`<span class="pill ${v?'ok':'bad'}">${v?T('تمام','OK'):T('لا','No')}</span>`,perm=('Notification'in window)?Notification.permission:'none';
+function pushDiag(){if(!S.session)return '';if(window.amayaDesktop)return deskDiag();const ok=v=>`<span class="pill ${v?'ok':'bad'}">${v?T('تمام','OK'):T('لا','No')}</span>`,perm=('Notification'in window)?Notification.permission:'none';
  const rows=[[T('التطبيق مثبت على الشاشة الرئيسية','App installed on home screen'),isIOS()?isStandalone():true],[T('صلاحية الإشعارات','Notification permission'),perm==='granted'],[T('هذا الجهاز مسجل لاستلام الإشعارات','This device is registered'),pushReady()],[T('الإرسال اللحظي','Instant sending'),!!((S.cfg&&S.cfg.pushUrl)||PUSH_WORKER)]];
  return `<div class="nb p-4 mb-4"><div class="font-bold mb-2">${T('فحص الإشعارات على هذا الجهاز','Notification check on this device')}</div>${rows.map(r=>`<div class="flex justify-between items-center py-1 border-b border-gray-100 text-sm"><span>${r[0]}</span>${ok(r[1])}</div>`).join('')}
  <div class="flex gap-2 flex-wrap mt-3">${pushReady()?'':`<button class="btn" onclick="askNotif()">${T('تفعيل / إعادة تسجيل الجهاز','Enable / re-register device')}</button>`}<button class="btn bg-white" onclick="pushTest()">${T('أرسل إشعار تجربة','Send a test notification')}</button></div>
@@ -1043,6 +1046,7 @@ const FBCFG={apiKey:'AIzaSyBrin3-ise3Lsd7zOM5cog9SaZ4SCiMPPg',authDomain:'amaya-
 const VAPID_KEY='BEBzEMNox1O-ZzdIdct4NikuX8DXaobh3WVmAS2hINR8bPqd3veH9QutRZiT8d8yf14ZDiosHv_rFW6mh9QAajg';
 let PUSH_BUSY=false;
 async function enablePush(){
+ if(window.amayaDesktop)return;
  if(PUSH_BUSY||!window.firebase||!firebase.messaging||!S.session)return;
  if(S.session.role==='runner'&&!notifOn(S.session.id)){toast(T('التنبيهات متوقفة لحسابك من الإدارة','Alerts are turned off for your account'));return}
  if(!('serviceWorker' in navigator)||!('Notification' in window))return toast(T('المتصفح لا يدعم الإشعارات','Browser does not support notifications'));

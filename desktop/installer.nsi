@@ -1,7 +1,7 @@
 Unicode true
 !include "MUI2.nsh"
 !define APP "Amaya Heroes"
-!define VER "1.0.0"
+!define VER "1.1.0"
 Name "${APP}"
 OutFile "dist/AmayaHeroes-Setup-${VER}.exe"
 InstallDir "$LOCALAPPDATA\Programs\${APP}"
@@ -9,7 +9,7 @@ RequestExecutionLevel user
 SetCompressor /SOLID lzma
 SetCompressorDictSize 64
 BrandingText "${APP} ${VER}"
-VIProductVersion "1.0.0.0"
+VIProductVersion "1.1.0.0"
 VIAddVersionKey "ProductName" "${APP}"
 VIAddVersionKey "FileDescription" "${APP} Setup"
 VIAddVersionKey "CompanyName" "Amaya"

@@ -1,18 +1,23 @@
 // Amaya Heroes desktop: a window around the live app, with silent slip printing.
-const { app, BrowserWindow, Menu, shell, ipcMain, session, dialog } = require('electron');
+const { app, BrowserWindow, Menu, Tray, nativeImage, shell, ipcMain, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
 const APP_URL = 'https://abdualdore-dev.github.io/amayaheros/';
 const APP_ORIGIN = new URL(APP_URL).origin;
-let win = null;
+let win = null, tray = null, quitting = false;
+const HIDDEN = process.argv.includes('--hidden');
+app.setAppUserModelId('Amaya Heroes');
 
 const cfgFile = () => path.join(app.getPath('userData'), 'desktop.json');
 const cfgRead = () => { try { return JSON.parse(fs.readFileSync(cfgFile(), 'utf8')); } catch (e) { return {}; } };
 const cfgWrite = c => { try { fs.writeFileSync(cfgFile(), JSON.stringify(c)); } catch (e) {} };
 
 if (!app.requestSingleInstanceLock()) app.quit();
-app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
+function showWin() { if (!win) return; if (win.isMinimized()) win.restore(); win.show(); win.focus(); }
+app.on('second-instance', () => showWin());
+const autoStart = () => { try { return app.getLoginItemSettings().openAtLogin; } catch (e) { return false; } };
+const setAutoStart = on => { try { app.setLoginItemSettings({ openAtLogin: !!on, args: ['--hidden'] }); } catch (e) {} };
 
 function load() { win.loadURL(APP_URL).catch(() => {}); }
 
@@ -25,8 +30,9 @@ async function buildMenu() {
     { label: 'Amaya Heroes', submenu: [
       { label: 'تحديث الصفحة', accelerator: 'CmdOrCtrl+R', click: () => load() },
       { label: 'ملء الشاشة', accelerator: 'F11', click: () => win.setFullScreen(!win.isFullScreen()) },
+      { label: 'يشتغل ويه تشغيل الكمبيوتر', type: 'checkbox', checked: autoStart(), click: m => setAutoStart(m.checked) },
       { type: 'separator' },
-      { label: 'خروج', role: 'quit' },
+      { label: 'إيقاف التطبيق نهائياً', click: () => { quitting = true; app.quit(); } },
     ] },
     { label: 'طابعة الوصولات', submenu: [
       { label: 'الطابعة الافتراضية للجهاز', type: 'radio', checked: !cur, click: () => pick('') },
@@ -42,9 +48,16 @@ function createWindow() {
   win = new BrowserWindow({
     width: 1280, height: 820, minWidth: 380, minHeight: 600, show: false, backgroundColor: '#efe9fb',
     icon: path.join(__dirname, 'icon.png'), title: 'Amaya Heroes',
-    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false },
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false, backgroundThrottling: false },
   });
-  win.once('ready-to-show', () => { win.maximize(); win.show(); });
+  win.once('ready-to-show', () => { win.maximize(); if (!HIDDEN) win.show(); });
+  // closing the window keeps the app running next to the clock, so notifications keep arriving
+  win.on('close', e => {
+    if (quitting) return;
+    e.preventDefault(); win.hide();
+    const c = cfgRead();
+    if (!c.trayTold && tray) { c.trayTold = 1; cfgWrite(c); try { tray.displayBalloon({ title: 'Amaya Heroes', content: 'التطبيق بعده شغال يم الساعة حتى توصلك الإشعارات. للإيقاف: كليك يمين على الأيقونة ثم إيقاف.' }); } catch (x) {} }
+  });
   win.on('page-title-updated', e => e.preventDefault());
 
   // only the app itself runs inside the window; any other link opens in the normal browser
@@ -62,6 +75,18 @@ function createWindow() {
 }
 
 ipcMain.handle('amaya-retry', () => { load(); return true; });
+ipcMain.handle('amaya-show', e => { if (win && e.sender === win.webContents) showWin(); return true; });
+function createTray() {
+  tray = new Tray(nativeImage.createFromPath(path.join(__dirname, 'icon.png')).resize({ width: 16, height: 16 }));
+  tray.setToolTip('Amaya Heroes');
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: 'فتح Amaya Heroes', click: () => showWin() },
+    { type: 'separator' },
+    { label: 'إيقاف التطبيق نهائياً', click: () => { quitting = true; app.quit(); } },
+  ]));
+  tray.on('click', () => showWin());
+}
+app.on('before-quit', () => { quitting = true; });
 ipcMain.handle('amaya-print', async (e, opts) => {
   if (!win || e.sender !== win.webContents) return { ok: false, error: 'bad sender' };
   try { if (new URL(e.sender.getURL()).origin !== APP_ORIGIN) return { ok: false, error: 'bad origin' }; } catch (x) { return { ok: false, error: 'bad origin' }; }
@@ -77,6 +102,9 @@ ipcMain.handle('amaya-print', async (e, opts) => {
 
 app.whenReady().then(async () => {
   try { await session.defaultSession.clearCache(); } catch (e) {}
+  const c = cfgRead();
+  if (!c.autoSet) { c.autoSet = 1; cfgWrite(c); setAutoStart(true); }
+  createTray();
   createWindow();
 });
-app.on('window-all-closed', () => app.quit());
+app.on('window-all-closed', () => { if (quitting) app.quit(); });

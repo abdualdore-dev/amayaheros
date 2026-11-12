@@ -417,6 +417,7 @@ body.auth .lg .lg-err{background:#fdecef;border-color:#f3b6c2;color:#9b1c36!impo
 .capch{max-width:40rem;margin:6vh auto 0;text-align:center}
 .capbig{padding:2.2rem 1rem!important;text-align:center;cursor:pointer;width:100%}
 .capbig-t{font-size:1.7rem;font-weight:900;margin-bottom:.35rem}
+.lg-inst{margin-top:1rem;width:100%;max-width:27rem;border-radius:12px;padding:.7rem;font-weight:700;cursor:pointer;background:rgba(255,255,255,.7);border:1px dashed #a78bda;color:#3b2a66!important;transition:background .2s}.lg-inst:hover{background:#fff}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script></head>
 <body class="min-h-screen splashing">
@@ -572,6 +573,8 @@ const LGIC={
  captain:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M9 15h3"/></svg>',
  host:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="m9 15 2 2 4-4"/></svg>'};
 const LGDEPTS=()=>[['mgr',T('المدير','Manager'),T('الإدارة والتقارير والإعدادات','Management, reports, settings')],['runner',T('الرنر','Runner'),T('الحضور والاستراحات والنقاط','Attendance, breaks, points')],['captain',T('الكابتن','Captain'),T('الطاولات والشكاوى والمبيعات','Tables, complaints, sales')],['host',T('الاستقبال','Reception'),T('الحجوزات والضيوف','Bookings and guests')]];
+let INSTP=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();INSTP=e;if(!S.session)render()});addEventListener('appinstalled',()=>{INSTP=null;toast(T('تم تثبيت التطبيق','App installed'));render()});
+async function appInstall(){if(!INSTP)return toast(T('من قائمة المتصفح اختار: تثبيت التطبيق','From the browser menu choose: Install app'));INSTP.prompt();try{await INSTP.userChoice}catch(e){}INSTP=null;render()}
 let LGD=null,LGERR='',LGUS='',LGPW='',LGANIM=true,LGBUSY=false;const LGLAST=()=>SS.get('amaya_ldept','');
 /* which login section an account belongs to: mgr for owner/managers, else the staff department */
 function lgDeptOf(u){u=String(u||'').trim();if(!u)return '';if(u==='abdurhman'||(S.mgrs||[]).some(m=>m.user===u))return 'mgr';const r=(S.runners||[]).find(x=>x.user===u);return r?(r.dept||'runner'):''}
@@ -589,7 +592,7 @@ function vLogin(){const an=LGANIM?' anim':'',last=LGLAST();
  const top=`<div class="stars"><i style="left:12%;top:14%;--z:16px;--d:3.4s;--w:0.2s"></i><i style="left:84%;top:10%;--z:22px;--d:4s;--w:0.9s"></i><i style="left:70%;top:28%;--z:12px;--d:3s;--w:1.6s"></i><i style="left:22%;top:62%;--z:18px;--d:3.8s;--w:0.5s"></i><i style="left:88%;top:58%;--z:14px;--d:3.2s;--w:1.2s"></i><i style="left:46%;top:8%;--z:10px;--d:2.8s;--w:2s"></i><i style="left:8%;top:86%;--z:20px;--d:4.2s;--w:0.7s"></i><i style="left:62%;top:82%;--z:12px;--d:3.1s;--w:1.9s"></i><i style="left:34%;top:36%;--z:9px;--d:2.6s;--w:2.4s"></i><i style="left:94%;top:90%;--z:16px;--d:3.6s;--w:0.3s"></i></div><button class="lg-lang" onclick="toggleLang()">${S.lang==='ar'?'English':'العربية'}</button><div class="lg-brand">${LGMARK('lgG2')}<div class="lg-name">Amaya Heroes</div><div class="lg-sub">${t('sub')}</div></div>`;
  if(!LGD)return `<div class="lg${an}">${top}<div class="lg-card"><div class="lg-h" style="margin-bottom:1rem">${T('اختار قسمك','Choose your section')}</div>
   <div class="lg-grid">${LGDEPTS().map(d=>`<button class="lg-d${d[0]===last?' last':''}" onclick="lgPick('${d[0]}')"><span class="lg-ic">${LGIC[d[0]]}</span><span class="lg-dn">${d[1]}</span></button>`).join('')}</div></div>
-  <div class="lg-foot">${T('مطعم أمايا','Amaya Restaurant')} &middot; ${new Date().getFullYear()}</div></div>`;
+  ${INSTP&&!isStandalone()?`<button class="lg-inst" onclick="appInstall()">${T('تثبيت التطبيق على هذا الجهاز','Install the app on this device')}</button>`:''}<div class="lg-foot">${T('مطعم أمايا','Amaya Restaurant')} &middot; ${new Date().getFullYear()}</div></div>`;
  const d=LGDEPTS().find(x=>x[0]===LGD)||LGDEPTS()[0],err=LGERR||(loginErr?t('bad'):'');
  return `<div class="lg step">${top}<div class="lg-card"><button class="lg-back" onclick="lgBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>${T('كل الأقسام','All sections')}</button>
   <div class="lg-who"><span class="lg-ic">${LGIC[d[0]]}</span><div class="lg-h" style="margin:0">${T('دخول ','Sign in: ')}${d[1]}</div></div>

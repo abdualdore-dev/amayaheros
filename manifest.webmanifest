@@ -6,11 +6,11 @@
  "scope": "./",
  "display": "standalone",
  "orientation": "any",
- "background_color": "#2b2950",
- "theme_color": "#2b2950",
+ "background_color": "#efe9fb",
+ "theme_color": "#efe9fb",
  "lang": "ar",
  "dir": "rtl",
- "description": "إدارة كادر الرنرات - مطعم أمايا بغداد",
+ "description": "نظام إدارة كادر مطعم أمايا: الحضور، الطلبات، الطاولات والتقارير",
  "icons": [
   {
    "src": "icon-192.png",
@@ -30,5 +30,9 @@
    "type": "image/png",
    "purpose": "maskable"
   }
+ ],
+ "display_override": [
+  "standalone",
+  "minimal-ui"
  ]
 }

@@ -1,0 +1,19 @@
+{
+  "name": "amaya-heroes",
+  "productName": "Amaya Heroes",
+  "version": "1.0.0",
+  "description": "Amaya Heroes desktop app",
+  "author": "Amaya",
+  "main": "main.js",
+  "scripts": { "dist": "electron-builder --win nsis --x64" },
+  "devDependencies": { "electron": "^33.2.0", "electron-builder": "^25.1.8", "resedit": "^2.0.2", "pe-library": "^1.0.1" },
+  "build": {
+    "appId": "iq.amaya.heroes",
+    "productName": "Amaya Heroes",
+    "files": ["main.js", "preload.js", "offline.html", "icon.png"],
+    "directories": { "output": "dist", "buildResources": "build" },
+    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }], "icon": "build/icon.ico", "signAndEditExecutable": false, "artifactName": "AmayaHeroes-Setup-${version}.${ext}" },
+    "nsis": { "oneClick": true, "perMachine": false, "createDesktopShortcut": true, "createStartMenuShortcut": true, "shortcutName": "Amaya Heroes", "installerIcon": "build/icon.ico", "uninstallerIcon": "build/icon.ico", "runAfterFinish": true },
+    "afterPack": "./afterPack.js"
+  }
+}

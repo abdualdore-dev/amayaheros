@@ -496,12 +496,13 @@ body{font-weight:400}
 .bk-svc{display:flex;gap:.5rem;align-items:center;margin-top:.9rem;font-size:.92rem}
 .bk-tot{margin-top:1rem;border-top:1px solid #ece7f6;padding-top:.7rem}.bk-tot div{display:flex;justify-content:space-between;padding:.25rem 0;font-variant-numeric:tabular-nums}
 .bk-big{font-size:1.25rem;border-top:1px dashed #d8cff0;margin-top:.4rem;padding-top:.6rem!important}.bk-big b{font-weight:800}
-.bk-pay{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem}
+.bk-pay{display:grid;grid-template-columns:repeat(2,1fr);gap:.4rem}
 .op-p2{height:50px;font-weight:700!important}
 .bl-it{display:grid;grid-template-columns:34px 1fr auto;gap:6px;padding:5px 0;border-bottom:1px dotted #000;font-size:13px}.bl-it .q{font-weight:800}.bl-it .p{font-weight:700}
 .bl-tot{margin-top:8px}.bl-tot div{display:flex;justify-content:space-between;padding:3px 0;font-size:13px}.bl-big{font-size:17px!important;font-weight:800;border-top:2px solid #000;margin-top:4px;padding-top:6px!important}
 .tk-ft{text-align:center;font-size:12px;margin-top:10px}
-@media (max-width:999px){.bk-wrap{grid-template-columns:1fr}.bk-side{position:static}.bk-h,.bk-l{grid-template-columns:minmax(0,1fr) 108px 80px 90px;padding:.6rem .8rem;gap:.4rem}}
+@media (max-width:999px){.bk-wrap{grid-template-columns:1fr}.bk-side{position:static}}
+@media (max-width:640px){.bk-h{display:none}.bk-l{grid-template-columns:auto 1fr auto;grid-template-areas:'n n n' 'q p s';padding:.8rem 1rem;gap:.5rem .8rem}.bk-n{grid-area:n}.bk-q{grid-area:q}.bk-p{grid-area:p;text-align:start;color:#8f88a3}.bk-s{grid-area:s}.bk-sz{width:100%}}
 /* sales report */
 .zr-ks{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.8rem;margin-bottom:1rem}
 .zr-k{padding:1rem 1.2rem!important}.zr-kv{font-size:1.7rem;font-weight:700;line-height:1.25;font-variant-numeric:tabular-nums}
@@ -2716,8 +2717,8 @@ async function zExcel(){try{await loadExcel()}catch(e){return toast(T('تعذّ�
 let KM='open',KSEL='',KPRT=null;
 const KDISC=()=>[['','',T('بدون خصم','No discount',"İndirim yok")],['p10',10,T('خصم 10%','10% discount',"%10 indirim")],['p15',15,T('خصم 15%','15% discount',"%15 indirim")],['p20',20,T('خصم 20%','20% discount',"%20 indirim")],['p30',30,T('خصم 30%','30% discount',"%30 indirim")],['p35',35,T('خصم 35%','35% discount',"%35 indirim")],['p40',40,T('خصم 40%','40% discount',"%40 indirim")],['amt',0,T('خصم بمبلغ','Amount discount',"Tutar indirimi")],['empl',0,T('خصم موظف','Employee discount',"Personel indirimi")],['comp',100,T('ضيافة المطعم (مجاناً)','Complimentary (free)',"İkram (ücretsiz)")]];
 const kDiscName=t=>(KDISC().find(x=>x[0]===t)||[,,''])[2];
-const PAYS=()=>[['cash',T('نقداً','Cash',"Nakit")],['card',T('بطاقة','Card',"Kart")],['cari',T('حساب آجل','On account',"Cari")]];
-const kPayName=p=>(PAYS().find(x=>x[0]===p)||[,''])[1];
+const PAYS=()=>[['cash',T('نقداً','Cash',"Nakit")],['master','Mastercard','Mastercard'],['visa','Visa','Visa'],['cari',T('حساب آجل','On account',"Cari")]];
+const kPayName=p=>p==='card'?T('بطاقة','Card',"Kart"):(PAYS().find(x=>x[0]===p)||[,''])[1];
 const isCashier=()=>{const r=me();return !!(r&&(r.dept||'runner')==='cashier')};
 const canBill=()=>isStaff()||isCashier();
 function billOf(sid){return (S.bills||[]).find(b=>b.sess===sid&&b.status!=='void')}
@@ -2775,7 +2776,7 @@ function cashRoot(){if(KSEL){const s=(S.tsess||[]).find(x=>x.id===KSEL);if(s)ret
  const head=`<div class="nb op-kpi" style="grid-template-columns:repeat(4,1fr)">${kp(T('مفتوحة','Open',"Açık"),open.length)}${kp(T('مدفوعة اليوم','Paid today',"Bugün ödenen"),paid.length)}${kp(T('المقبوض','Collected',"Tahsil edilen"),money(paid.reduce((a,b)=>a+(+b.total||0),0)))}${kp(T('الخصومات','Discounts',"İndirimler"),money(paid.reduce((a,b)=>a+(+b.dsc||0),0)))}</div>`;
  if(KM==='live')return head+seg+omLive();
  if(KM==='bills'){const L=tb.slice().sort((a,b)=>(b.paidAt||b.upd||b.at)-(a.paidAt||a.upd||a.at));const byPay=PAYS().map(([k,l])=>[l,paid.filter(b=>b.pay===k).reduce((a,b)=>a+(+b.total||0),0)]);
-  return head+seg+`<div class="nb p-4 mb-3 flex gap-6 flex-wrap">${byPay.map(([l,v])=>`<div><div class="text-sm text-gray-500">${l}</div><div class="text-xl font-bold">${money(v)}</div></div>`).join('')}</div><div class="nb op-list">${L.map(b=>`<div class="op-row" style="cursor:pointer" onclick="KSEL='${b.sess}';render()"><span><b>${T('طاولة ','Table ',"Masa ")}${esc(b.table)}</b> · ${esc(nm(b.rid))}${b.disc&&b.disc.t?` · <span class="text-gray-500">${kDiscName(b.disc.t)}</span>`:''}</span><span class="flex gap-2 items-center"><b>${money(b.total||0)}</b><span class="pill ${b.status==='paid'?'ok':b.status==='void'?'bad':'warn'}">${b.status==='paid'?kPayName(b.pay):b.status==='void'?T('ملغى','Void',"İptal"):T('غير مدفوع','Unpaid',"Ödenmedi")}</span>${b.status==='paid'&&isStaff()?`<button class="btn bg-white !py-1 text-sm" onclick="event.stopPropagation();bVoidBill('${b.id}')">${T('إلغاء','Void',"İptal")}</button>`:''}</span></div>`).join('')||`<div class="op-empty">${T('لا توجد حسابات اليوم','No bills today',"Bugün hesap yok")}</div>`}</div>`}
+  return head+seg+`<div class="nb op-kpi" style="grid-template-columns:repeat(4,1fr)">${byPay.map(([l,v])=>`<div><b>${money(v)}</b><span>${l}</span></div>`).join('')}</div><div class="nb op-list">${L.map(b=>`<div class="op-row" style="cursor:pointer" onclick="KSEL='${b.sess}';render()"><span><b>${T('طاولة ','Table ',"Masa ")}${esc(b.table)}</b> · ${esc(nm(b.rid))}${b.disc&&b.disc.t?` · <span class="text-gray-500">${kDiscName(b.disc.t)}</span>`:''}</span><span class="flex gap-2 items-center"><b>${money(b.total||0)}</b><span class="pill ${b.status==='paid'?'ok':b.status==='void'?'bad':'warn'}">${b.status==='paid'?kPayName(b.pay):b.status==='void'?T('ملغى','Void',"İptal"):T('غير مدفوع','Unpaid',"Ödenmedi")}</span>${b.status==='paid'&&isStaff()?`<button class="btn bg-white !py-1 text-sm" onclick="event.stopPropagation();bVoidBill('${b.id}')">${T('إلغاء','Void',"İptal")}</button>`:''}</span></div>`).join('')||`<div class="op-empty">${T('لا توجد حسابات اليوم','No bills today',"Bugün hesap yok")}</div>`}</div>`}
  return head+seg+(open.length?`<div class="op-tbls">${open.map(s=>{const b=billOf(s.id),c=billCalc(s,b);return `<button class="op-tb on" onclick="KSEL='${s.id}';render()"><span class="lb">${T('طاولة','Table',"Masa")}</span><b>${esc(s.table)}</b><span class="mt">${esc(nm(s.rid))} · ${s.guests} ${T('أشخاص','guests',"misafir")}</span><span class="mt"><b>${money(c.total)}</b>${b&&b.status==='printed'?' · '+T('طُبع','printed',"yazdırıldı"):''}</span></button>`}).join('')}</div>`:`<div class="nb p-6 text-center text-gray-500">${T('لا توجد طاولات مفتوحة','No open tables',"Açık masa yok")}</div>`)}
 /* manager view of bills */
 let BV='cash';

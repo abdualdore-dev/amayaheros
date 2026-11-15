@@ -7,8 +7,8 @@ messaging.onBackgroundMessage(payload => {
   const ar = (self.navigator && self.navigator.language || '').startsWith('ar');
   const title = ar ? (d.title_ar || d.title_en) : (d.title_en || d.title_ar);
   const body = ar ? (d.body_ar || d.body_en) : (d.body_en || d.body_ar);
-  const orders = ['ready', 'adj', 'comp', 'mgmt', 'move', 'del'].includes(d.kind);
-  self.registration.showNotification(title || 'Amaya Heroes', { body: body || '', tag: d.kind === 'ready' ? 'amaya-ready-' + Date.now() : 'amaya', renotify: true, vibrate: [200, 100, 200], dir: ar ? 'rtl' : 'ltr', data: { app: orders ? 'orders.html' : '' } });
+  const orders = ['ready', 'onway', 'adj', 'comp', 'mgmt', 'move', 'del'].includes(d.kind);
+  self.registration.showNotification(title || 'Amaya Heroes', { body: body || '', tag: ['ready', 'pick', 'onway'].includes(d.kind) ? 'amaya-' + d.kind + '-' + Date.now() : 'amaya', renotify: true, vibrate: [200, 100, 200], dir: ar ? 'rtl' : 'ltr', data: { app: orders ? 'orders.html' : '' } });
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();

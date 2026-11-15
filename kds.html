@@ -192,7 +192,7 @@ async function load(){
  try{let o,s,a;try{[o,s,a]=await pull()}catch(e){if(e.auth&&!CFG.auth&&await refreshTok())[o,s,a]=await pull();else throw e}
   SESS={};vals(s).forEach(x=>{SESS[x.id]=x});ASG={};Object.entries(a||{}).forEach(([k,v])=>{if(typeof v==='string'){try{v=JSON.parse(v)}catch(e){v=null}}if(v)ASG[k]=v});ORDERS=vals(o).map(x=>{const p=PEND[x.id];if(p&&p.sent){x.ready=Object.assign({},x.ready,p.sent)}return x});setNet(true);$('err').style.display='none';
  }catch(e){setNet(false);if(e.auth){if(!CFG.auth){showLogin();return}$('err').textContent=L.auth;$('err').style.display='block'}}
- draw();prScan();
+ draw();prScan();rdRemind();
 }
 function setNet(v){ONLINE=v;const n=$('net');n.textContent=CFG.demo?L.demo:v?L.on:L.off;n.classList.toggle('off',!v&&!CFG.demo)}
 
@@ -233,6 +233,13 @@ async function rdNotify(o,sts,now){const s=SESS[o.sess]||{},table=s.table||o.tab
  if(cap){const names=sts.map(g=>(ST3[g]||ST3.kitchen));notes.push(mkN(cap,'ready',{ar:'طلب طاولة '+table+' جاهز',en:'Table '+table+' order is ready',tr:'Masa '+table+' siparişi hazır'},{ar:'جهز من '+names.map(x=>x.ar).join(' و')+' وراح يوصلك. جهّز الطاولة.',en:'Ready from '+names.map(x=>x.en).join(' and ')+' and on its way. Get the table ready.',tr:names.map(x=>x.tr).join(' ve ')+' hazırladı, geliyor. Masayı hazırlayın.'}))}
  await Promise.all(notes.map(n=>fetch(CFG.db+'/amaya/notes/'+n.id+'.json'+(q?'?'+q:''),{method:'PUT',body:JSON.stringify(n)})));
  if(CFG.push&&notes.length)try{fetch(CFG.push+'/kick',{method:'POST',keepalive:true}).catch(()=>{})}catch(e){}}
+async function rdRemind(){if(CFG.demo||CFG.ro)return;const now=Date.now(),today=dayKey(),q=aq();
+ for(const o of ORDERS){if(o.done||!o.ready||o.day!==today)continue;for(const g of myStations(o)){const rs=RUNST[g];if(!rs||!o.ready[g]||(o.picked&&o.picked[g])||(o.remind&&o.remind[g])||now-o.ready[g]<2*6e4)continue;
+  o.remind=Object.assign({},o.remind,{[g]:now});
+  try{const r=await fetch(CFG.db+'/amaya/orders/'+encodeURIComponent(o._k||o.id)+'.json'+(q?'?'+q:''),{method:'PATCH',body:JSON.stringify({['remind/'+g]:now})});if(!r.ok)continue}catch(e){continue}
+  const s=SESS[o.sess]||{},table=s.table||o.table,S3=ST3[g]||ST3.kitchen,runners=Object.keys(ASG).filter(k=>ASG[k]&&ASG[k].st===rs&&ASG[k].day===today);
+  const notes=(runners.length?runners:['staff']).map(to=>({id:'n'+now+Math.random().toString(36).slice(2,6),at:now,to,kind:runners.length?'pick':'ready',title:{ar:'تذكير: طلب طاولة '+table+' ينتظر في '+S3.ar,en:'Reminder: table '+table+' order is waiting at '+S3.en,tr:'Hatırlatma: masa '+table+' siparişi '+S3.tr+' bekliyor'},body:{ar:'جاهز من '+Math.floor((now-o.ready[g])/6e4)+' دقائق ولم يستلمه أحد.',en:'Ready for '+Math.floor((now-o.ready[g])/6e4)+' minutes and nobody picked it up.',tr:Math.floor((now-o.ready[g])/6e4)+' dakikadır hazır, kimse almadı.'},read:{},sess:o.sess,ord:o.id}));
+  try{await Promise.all(notes.map(x=>fetch(CFG.db+'/amaya/notes/'+x.id+'.json'+(q?'?'+q:''),{method:'PUT',body:JSON.stringify(x)})));if(CFG.push)fetch(CFG.push+'/kick',{method:'POST',keepalive:true}).catch(()=>{})}catch(e){}}}}
 $('grid').addEventListener('click',e=>{const b=e.target.closest('[data-rd]');if(b){e.stopPropagation();rdPress(b.dataset.rd)}},true);
 $('dB').addEventListener('click',e=>{const b=e.target.closest('[data-rd]');if(b)rdPress(b.dataset.rd)});
 

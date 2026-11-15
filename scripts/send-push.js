@@ -66,7 +66,7 @@ async function main() {
       const r = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
         method: 'POST',
         headers: { authorization: 'Bearer ' + tok, 'content-type': 'application/json' },
-        body: JSON.stringify({ message: { token: x.t, data, webpush: { headers: { Urgency: 'high' } } } }),
+        body: JSON.stringify({ message: { token: x.t, data, android: { priority: 'HIGH', ttl: '3600s' }, webpush: { headers: { Urgency: 'high' } } } }),
       });
       if (r.ok) { sent++; continue; }
       failed++;

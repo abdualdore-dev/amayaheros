@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ch_orders">الطلبات</string>
+    <string name="ch_orders_desc">طلبات جاهزة واستلام وتسليم، بصوت قوي واهتزاز طويل</string>
+    <string name="ch_general">إشعارات عامة</string>
+</resources>

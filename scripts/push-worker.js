@@ -70,7 +70,7 @@ async function sendNew(env) {
     };
     for (const x of targets) jobs.push(fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
       method: 'POST', headers: { authorization: 'Bearer ' + tok, 'content-type': 'application/json' },
-      body: JSON.stringify({ message: { token: x.t, data, webpush: { headers: { Urgency: 'high', TTL: '3600' } } } }),
+      body: JSON.stringify({ message: { token: x.t, data, android: { priority: 'HIGH', ttl: '3600s' }, webpush: { headers: { Urgency: 'high', TTL: '3600' } } } }),
     }).then(async r => {
       if (r.ok) { sent++; return; }
       failed++;

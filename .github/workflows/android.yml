@@ -1,0 +1,57 @@
+name: Android apps
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
+      - name: Build both apps
+        working-directory: android
+        run: gradle assembleOrdersRelease assembleStaffRelease --no-daemon --stacktrace 2>&1 | tee build.log
+
+      - name: Publish the download links
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp android/app/build/outputs/apk/orders/release/app-orders-release.apk amaya-orders.apk
+          cp android/app/build/outputs/apk/staff/release/app-staff-release.apk amaya-staff.apk
+          gh release delete android-latest -y --cleanup-tag || true
+          gh release create android-latest amaya-orders.apk amaya-staff.apk \
+            --title "Amaya Android apps (build ${{ github.run_number }})" \
+            --notes "طلبات أمايا: amaya-orders.apk — أمايا للكادر: amaya-staff.apk" --latest
+          gh release delete android-build-log -y --cleanup-tag || true
+
+      - name: Keep the build log when it fails
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete android-build-log -y --cleanup-tag || true
+          tail -c 200000 android/build.log > build-log.txt || echo "no log" > build-log.txt
+          gh release create android-build-log build-log.txt --title "Android build failed (${{ github.run_number }})" --notes "Build log" --prerelease

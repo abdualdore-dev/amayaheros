@@ -1,0 +1,76 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Push notifications need google-services.json from the Firebase console (Project settings > Your apps > Android).
+// Without it the apps still build and work; only notifications while the app is closed are missing.
+def hasFirebase = file('google-services.json').exists()
+if (hasFirebase) {
+    apply plugin: 'com.google.gms.google-services'
+}
+
+android {
+    namespace 'com.amaya.app'
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 24
+        targetSdk 34
+        versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int)
+        versionName "1.0." + (System.getenv('GITHUB_RUN_NUMBER') ?: '0')
+        buildConfigField 'boolean', 'HAS_FIREBASE', hasFirebase ? 'true' : 'false'
+    }
+
+    flavorDimensions 'app'
+    productFlavors {
+        orders {
+            dimension 'app'
+            applicationId 'com.amaya.orders'
+            resValue 'string', 'app_name', 'طلبات أمايا'
+            buildConfigField 'String', 'START_URL', '"https://abdualdore-dev.github.io/amayaheros/orders.html"'
+            buildConfigField 'boolean', 'ORDERS_APP', 'true'
+        }
+        staff {
+            dimension 'app'
+            applicationId 'com.amaya.staff'
+            resValue 'string', 'app_name', 'أمايا'
+            buildConfigField 'String', 'START_URL', '"https://abdualdore-dev.github.io/amayaheros/"'
+            buildConfigField 'boolean', 'ORDERS_APP', 'false'
+        }
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('../amaya-release.keystore')
+            storePassword System.getenv('AMAYA_KEYSTORE_PASS') ?: 'amaya-heroes-2026'
+            keyAlias 'amaya'
+            keyPassword System.getenv('AMAYA_KEYSTORE_PASS') ?: 'amaya-heroes-2026'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:33.1.2')
+    implementation 'com.google.firebase:firebase-messaging'
+}

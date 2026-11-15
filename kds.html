@@ -80,6 +80,15 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 .bt.done{opacity:.45}
 .bt .bl{padding:2px 12px 8px}
 .bt .nt2{padding:6px 12px;font-weight:700;border-top:2px dashed currentColor}
+#tkp{display:none}
+@media print{@page{size:80mm auto;margin:0}html,body{height:auto;overflow:visible;background:#fff!important;color:#000!important;padding:0}body>*{display:none!important}#tkp{display:block!important}}
+#tkp{width:72mm;margin:0 auto;padding:3mm 0 6mm;font-family:Tahoma,"Noto Sans Arabic",Arial,sans-serif;color:#000;background:#fff}
+#tkp .ps{text-align:center;font-size:15px;font-weight:700;border-bottom:2px solid #000;padding-bottom:2mm}
+#tkp .pt{display:flex;justify-content:space-between;align-items:flex-end;margin:3mm 0 2mm}#tkp .pt b{font-size:40px;line-height:1}#tkp .pt span{font-size:13px}
+#tkp .pm{font-size:13px;display:flex;justify-content:space-between;border-bottom:1px dashed #000;padding-bottom:2mm;margin-bottom:1mm}
+#tkp .pi{display:flex;gap:3mm;font-size:19px;font-weight:700;padding:1.6mm 0;border-bottom:1px dotted #000}#tkp .pi .q{min-width:9mm}#tkp .pi small{display:block;font-size:14px;font-weight:700}
+#tkp .pn{margin-top:2mm;font-size:15px;font-weight:700;border:2px solid #000;padding:1.5mm 2mm}
+#tkp .pf{margin-top:3mm;text-align:center;font-size:11px}
 #lg{display:none;flex-direction:column;gap:10px;width:min(360px,90vw)}
 #lg input{height:52px;border:2px solid var(--fg);border-radius:8px;background:var(--bg);color:var(--fg);font-size:18px;padding:0 14px;-webkit-user-select:text;user-select:text}
 #lg button{height:54px;border:0;border-radius:8px;background:var(--fg);color:var(--bg);font-size:19px;font-weight:800}
@@ -93,7 +102,7 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 <div id="grid"></div>
 <div id="empty"><b id="eT"></b><span id="eS"></span></div>
 <div id="det"><div class="dh"><div><div class="ln" id="dL"></div><div class="tn" id="dT"></div></div><div class="ln" id="dM"></div><div class="sp"></div><button class="x" id="dX"></button></div><div class="db" id="dB"></div></div>
-<div id="err"></div>
+<div id="err"></div><div id="tkp"></div>
 <div id="gate"><b>Amaya KDS</b><span id="gS"></span><i id="gB"></i><form id="lg" onsubmit="return false"><input id="lu" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"><input id="lp" type="password" autocomplete="current-password"><button id="lb" type="submit"></button><div id="lgE"></div></form></div>
 <script>
 /*
@@ -105,6 +114,7 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
    lang=ar | en | tr          interface language (default ar)
    poll=4                     seconds between refreshes
    ro=1                       read-only screen: hides the Ready button
+   print=1                    print a kitchen ticket for every new order of this station (for silent printing run Chrome with --kiosk-printing)
    push=https://...           push service that sends phone notifications (default: the restaurant's)
    dead=x1,y1,x2,y2           ignore touches inside this rectangle (screen percentages, for a cracked area)
    demo=1                     fake orders, no database
@@ -112,7 +122,7 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
    auth=TOKEN                 database auth token if the database rules require it
 */
 const Q=new URLSearchParams(location.search);
-const CFG={view:Q.get('view')==='orders'?'orders':'tables',st:Q.get('st')||'all',late:Math.max(1,+Q.get('late')||20),lang:['ar','en','tr'].includes(Q.get('lang'))?Q.get('lang'):'ar',poll:Math.max(2,+Q.get('poll')||4),ro:Q.get('ro')==='1',push:(Q.get('push')||'https://restless-salad-2a4b.abdualdore.workers.dev').replace(/\/+$/,''),demo:Q.get('demo')==='1',
+const CFG={view:Q.get('view')==='orders'?'orders':'tables',st:Q.get('st')||'all',late:Math.max(1,+Q.get('late')||20),lang:['ar','en','tr'].includes(Q.get('lang'))?Q.get('lang'):'ar',poll:Math.max(2,+Q.get('poll')||4),ro:Q.get('ro')==='1',print:Q.get('print')==='1',push:(Q.get('push')||'https://restless-salad-2a4b.abdualdore.workers.dev').replace(/\/+$/,''),demo:Q.get('demo')==='1',
  db:(Q.get('db')||'https://amaya-runner-default-rtdb.europe-west1.firebasedatabase.app').replace(/\/+$/,''),auth:Q.get('auth')||'',dead:(Q.get('dead')||'').split(',').map(Number).filter(n=>!isNaN(n))};
 const TX={
  ar:{login:'تسجيل الدخول لقاعدة البيانات',user:'اسم المستخدم',pass:'كلمة السر',signin:'دخول',bad:'اسم المستخدم أو كلمة السر غير صحيحة',loginS:'سجّل الدخول مرة واحدة بحساب مدير أو كابتن، وستبقى الشاشة متصلة.',logout:'خروج',tables:'طاولات',sent:'أُرسل',ago:'منذ',lateBy:'متأخر',min:'د',batch:'الدفعة',close:'إغلاق',opened:'فُتحت',waiting:'بالانتظار',items:'أصناف',noOrd:'لا توجد طلبات بعد',kitchen:'المطبخ',bev:'البار',all:'كل الأقسام',open:'طلبات',late:'متأخرة',table:'طاولة',guests:'أشخاص',empty:'لا توجد طلبات',emptyS:'الشاشة تتحدث تلقائياً',gate:'اضغط مرة واحدة لتشغيل الصوت',gateB:'تشغيل',on:'متصل',off:'غير متصل',demo:'تجربة',more:'أصناف أخرى',note:'ملاحظة',sugar:{sweet:'حلوة',medium:'وسط',none:'بدون سكر'},auth:'قاعدة البيانات تطلب تسجيل دخول (auth)',done:'تم التسليم',ready:'جاهز',readyAt:'جاهز',sending:'يُرسل خلال',undo:'تراجع',shisha:'النركيلة'},
@@ -154,6 +164,22 @@ $('lg').addEventListener('submit',async()=>{$('lgE').textContent='';$('lb').disa
 
 /* ---------- data ---------- */
 let ORDERS=[],SESS={},SEEN=null,LATEWARN={},ONLINE=false;
+/* ---------- auto print: one ticket per new order for this station ---------- */
+const PKEY='kds_printed_'+CFG.st;let PRINTED=null,PQ=[],PBUSY=false;
+function prSave(){try{const a=Object.entries(PRINTED).filter(([k,t])=>Date.now()-t<2*864e5);PRINTED=Object.fromEntries(a);localStorage.setItem(PKEY,JSON.stringify(PRINTED))}catch(e){}}
+function prScan(){if(!CFG.print)return;if(PRINTED===null){try{PRINTED=JSON.parse(localStorage.getItem(PKEY)||'{}')}catch(e){PRINTED={}}
+  /* first load: mark what is already on screen as printed, so opening the screen does not print a backlog */
+  ORDERS.forEach(o=>{if(!PRINTED[o.id]&&Date.now()-o.at>3*6e4)PRINTED[o.id]=Date.now()});prSave()}
+ const today=dayKey();ORDERS.filter(o=>!PRINTED[o.id]&&(CFG.demo||o.day===today||Date.now()-o.at<12*36e5)&&(o.items||[]).some(x=>CFG.st==='all'||(x.g||'kitchen')===CFG.st)).sort((a,b)=>a.at-b.at).forEach(o=>{PRINTED[o.id]=Date.now();PQ.push(o)});
+ prSave();prNext()}
+function prHtml(o){const s=SESS[o.sess]||{},its=(o.items||[]).filter(x=>CFG.st==='all'||(x.g||'kitchen')===CFG.st),d=new Date(o.at);
+ return `<div class="ps">${esc(L[CFG.st]||L.all)}</div><div class="pt"><span>${L.table}</span><b>${esc(s.table||o.table)}</b></div>
+ <div class="pm"><span>${esc(o.cn||'')}${(o.gs||s.guests)?' · '+esc(o.gs||s.guests)+' '+L.guests:''}</span><span>${pad(d.getHours())}:${pad(d.getMinutes())}</span></div>
+ ${its.map(x=>`<div class="pi"><span class="q">${x.qty}×</span><span>${esc(itemName(x))}${x.opt?`<small>${esc(L.sugar[x.opt]||x.opt)}</small>`:''}${x.note?`<small>${L.note}: ${esc(x.note)}</small>`:''}</span></div>`).join('')}
+ ${o.note?`<div class="pn">${esc(o.note)}</div>`:''}<div class="pf">amaya</div>`}
+function prNext(){if(PBUSY||!PQ.length)return;PBUSY=true;const o=PQ.shift();$('tkp').innerHTML=prHtml(o);
+ let done=false;const fin=()=>{if(done)return;done=true;removeEventListener('afterprint',fin);PBUSY=false;setTimeout(prNext,400)};addEventListener('afterprint',fin);
+ setTimeout(()=>{try{window.print()}catch(e){}setTimeout(fin,4000)},120)}
 const aq=()=>TOKEN?('auth='+encodeURIComponent(TOKEN)):'';
 const dayStart=()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime()};
 async function getJSON(path,query){const q=[query,aq()].filter(Boolean).join('&');const r=await fetch(CFG.db+path+(q?'?'+q:''),{cache:'no-store'});const j=await r.json();if(!r.ok||(j&&j.error)){const e=new Error((j&&j.error)||('HTTP '+r.status));e.auth=r.status===401||/permission|auth/i.test(String(j&&j.error));throw e}return j}
@@ -166,7 +192,7 @@ async function load(){
  try{let o,s,a;try{[o,s,a]=await pull()}catch(e){if(e.auth&&!CFG.auth&&await refreshTok())[o,s,a]=await pull();else throw e}
   SESS={};vals(s).forEach(x=>{SESS[x.id]=x});ASG={};Object.entries(a||{}).forEach(([k,v])=>{if(typeof v==='string'){try{v=JSON.parse(v)}catch(e){v=null}}if(v)ASG[k]=v});ORDERS=vals(o).map(x=>{const p=PEND[x.id];if(p&&p.sent){x.ready=Object.assign({},x.ready,p.sent)}return x});setNet(true);$('err').style.display='none';
  }catch(e){setNet(false);if(e.auth){if(!CFG.auth){showLogin();return}$('err').textContent=L.auth;$('err').style.display='block'}}
- draw();
+ draw();prScan();
 }
 function setNet(v){ONLINE=v;const n=$('net');n.textContent=CFG.demo?L.demo:v?L.on:L.off;n.classList.toggle('off',!v&&!CFG.demo)}
 

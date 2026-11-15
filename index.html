@@ -999,7 +999,7 @@ const dbStatus=()=>!DB?' محلي فقط - غير مربوط بقاعدة بيا
 const dbShow=()=>{const e=document.getElementById('dbs');if(e)e.textContent=dbStatus()};
 const PHC={},LOAD={},PH={};
 const snap=st=>{const o={};AK.forEach(k=>{o[k]={};(st[k]||[]).forEach(x=>{const y={...x};delete y.photo;if(k==='broken'||k==='runners')y.hp=(x.photo||x.hp)?1:0;o[k][UID[k](x)]=JSON.stringify(y)})});MK.forEach(k=>{o[k]={};Object.keys(st[k]||{}).forEach(i=>o[k][i]=JSON.stringify(st[k][i]))});return o};
-async function push(){if(!DB)return;await refreshTok();const cur=snap(S),ops=[];pushing++;
+async function push(){if(!DB)return;pushing++;await refreshTok();const cur=snap(S),ops=[];
  try{[...AK,...MK].forEach(k=>{const a=cur[k],b=Rm[k]||{};
    Object.keys(a).forEach(i=>{if(a[i]!==b[i])ops.push(fetch(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method:'PUT',body:a[i]}))});
    Object.keys(b).forEach(i=>{if(!(i in a)){ops.push(fetch(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method:'DELETE'}));if(k==='broken'||k==='runners')ops.push(fetch(`${DB}/amaya_photos/${i}.json${AQ()}`,{method:'DELETE'}))}})});
@@ -1009,6 +1009,9 @@ async function pull(){if(!DB||pushing)return;await refreshTok();
  try{const r0=await fetch(`${DB}/amaya.json${AQ()}`),d0=await r0.json();
   if(!r0.ok||(d0&&d0.error)){dbErr=(d0&&d0.error)||('HTTP '+r0.status);dbOk=false;dbShow();return}
   dbErr='';dbOk=true;dbShow();const d=d0||{};if(pushing)return;
+  applyRemote(d);
+ }catch(e){dbErr=(e&&e.message)||'network';dbOk=false;dbShow()}}
+function applyRemote(d){
   if(!Object.keys(d).length){Rm={};push();return}
   const L2=m=>Object.values(m||{}),old=Object.fromEntries(S.broken.concat(S.runners).map(x=>[x.id+'|'+(x.pv||0),x.photo])),N={...S};
   N.runners=L2(d.runners).sort((a,b)=>a.id<b.id?-1:1);N.broken=L2(d.broken).sort((a,b)=>b.at-a.at);N.delays=L2(d.delays).sort((a,b)=>b.at-a.at);
@@ -1020,7 +1023,27 @@ async function pull(){if(!DB||pushing)return;await refreshTok();
    else if(tab==='chat'){const cl=document.getElementById('cl');if(cl){cl.innerHTML=chatHTML();cl.scrollTop=cl.scrollHeight}}}
   else Rm=snap(S);
   S.broken.concat(S.runners).forEach(x=>{if(x.hp&&!x.photo&&!LOAD[x.id]){LOAD[x.id]=1;fetch(`${DB}/amaya_photos/${clean(x.id)}.json${AQ()}`).then(r=>r.json()).then(v=>{const b=S.broken.concat(S.runners).find(y=>y.id===x.id);if(b&&v){b.photo=v;PHC[x.id+'|'+(x.pv||0)]=v;if(!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))render()}}).catch(()=>{}).finally(()=>{delete LOAD[x.id]})}});
- }catch(e){dbErr=(e&&e.message)||'network';dbOk=false;dbShow()}}
+}
+/* Live sync: one Firebase stream per device. The database sends the full data once, then only the changes,
+   so updates arrive in under a second and each device downloads a small fraction of what polling cost.
+   If the stream drops (network, expired sign-in), a watchdog reconnects it and polls until it is back. */
+let ES=null,ESM=null,ESok=0,EST=0,ESTok='',ESdef=0;
+function setAt(r,p,v){const k=String(p||'/').split('/').filter(Boolean);if(!k.length)return v==null?{}:v;r=(r&&typeof r==='object')?r:{};let c=r;for(let i=0;i<k.length-1;i++){if(!c[k[i]]||typeof c[k[i]]!=='object')c[k[i]]={};c=c[k[i]]}const l=k[k.length-1];if(v==null)delete c[l];else c[l]=v;return r}
+function liveApply(){clearTimeout(EST);EST=setTimeout(()=>{if(!ESM)return;if(pushing&&ESdef<40){ESdef++;liveApply();return}ESdef=0;
+  try{dbErr='';dbOk=true;dbShow();applyRemote(JSON.parse(JSON.stringify(ESM)))}catch(e){console.error(e)}},150)}
+function liveStop(){const es=ES;ES=null;ESok=0;if(es)try{es.close()}catch(e){}}
+async function liveStart(){if(!DB||typeof EventSource==='undefined')return;await refreshTok();liveStop();ESM=null;ESTok=FB_TOKEN;
+ let es;try{es=new EventSource(`${DB}/amaya.json${AQ()}`)}catch(e){return}ES=es;
+ const on=(t,f)=>es.addEventListener(t,e=>{if(es===ES)f(e)});
+ const upd=(e,patch)=>{let m;try{m=JSON.parse(e.data)}catch(x){return}if(!m)return;const p=m.path||'/';
+  if(patch&&m.data&&typeof m.data==='object')Object.keys(m.data).forEach(k=>{ESM=setAt(ESM,p+'/'+k,m.data[k])});else ESM=setAt(ESM,p,m.data);
+  ESok=Date.now();liveApply()};
+ on('put',e=>upd(e,false));on('patch',e=>upd(e,true));on('keep-alive',()=>{ESok=Date.now()});
+ on('cancel',()=>{liveStop();setTimeout(liveStart,3000)});on('auth_revoked',()=>{liveStop();liveStart()});
+ es.onerror=()=>{if(es!==ES)return;if(es.readyState===2){liveStop();setTimeout(liveStart,3000)}}}
+const liveUp=()=>ES&&ESok&&Date.now()-ESok<75000;
+function liveWatch(){if(!DB)return;if(liveUp()){if(FB_TOKEN&&FB_TOKEN!==ESTok&&!ESTok)liveStart();return}
+ pull();if(!ES||ES.readyState===2||(ESok&&Date.now()-ESok>=75000))liveStart()}
 
 /* ---------- Pro features ---------- */
 const T=(a,e,r)=>S.lang==='ar'?a:(S.lang==='tr'&&r!==undefined)?r:e;
@@ -3343,7 +3366,9 @@ function render(){
 try{if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('firebase-messaging-sw.js').catch(()=>{})}catch(e){}
 render();
 ensureSeed(S);save();
-if(DB){initReset().then(()=>{pull();setInterval(pull,8000)})}
+if(DB){initReset().then(()=>{pull();liveStart();setInterval(liveWatch,15000);
+ addEventListener('online',()=>{if(!liveUp())liveStart()});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!liveUp()){pull();liveStart()}})})}
 /* splash: plays on every open, tap to skip */
 (function(){const sp=document.getElementById('splash');if(!sp){document.body.classList.remove('splashing');return}const sb=sp.querySelector('.sp-sub');if(sb&&S.lang==='en')sb.textContent='Amaya Restaurant \u00b7 Baghdad, Mansour';if(sb&&S.lang==='tr')sb.textContent='Amaya Restoran \u00b7 Bağdat, Mansur';let rm=false;try{rm=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)}catch(e){}let done=false;
  const end=()=>{if(done)return;done=true;sp.classList.add('out');setTimeout(()=>{document.body.classList.remove('splashing');setTimeout(()=>{LGANIM=false},1200)},rm?0:420);setTimeout(()=>sp.remove(),1100)};

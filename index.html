@@ -714,7 +714,7 @@ const fmt=ts=>new Date(ts).toLocaleString(dLoc());
 const chName=()=>'';
 const isOwner=()=>S.session&&S.session.role==='owner';
 const me=()=>S.runners.find(r=>r.id===S.session.id);
-function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.remove('hidden');setTimeout(()=>e.classList.add('hidden'),2500)}
+let TOASTT=0;function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.remove('hidden');clearTimeout(TOASTT);TOASTT=setTimeout(()=>e.classList.add('hidden'),Math.max(2500,String(m||'').length*70))}
 const LNGS=[['ar','العربية'],['en','English'],['tr','Türkçe']];
 function setLang(){if(!['ar','en','tr'].includes(S.lang))S.lang='ar';document.documentElement.lang=S.lang;document.documentElement.dir=S.lang==='ar'?'rtl':'ltr'}
 function setLng(l){S.lang=l;setLang();save();render()}
@@ -1030,22 +1030,27 @@ const dbStatus=()=>!DB?' محلي فقط - غير مربوط بقاعدة بيا
 const dbShow=()=>{const e=document.getElementById('dbs');if(e)e.textContent=dbStatus()};
 const PHC={},LOAD={},PH={};
 const snap=st=>{const o={};AK.forEach(k=>{o[k]={};(st[k]||[]).forEach(x=>{const y={...x};delete y.photo;if(k==='broken'||k==='runners')y.hp=(x.photo||x.hp)?1:0;o[k][UID[k](x)]=JSON.stringify(y)})});MK.forEach(k=>{o[k]={};Object.keys(st[k]||{}).forEach(i=>o[k][i]=JSON.stringify(st[k][i]))});return o};
-let PULLED=0,PUSHBAD=0;
-async function push(){if(!DB)return;await refreshTok();const cur=snap(S),ops=[],nr={};let bad=0,why='';pushing++;
+let PULLED=0,PUSHBAD=0,WSEQ=0,PULLING=0;
+/* every database request gives up after a time limit, so a stuck connection never freezes the app */
+function dbf(u,o,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||12000);return fetch(u,Object.assign({},o||{},{signal:c.signal})).finally(()=>clearTimeout(t))}
+function dirtyList(){const c=snap(S),o=[];[...AK,...MK].forEach(k=>{const a=c[k]||{},b=Rm[k]||{};Object.keys(a).forEach(i=>{if(a[i]!==b[i])o.push([k,i])});Object.keys(b).forEach(i=>{if(!(i in a))o.push([k,i])})});return o}
+const keepDirty=()=>{try{SS.set('amaya_dirty',dirtyList())}catch(e){}};
+async function push(){if(!DB)return;await refreshTok();const cur=snap(S),ops=[],nr={};let bad=0,why='';pushing++;WSEQ++;
  const ok=r=>{if(r.ok)return true;bad++;why=why||('HTTP '+r.status);return false},fail=e=>{bad++;why=why||((e&&e.message)||'network')};
  try{[...AK,...MK].forEach(k=>{const a=cur[k],b=Rm[k]||{},n=nr[k]={...b};
    Object.keys(a).forEach(i=>{if(a[i]===b[i])return;let body=a[i],method='PUT';
     if(b[i]!==undefined){try{const A=JSON.parse(a[i]),B=JSON.parse(b[i]);if(A&&B&&typeof A==='object'&&typeof B==='object'&&!Array.isArray(A)&&!Array.isArray(B)){const p={};Object.keys(A).forEach(f=>{if(JSON.stringify(A[f])!==JSON.stringify(B[f]))p[f]=A[f]});Object.keys(B).forEach(f=>{if(!(f in A))p[f]=null});if(!Object.keys(p).length){n[i]=a[i];return}body=JSON.stringify(p);method='PATCH'}}catch(e){}}
-    ops.push(fetch(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method,body}).then(r=>{if(ok(r))n[i]=a[i]}).catch(fail))});
-   Object.keys(b).forEach(i=>{if(!(i in a)){ops.push(fetch(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method:'DELETE'}).then(r=>{if(ok(r))delete n[i]}).catch(fail));if(k==='broken'||k==='runners')ops.push(fetch(`${DB}/amaya_photos/${i}.json${AQ()}`,{method:'DELETE'}).catch(()=>{}))}})});
+    ops.push(dbf(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method,body}).then(r=>{if(ok(r))n[i]=a[i]}).catch(fail))});
+   Object.keys(b).forEach(i=>{if(!(i in a)){ops.push(dbf(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method:'DELETE'}).then(r=>{if(ok(r))delete n[i]}).catch(fail));if(k==='broken'||k==='runners')ops.push(fetch(`${DB}/amaya_photos/${i}.json${AQ()}`,{method:'DELETE'}).catch(()=>{}))}})});
   S.broken.concat(S.runners).forEach(x=>{if(x.photo&&!PH[x.id]){PH[x.id]=1;ops.push(fetch(`${DB}/amaya_photos/${clean(x.id)}.json${AQ()}`,{method:'PUT',body:JSON.stringify(x.photo)}).catch(()=>{delete PH[x.id]}))}});
-  await Promise.all(ops);Rm=nr;if(bad){PUSHBAD++;dbErr=why;dbOk=false;dbShow()}else{PUSHBAD=0;if(PULLED&&dbErr){dbErr='';dbOk=true;dbShow()}}}catch(e){}finally{pushing--}}
+  await Promise.all(ops);Rm=nr;WSEQ++;keepDirty();if(bad){PUSHBAD++;dbErr=why;dbOk=false;dbShow()}else{PUSHBAD=0;if(PULLED&&dbErr){dbErr='';dbOk=true;dbShow()}}}catch(e){}finally{pushing--}}
 /* records changed on this device that the database has not confirmed yet */
 function dirty(){const c=snap(S);return [...AK,...MK].some(k=>{const a=c[k]||{},b=Rm[k]||{};return Object.keys(a).some(i=>a[i]!==b[i])||Object.keys(b).some(i=>!(i in a))})}
-async function pull(){if(!DB||pushing)return;if(PULLED&&dirty()){await push();if(dirty()&&PUSHBAD<4)return}await refreshTok();
- try{const r0=await fetch(`${DB}/amaya.json${AQ()}`),d0=await r0.json();
+async function pull(){if(!DB||pushing||PULLING)return;PULLING=1;try{await pull0()}finally{PULLING=0}}
+async function pull0(){if(PULLED&&dirty()){await push();if(dirty()&&PUSHBAD<4)return}await refreshTok();
+ try{const w0=WSEQ,r0=await dbf(`${DB}/amaya.json${AQ()}`,{},25000),d0=await r0.json();
   if(!r0.ok||(d0&&d0.error)){dbErr=(d0&&d0.error)||('HTTP '+r0.status);dbOk=false;dbShow();return}
-  if(!PUSHBAD){dbErr='';dbOk=true}dbShow();const d=d0||{};if(pushing)return;
+  if(!PUSHBAD){dbErr='';dbOk=true}dbShow();const d=d0||{};if(pushing||WSEQ!==w0)return;
   if(!Object.keys(d).length){Rm={};push();return}
   const L2=m=>Object.values(m||{}),old=Object.fromEntries(S.broken.concat(S.runners).map(x=>[x.id+'|'+(x.pv||0),x.photo])),N={...S};
   N.runners=L2(d.runners).sort((a,b)=>a.id<b.id?-1:1);N.broken=L2(d.broken).sort((a,b)=>b.at-a.at);N.delays=L2(d.delays).sort((a,b)=>b.at-a.at);
@@ -1053,6 +1058,7 @@ async function pull(){if(!DB||pushing)return;if(PULLED&&dirty()){await push();if
   N.broken.concat(N.runners).forEach(x=>{const k=x.id+'|'+(x.pv||0);x.photo=old[k]||PHC[k]||'';if(x.hp)PH[x.id]=1});
   const SRV=snap(N);
   /* keep what this device changed and the database has not confirmed yet */
+  if(!PULLED){const PD=SS.get('amaya_dirty',[]);if(Array.isArray(PD)&&PD.length){const cs=snap(S);PD.forEach(([k,i])=>{if(AK.includes(k)){const loc=(S[k]||[]).find(x=>UID[k](x)===i),arr=(N[k]||[]).filter(x=>UID[k](x)!==i);if(loc)arr.push(loc);N[k]=arr}else if(MK.includes(k)){N[k]={...(N[k]||{})};if(cs[k]&&i in cs[k])N[k][i]=S[k][i];else delete N[k][i]}})}}
   if(PULLED){const cs=snap(S);AK.forEach(k=>{const a=cs[k]||{},b=Rm[k]||{},di=Object.keys(a).filter(i=>a[i]!==b[i]),gone=new Set(Object.keys(b).filter(i=>!(i in a)));if(!di.length&&!gone.size)return;const loc={};(S[k]||[]).forEach(x=>loc[UID[k](x)]=x);const arr=(N[k]||[]).filter(x=>!gone.has(UID[k](x)));di.forEach(i=>{const j=arr.findIndex(x=>UID[k](x)===i);if(j>=0)arr[j]=loc[i];else arr.push(loc[i])});N[k]=arr});
    MK.forEach(k=>{const a=cs[k]||{},b=Rm[k]||{};const di=Object.keys(a).filter(i=>a[i]!==b[i]),gone=Object.keys(b).filter(i=>!(i in a));if(!di.length&&!gone.length)return;N[k]={...(N[k]||{})};di.forEach(i=>N[k][i]=S[k][i]);gone.forEach(i=>delete N[k][i])})}
   const changed=JSON.stringify(snap(N))!==JSON.stringify(snap(S));
@@ -1061,6 +1067,7 @@ async function pull(){if(!DB||pushing)return;if(PULLED&&dirty()){await push();if
    if(!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&tab!=='chat'))render();
    else if(tab==='chat'){const cl=document.getElementById('cl');if(cl){cl.innerHTML=chatHTML();cl.scrollTop=cl.scrollHeight}}}
   else Rm=SRV;
+  keepDirty();if(PULLED&&dirty())push();lateCheck();
   S.broken.concat(S.runners).forEach(x=>{if(x.hp&&!x.photo&&!LOAD[x.id]){LOAD[x.id]=1;fetch(`${DB}/amaya_photos/${clean(x.id)}.json${AQ()}`).then(r=>r.json()).then(v=>{const b=S.broken.concat(S.runners).find(y=>y.id===x.id);if(b&&v){b.photo=v;PHC[x.id+'|'+(x.pv||0)]=v;if(!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))render()}}).catch(()=>{}).finally(()=>{delete LOAD[x.id]})}});
  }catch(e){dbErr=(e&&e.message)||'network';dbOk=false;dbShow()}}
 
@@ -1110,7 +1117,7 @@ function DEFSH(){return [{id:'m',ord:1,name:'صباحي',from:'10:00',to:'17:00'
 const blank=lang=>({lang,runners:[],breaks:{},broken:[],delays:[],blog:[],chat:[],assign:{},mgrs:[],att:[],pts:[],log:[],sched:{},cfg:{},shifts:DEFSH(),notes:[],tokens:{},absences:[],checks:[],warns:[],wrong:[],session:null});
 const TOK='accounts-wipe-2026-11-02';
 if(SS.get('amaya_tok','')!==TOK){const oc=S.cfg,osh=S.shifts;S=blank(S.lang);S.cfg=oc||{};S.shifts=(osh&&osh.length)?osh:DEFSH();SS.set('amaya_tok',TOK);SS.set('amaya_state',S)}
-async function initReset(){if(!DB)return;try{const m=await(await fetch(`${DB}/amaya_meta/reset.json${AQ()}`)).json();if(m!==TOK){await fetch(`${DB}/amaya.json${AQ()}`,{method:'DELETE'});await fetch(`${DB}/amaya_photos.json${AQ()}`,{method:'DELETE'});await fetch(`${DB}/amaya_meta/reset.json${AQ()}`,{method:'PUT',body:JSON.stringify(TOK)});Rm={}}}catch(e){}}
+async function initReset(){if(!DB)return;try{const r=await fetch(`${DB}/amaya_meta/reset.json${AQ()}`),m=await r.json();if(r.ok&&(m===null||typeof m==='string')&&m!==TOK){await fetch(`${DB}/amaya.json${AQ()}`,{method:'DELETE'});await fetch(`${DB}/amaya_photos.json${AQ()}`,{method:'DELETE'});await fetch(`${DB}/amaya_meta/reset.json${AQ()}`,{method:'PUT',body:JSON.stringify(TOK)});Rm={}}}catch(e){}}
 function setCfg(k,v){S.cfg[k]=k==='defMin'?(parseInt(v)||10):k==='grace'?(parseInt(v)||0):v;logAct('settings: '+k);save()}
 const avImg=(o,z)=>{z=z||36;const r=S.runners.find(x=>x.id===(o.rid||o.id))||S.runners.find(x=>x.name===o.name);return r&&r.photo?`<img src="${r.photo}" style="width:${z}px;height:${z}px;border-radius:50%;object-fit:cover;border:1px solid #D9DEE5;display:inline-block;vertical-align:middle">`:`<span style="width:${z}px;height:${z}px;border-radius:50%;background:#E5E7EB;display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:#4B5563;vertical-align:middle;font-size:${z*.45}px">${esc((o.name||'?').trim().charAt(0))}</span>`};
 let pendRP='';
@@ -3134,13 +3141,32 @@ function billHtml(b,s,c){const ln=c.lines.filter(l=>l.net>0);return `<div class=
 async function billPrintOut(b,s,c){let pa=document.getElementById('printArea');if(!pa){pa=document.createElement('div');pa.id='printArea';document.body.appendChild(pa)}pa.innerHTML=billHtml(b,s,c);
  if(isDesk()){document.body.classList.add('tkprint');await new Promise(r=>setTimeout(r,150));let r;try{const h=pa.firstElementChild?pa.firstElementChild.offsetHeight:800;r=await window.amayaDesktop.print({heightMicrons:Math.ceil((h+24)*25400/96)})}catch(e){r={ok:false,error:String(e&&e.message||e)}}document.body.classList.remove('tkprint');return toast(r&&r.ok?T('تمت طباعة الحساب','Bill printed',"Hesap yazdırıldı"):T('لم تتم الطباعة: ','Not printed: ',"Yazdırılamadı: ")+((r&&r.error)||''))}
  document.body.classList.add('tkprint');const done=()=>{document.body.classList.remove('tkprint');removeEventListener('afterprint',done)};addEventListener('afterprint',done);setTimeout(()=>{try{window.print()}catch(e){toast(T('الطباعة غير متاحة على هذا الجهاز','Printing is not available on this device',"Bu cihazda yazdırma kullanılamıyor"))}setTimeout(done,60000)},80)}
-async function bPay(sid){if(DB){await push();await pull();while(pushing)await new Promise(r=>setTimeout(r,120));if(dirty())await push();if(!dbOk||dirty())return toast(T('الجهاز غير متصل بقاعدة البيانات. تأكد من الإنترنت ثم حاول مرة أخرى','This device is not connected to the database. Check the internet and try again',"Bu cihaz veritabanına bağlı değil. İnterneti kontrol edip tekrar deneyin"))}
- const s=(S.tsess||[]).find(x=>x.id===sid);if(!s)return;if(s.end)return toast(T('هذه الطاولة مغلقة','This table is closed',"Bu masa kapalı"));
- if(!tsOrders(s.id).length){if(!confirm(T('لا توجد طلبات على طاولة ','There are no orders on table ',"Masada sipariş yok: ")+s.table+T('. إغلاقها بدون حساب؟','. Close it without a bill?',". Hesapsız kapatılsın mı?")))return;const ob=billOf(sid);if(ob&&ob.status!=='paid')S.bills=S.bills.filter(x=>x!==ob);s.end=Date.now();logAct(' '+T('إغلاق طاولة فارغة ','closed empty table ',"boş masa kapatıldı ")+s.table);KSEL='';save();toast(T('أُغلقت الطاولة','Table closed',"Masa kapatıldı"));return render()}
- const b=billEnsure(sid),c=billCalc(s,b);if(c.miss)return toast(T('بعض الأصناف بدون سعر. اكتب السعر أولاً','Some items have no price. Enter it first',"Bazı ürünlerin fiyatı yok. Önce fiyatı girin"));
- if(c.mg){if(!b.prints)return toast(T('اطبع الحساب ليوقّع عليه المدير أولاً','Print the bill for the manager to sign first',"Önce yöneticinin imzalaması için hesabı yazdırın"));b.pay='mgmt'}
- if(!confirm(T('تأكيد الدفع وإغلاق الطاولة؟ ','Confirm payment and close the table? ',"Ödeme onaylanıp masa kapatılsın mı? ")+iqd(c.total)+' · '+kPayName(b.pay)))return;
- Object.assign(b,billSnap(s,b),{status:'paid',paidAt:Date.now(),cid:S.session.id});if(!s.end)s.end=Date.now();logAct(' '+T('دفع حساب طاولة ','paid bill table ',"masa hesabı ödendi ")+s.table+' '+money(c.total));KSEL='';save();render();if(DB){await push();if(dirty())return toast(T('تم الدفع على هذا الجهاز، لكنه لم يُحفظ في قاعدة البيانات بعد. لا تغلق التطبيق حتى يرجع الاتصال','Paid on this device, but not saved to the database yet. Keep the app open until the connection is back',"Bu cihazda ödendi ama henüz veritabanına kaydedilmedi. Bağlantı gelene kadar uygulamayı kapatmayın"))}toast(T('تم الدفع وأُغلقت الطاولة','Paid and the table is closed',"Ödendi, masa kapatıldı"))}
+let PAYING=0;const LATEW={};
+/* reads only this table and its orders from the database (max a few seconds) */
+async function tsFresh(sid,ms){const s0=(S.tsess||[]).find(x=>x.id===sid);if(!s0||!DB)return null;
+ try{await refreshTok();const a=AQ(),q='orderBy='+encodeURIComponent('"$key"')+'&startAt='+encodeURIComponent('"or'+((+s0.at||Date.now())-36e5)+'"');
+  const [ro,rs]=await Promise.all([dbf(`${DB}/amaya/orders.json${a?a+'&':'?'}${q}`,{},ms),dbf(`${DB}/amaya/tsess/${clean(sid)}.json${a}`,{},ms)]);if(!ro.ok||!rs.ok)return null;
+  const os=await ro.json(),ss=await rs.json(),cs=snap(S),n0=tsOrders(sid).length,t0=billCalc(s0,billOf(sid)).total;Rm.orders=Rm.orders||{};Rm.tsess=Rm.tsess||{};
+  Object.values(os||{}).forEach(x=>{if(!x||x.sess!==sid)return;const u=clean(x.id);if(cs.orders[u]!==Rm.orders[u])return;const j=S.orders.findIndex(y=>y.id===x.id);if(j<0)S.orders.push(x);else S.orders[j]=x;Rm.orders[u]=JSON.stringify(x)});
+  if(ss&&ss.id===sid){const u=clean(sid);if(cs.tsess[u]===Rm.tsess[u]){const j=S.tsess.findIndex(y=>y.id===sid);if(j>=0)S.tsess[j]=ss;Rm.tsess[u]=JSON.stringify(ss)}}
+  S.orders.sort((x,y)=>x.at-y.at);const s1=(S.tsess||[]).find(x=>x.id===sid);
+  return {closed:!!(s1&&s1.end),more:tsOrders(sid).length>n0||billCalc(s1,billOf(sid)).total!==t0}}catch(e){return null}}
+async function bPay(sid){if(PAYING)return;PAYING=1;try{await bPay0(sid)}finally{PAYING=0}}
+async function bPay0(sid){let s=(S.tsess||[]).find(x=>x.id===sid);if(!s)return;if(s.end)return toast(T('هذه الطاولة مغلقة','This table is closed',"Bu masa kapalı"));
+ const btn=document.querySelector('.bk-side .op-main');if(btn){btn.disabled=true;btn.textContent=T('لحظة...','One moment...',"Bir saniye...")}
+ const f=await tsFresh(sid,2500);s=(S.tsess||[]).find(x=>x.id===sid);
+ if(f&&f.closed){KSEL='';render();return toast(T('هذه الطاولة أُغلقت من جهاز آخر','This table was closed on another device',"Bu masa başka bir cihazda kapatıldı"))}
+ if(f&&f.more){render();return toast(T('وصلت أصناف جديدة لهذه الطاولة. راجع الحساب ثم اضغط الدفع مرة أخرى','New items arrived for this table. Check the bill, then press pay again',"Bu masaya yeni ürünler geldi. Hesabı kontrol edip tekrar ödemeye basın"))}
+ if(!tsOrders(s.id).length){render();if(!confirm(T('لا توجد طلبات على طاولة ','There are no orders on table ',"Masada sipariş yok: ")+s.table+T('. إغلاقها بدون حساب؟','. Close it without a bill?',". Hesapsız kapatılsın mı?")))return;const ob=billOf(sid);if(ob&&ob.status!=='paid')S.bills=S.bills.filter(x=>x!==ob);s.end=Date.now();logAct(' '+T('إغلاق طاولة فارغة ','closed empty table ',"boş masa kapatıldı ")+s.table);KSEL='';save();render();payCheck();return toast(T('أُغلقت الطاولة','Table closed',"Masa kapatıldı"))}
+ const b=billEnsure(sid),c=billCalc(s,b);if(c.miss){render();return toast(T('بعض الأصناف بدون سعر. اكتب السعر أولاً','Some items have no price. Enter it first',"Bazı ürünlerin fiyatı yok. Önce fiyatı girin"))}
+ if(c.mg){if(!b.prints){render();return toast(T('اطبع الحساب ليوقّع عليه المدير أولاً','Print the bill for the manager to sign first',"Önce yöneticinin imzalaması için hesabı yazdırın"))}b.pay='mgmt'}
+ if(!confirm(T('تأكيد الدفع وإغلاق الطاولة؟ ','Confirm payment and close the table? ',"Ödeme onaylanıp masa kapatılsın mı? ")+iqd(c.total)+' · '+kPayName(b.pay))){render();return}
+ Object.assign(b,billSnap(s,b),{status:'paid',paidAt:Date.now(),cid:S.session.id,nOrd:tsOrders(s.id).length});if(!s.end)s.end=Date.now();logAct(' '+T('دفع حساب طاولة ','paid bill table ',"masa hesabı ödendi ")+s.table+' '+money(c.total));KSEL='';save();render();
+ toast(T('تم الدفع وأُغلقت الطاولة','Paid and the table is closed',"Ödendi, masa kapatıldı"));payCheck()}
+/* after paying: tell the cashier if the save is still waiting for the connection */
+function payCheck(){if(!DB)return;setTimeout(async()=>{for(let i=0;i<150&&pushing;i++)await new Promise(r=>setTimeout(r,100));if(dirty())toast(T('لم يُحفظ الدفع في قاعدة البيانات بعد بسبب الاتصال. سيُحفظ تلقائياً عند رجوعه','The payment is not in the database yet because of the connection. It will be saved automatically when it is back',"Ödeme bağlantı nedeniyle henüz veritabanına kaydedilmedi. Bağlantı gelince otomatik kaydedilecek"))},400)}
+/* an order that reached a table after it was paid on this device */
+function lateCheck(){try{const now=Date.now();(S.bills||[]).forEach(b=>{if(b.status!=='paid'||!b.nOrd||b.cid!==(S.session&&S.session.id)||now-(b.paidAt||0)>4*36e5||LATEW[b.id])return;if(tsOrders(b.sess).length>b.nOrd){LATEW[b.id]=1;toast(T('وصل طلب جديد لطاولة ','A new order reached table ',"Ödenmiş masaya yeni sipariş: ")+b.table+T(' بعد الدفع',' after it was paid',''))}})}catch(e){}}
 function bVoidBill(id){const b=(S.bills||[]).find(x=>x.id===id);if(!b)return;const why=prompt(T('سبب إلغاء الحساب','Reason for voiding the bill',"Hesap iptal nedeni"),'');if(!why)return;b.status='void';b.voidWhy=String(why).slice(0,160);b.voidAt=Date.now();b.voidBy=S.session.id;const s=(S.tsess||[]).find(x=>x.id===b.sess);if(s&&s.end&&b.paidAt)delete s.end;logAct(' '+T('إلغاء حساب طاولة ','void bill table ',"masa hesabı iptal ")+b.table);save();render()}
 function billEditor(s){const b=billOf(s.id)||{lines:{},disc:{},svc:0,pay:'cash',status:'open'},c=billCalc(s,b),lock=b.status==='paid',sid=s.id;
  const rows=c.lines.map(l=>`<div class="bk-l ${l.net<=0?'vd':''}"><div class="bk-n"><b>${esc(S.lang==='ar'?(l.n.ar||l.n.en):(l.n.en||l.n.ar))}</b>${l.opt?`<span class="op-tag">${sugName(l.opt)}</span>`:''}${l.comp?`<span class="op-tag">${T('ضيافة','Complimentary',"İkram")}</span>`:''}${l.void?`<small>${T('أُلغي ','voided ',"iptal ")+l.void}</small>`:''}${l.can?`<small>${T('إلغاء ','cancelled ',"iptal ")+l.can}</small>`:''}${l.ret?`<small>${T('إرجاع ','returned ',"iade ")+l.ret}</small>`:''}${l.ex?`<small>${T('تبديل ','exchanged ',"değişim ")+l.ex}</small>`:''}

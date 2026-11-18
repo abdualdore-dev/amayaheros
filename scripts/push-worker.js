@@ -51,6 +51,7 @@ async function sendNew(env) {
     .filter(n => n && n.at > last && n.at > now - MAX_AGE_MS && n.at <= now + 60e3)
     .sort((a, b) => a.at - b.at);
   if (!notes.length) return { notes: 0, sent: 0 };
+  if (!(await get('amaya/cfg/pushOn'))) return { notes: notes.length, sent: 0, off: true };
   // claim these notes first so a second run at the same moment does not send them again
   await put('amaya_meta/pushLast', notes[notes.length - 1].at);
 

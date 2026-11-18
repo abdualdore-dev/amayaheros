@@ -42,6 +42,7 @@ async function main() {
     .filter(n => n && n.at > last && n.at > now - MAX_AGE_MS)
     .sort((a, b) => a.at - b.at);
   if (!notes.length) { console.log('No new notes'); return; }
+  if (!(await get('amaya/cfg/pushOn'))) { console.log('Push is off'); return; }
 
   const tokens = Object.values((await get('amaya/tokens')) || {}).filter(x => x && x.t);
   const runners = (await get('amaya/runners')) || {};

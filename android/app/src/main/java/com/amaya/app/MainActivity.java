@@ -31,6 +31,7 @@ public class MainActivity extends Activity {
     private static final int REQ_FILE = 11;
     private static final int REQ_LOCATION = 12;
     private static final int REQ_NOTIFY = 13;
+    private static final int REQ_FIT = 14;
     private static final String HOST = "abdualdore-dev.github.io";
 
     private WebView web;
@@ -151,6 +152,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int code, int result, Intent data) {
         super.onActivityResult(code, result, data);
+        if (code == REQ_FIT) {
+            fitRead(true);
+            return;
+        }
         if (code == REQ_FILE && fileCallback != null) {
             fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result, data));
             fileCallback = null;
@@ -184,6 +189,12 @@ public class MainActivity extends Activity {
         moveTaskToBack(true);
     }
 
+    private void fitRead(boolean loud) {
+        Fit.read(this, loud, json -> runOnUiThread(() -> {
+            if (web != null) web.evaluateJavascript("try{window.amayaFitCb&&window.amayaFitCb(" + org.json.JSONObject.quote(json) + ")}catch(e){}", null);
+        }));
+    }
+
     /** Functions the web app can call as window.AmayaApp.* */
     private class Bridge {
         @JavascriptInterface
@@ -212,6 +223,47 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void notify(String title, String body, boolean loud) {
             PushService.show(MainActivity.this, title, body, loud);
+        }
+
+        @JavascriptInterface
+        public String fitStatus() {
+            try {
+                return Fit.status(MainActivity.this);
+            } catch (Throwable e) {
+                return "no";
+            }
+        }
+
+        /** Asks for permission the first time; afterwards reads and shows a confirmation. */
+        @JavascriptInterface
+        public void fitAsk() {
+            runOnUiThread(() -> {
+                String st = fitStatus();
+                if ("ok".equals(st)) {
+                    fitRead(true);
+                    return;
+                }
+                if ("nohc".equals(st)) {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.google.android.apps.healthdata")));
+                    } catch (ActivityNotFoundException e) {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata")));
+                    }
+                    return;
+                }
+                Intent i = Fit.permissionIntent(MainActivity.this);
+                if (i == null) return;
+                try {
+                    startActivityForResult(i, REQ_FIT);
+                } catch (ActivityNotFoundException e) {
+                    fitRead(true);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void fitRead() {
+            MainActivity.this.fitRead(false);
         }
 
         @JavascriptInterface

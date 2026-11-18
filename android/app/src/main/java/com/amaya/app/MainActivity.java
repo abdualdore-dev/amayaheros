@@ -240,7 +240,7 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> {
                 String st = fitStatus();
                 if ("ok".equals(st)) {
-                    fitRead(true);
+                    MainActivity.this.fitRead(true);
                     return;
                 }
                 if ("nohc".equals(st)) {
@@ -256,7 +256,7 @@ public class MainActivity extends Activity {
                 try {
                     startActivityForResult(i, REQ_FIT);
                 } catch (ActivityNotFoundException e) {
-                    fitRead(true);
+                    MainActivity.this.fitRead(true);
                 }
             });
         }

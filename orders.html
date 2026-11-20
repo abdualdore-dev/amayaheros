@@ -1031,44 +1031,47 @@ const dbStatus=()=>!DB?' محلي فقط - غير مربوط بقاعدة بيا
 const dbShow=()=>{const e=document.getElementById('dbs');if(e)e.textContent=dbStatus()};
 const PHC={},LOAD={},PH={};
 const snap=st=>{const o={};AK.forEach(k=>{o[k]={};(st[k]||[]).forEach(x=>{const y={...x};delete y.photo;if(k==='broken'||k==='runners')y.hp=(x.photo||x.hp)?1:0;o[k][UID[k](x)]=JSON.stringify(y)})});MK.forEach(k=>{o[k]={};Object.keys(st[k]||{}).forEach(i=>o[k][i]=JSON.stringify(st[k][i]))});return o};
-let PULLED=0,PUSHBAD=0,WSEQ=0,PULLING=0;
+let PULLED=0,PUSHBAD=0,WSEQ=0,PULLING=0,LASTPULL=0;
 /* every database request gives up after a time limit, so a stuck connection never freezes the app */
 function dbf(u,o,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||12000);return fetch(u,Object.assign({},o||{},{signal:c.signal})).finally(()=>clearTimeout(t))}
 function dirtyList(){const c=snap(S),o=[];[...AK,...MK].forEach(k=>{const a=c[k]||{},b=Rm[k]||{};Object.keys(a).forEach(i=>{if(a[i]!==b[i])o.push([k,i])});Object.keys(b).forEach(i=>{if(!(i in a))o.push([k,i])})});return o}
-const keepDirty=()=>{try{SS.set('amaya_dirty',dirtyList())}catch(e){}};
-async function push(){if(!DB)return;await refreshTok();const cur=snap(S),ops=[],nr={};let bad=0,why='';pushing++;WSEQ++;
+const keepDirty=()=>{try{SS.set('amaya_dirty',dirtyList().map(([k,i])=>[k,i,(Rm[k]||{})[i]||null]))}catch(e){}};
+/* three-way merge of one record: server version + the fields this device changed since its base */
+function merge3(srv,loc,baseStr){if(!srv||!loc||typeof srv!=='object'||typeof loc!=='object'||Array.isArray(srv)||Array.isArray(loc)||!baseStr)return loc;let base;try{base=JSON.parse(baseStr)}catch(e){return loc}if(!base||typeof base!=='object')return loc;
+ const m=Object.assign({},srv),J=v=>JSON.stringify(v===undefined?null:v);new Set([...Object.keys(loc),...Object.keys(base)]).forEach(f=>{if(f==='hp')return;if(f==='photo'){if(loc.photo)m.photo=loc.photo;return}if(J(loc[f])!==J(base[f])){if(f in loc&&loc[f]!==undefined)m[f]=loc[f];else delete m[f]}});return m}
+async function push(){if(!DB||!PULLED)return;await refreshTok();const cur=snap(S),ops=[],nr={};let bad=0,why='';pushing++;WSEQ++;
  const ok=r=>{if(r.ok)return true;bad++;why=why||('HTTP '+r.status);return false},fail=e=>{bad++;why=why||((e&&e.message)||'network')};
- try{[...AK,...MK].forEach(k=>{const a=cur[k],b=Rm[k]||{},n=nr[k]={...b};
+ try{[...AK,...MK].forEach(k=>{const a=cur[k],b={...(Rm[k]||{})},n=nr[k]={...b};
    Object.keys(a).forEach(i=>{if(a[i]===b[i])return;let body=a[i],method='PUT';
-    if(b[i]!==undefined){try{const A=JSON.parse(a[i]),B=JSON.parse(b[i]);if(A&&B&&typeof A==='object'&&typeof B==='object'&&!Array.isArray(A)&&!Array.isArray(B)){const p={};Object.keys(A).forEach(f=>{if(JSON.stringify(A[f])!==JSON.stringify(B[f]))p[f]=A[f]});Object.keys(B).forEach(f=>{if(!(f in A))p[f]=null});if(!Object.keys(p).length){n[i]=a[i];return}body=JSON.stringify(p);method='PATCH'}}catch(e){}}
-    ops.push(dbf(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method,body}).then(r=>{if(ok(r))n[i]=a[i]}).catch(fail))});
-   Object.keys(b).forEach(i=>{if(!(i in a)){ops.push(dbf(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method:'DELETE'}).then(r=>{if(ok(r))delete n[i]}).catch(fail));if(k==='broken'||k==='runners')ops.push(fetch(`${DB}/amaya_photos/${i}.json${AQ()}`,{method:'DELETE'}).catch(()=>{}))}})});
+    if(b[i]!==undefined){try{const A=JSON.parse(a[i]),B=JSON.parse(b[i]);if(A&&B&&typeof A==='object'&&typeof B==='object'&&!Array.isArray(A)&&!Array.isArray(B)){const p={},po=v=>v&&typeof v==='object'&&!Array.isArray(v);Object.keys(A).forEach(f=>{if(JSON.stringify(A[f])===JSON.stringify(B[f]))return;if(po(A[f])&&po(B[f])&&Object.keys(A[f]).length){Object.keys(A[f]).forEach(g=>{if(JSON.stringify(A[f][g])!==JSON.stringify(B[f][g]))p[f+'/'+g]=A[f][g]});Object.keys(B[f]).forEach(g=>{if(!(g in A[f]))p[f+'/'+g]=null})}else p[f]=A[f]});Object.keys(B).forEach(f=>{if(!(f in A))p[f]=null});if(!Object.keys(p).length){n[i]=a[i];if(b[i]===(Rm[k]||{})[i])(Rm[k]=Rm[k]||{})[i]=a[i];return}body=JSON.stringify(p);method='PATCH'}}catch(e){}}
+    ops.push(dbf(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method,body}).then(r=>{if(ok(r)){n[i]=a[i];if(b[i]===(Rm[k]||{})[i])(Rm[k]=Rm[k]||{})[i]=a[i]}}).catch(fail))});
+   Object.keys(b).forEach(i=>{if(!(i in a)){ops.push(dbf(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method:'DELETE'}).then(r=>{if(ok(r)){delete n[i];if(Rm[k])delete Rm[k][i]}}).catch(fail));if(k==='broken'||k==='runners')ops.push(fetch(`${DB}/amaya_photos/${i}.json${AQ()}`,{method:'DELETE'}).catch(()=>{}))}})});
   S.broken.concat(S.runners).forEach(x=>{if(x.photo&&!PH[x.id]){PH[x.id]=1;ops.push(fetch(`${DB}/amaya_photos/${clean(x.id)}.json${AQ()}`,{method:'PUT',body:JSON.stringify(x.photo)}).catch(()=>{delete PH[x.id]}))}});
-  await Promise.all(ops);Rm=nr;WSEQ++;keepDirty();if(bad){PUSHBAD++;dbErr=why;dbOk=false;dbShow()}else{PUSHBAD=0;if(PULLED&&dbErr){dbErr='';dbOk=true;dbShow()}}}catch(e){}finally{pushing--}}
+  await Promise.all(ops);WSEQ++;keepDirty();if(bad){PUSHBAD++;dbErr=why;dbOk=false;dbShow()}else{PUSHBAD=0;if(PULLED&&dbErr){dbErr='';dbOk=true;dbShow()}}}catch(e){}finally{pushing--}}
 /* records changed on this device that the database has not confirmed yet */
 function dirty(){const c=snap(S);return [...AK,...MK].some(k=>{const a=c[k]||{},b=Rm[k]||{};return Object.keys(a).some(i=>a[i]!==b[i])||Object.keys(b).some(i=>!(i in a))})}
 async function pull(){if(!DB||pushing||PULLING)return;PULLING=1;try{await pull0()}finally{PULLING=0}}
 async function pull0(){if(PULLED&&dirty()){await push();if(dirty()&&PUSHBAD<4)return}await refreshTok();
  try{const w0=WSEQ,r0=await dbf(`${DB}/amaya.json${AQ()}`,{},25000),d0=await r0.json();
   if(!r0.ok||(d0&&d0.error)){dbErr=(d0&&d0.error)||('HTTP '+r0.status);dbOk=false;dbShow();return}
-  if(!PUSHBAD){dbErr='';dbOk=true}dbShow();const d=d0||{};if(pushing||WSEQ!==w0)return;
-  if(!Object.keys(d).length){Rm={};push();return}
+  LASTPULL=Date.now();if(!PUSHBAD){dbErr='';dbOk=true}dbShow();const d=d0||{};if(pushing||WSEQ!==w0)return;
+  if(!Object.keys(d).length){Rm={};PULLED=1;push();return}
   const L2=m=>Object.values(m||{}),old=Object.fromEntries(S.broken.concat(S.runners).map(x=>[x.id+'|'+(x.pv||0),x.photo])),N={...S};
   N.runners=L2(d.runners).sort((a,b)=>a.id<b.id?-1:1);N.broken=L2(d.broken).sort((a,b)=>b.at-a.at);N.delays=L2(d.delays).sort((a,b)=>b.at-a.at);
   N.blog=L2(d.blog).sort((a,b)=>a.at-b.at);N.chat=L2(d.chat).sort((a,b)=>a.at-b.at);N.breaks=d.breaks||{};N.assign=d.assign||{};N.sched=d.sched||{};N.notes=L2(d.notes).sort((a,b)=>a.at-b.at);['mgrs','pts','log','att'].forEach(k=>N[k]=L2(d[k]).sort((a,b)=>a.at-b.at));N.cfg=d.cfg||{};N.tokens=d.tokens||{};N.absences=L2(d.absences).sort((a,b)=>a.at-b.at);N.checks=L2(d.checks).sort((a,b)=>a.at-b.at);N.warns=L2(d.warns).sort((a,b)=>a.at-b.at);N.wrong=L2(d.wrong).sort((a,b)=>a.at-b.at);N.menu=L2(d.menu);N.quiz=L2(d.quiz).sort((a,b)=>a.at-b.at);N.meet=L2(d.meet).sort((a,b)=>a.at-b.at);N.mresp=L2(d.mresp).sort((a,b)=>a.at-b.at);N.dcomp=L2(d.dcomp).sort((a,b)=>a.at-b.at);N.dsales=L2(d.dsales).sort((a,b)=>a.at-b.at);N.zrep=L2(d.zrep);N.bills=L2(d.bills);N.tdist=L2(d.tdist);N.halls=L2(d.halls);N.dpraise=L2(d.dpraise).sort((a,b)=>a.at-b.at);N.hnotes=L2(d.hnotes).sort((a,b)=>a.at-b.at);N.thand=L2(d.thand).sort((a,b)=>a.at-b.at);N.tday=L2(d.tday);N.tsess=L2(d.tsess).sort((a,b)=>a.at-b.at);N.orders=L2(d.orders).sort((a,b)=>a.at-b.at);N.notes=(N.notes||[]).map(n=>({...n,read:n.read||{}}));{const sh=L2(d.shifts).sort((a,b)=>a.ord-b.ord);N.shifts=sh.length?sh:DEFSH()}ensureSeed(N);
   N.broken.concat(N.runners).forEach(x=>{const k=x.id+'|'+(x.pv||0);x.photo=old[k]||PHC[k]||'';if(x.hp)PH[x.id]=1});
   const SRV=snap(N);
   /* keep what this device changed and the database has not confirmed yet */
-  if(!PULLED){const PD=SS.get('amaya_dirty',[]);if(Array.isArray(PD)&&PD.length){const cs=snap(S);PD.forEach(([k,i])=>{if(AK.includes(k)){const loc=(S[k]||[]).find(x=>UID[k](x)===i),arr=(N[k]||[]).filter(x=>UID[k](x)!==i);if(loc)arr.push(loc);N[k]=arr}else if(MK.includes(k)){N[k]={...(N[k]||{})};if(cs[k]&&i in cs[k])N[k][i]=S[k][i];else delete N[k][i]}})}}
-  if(PULLED){const cs=snap(S);AK.forEach(k=>{const a=cs[k]||{},b=Rm[k]||{},di=Object.keys(a).filter(i=>a[i]!==b[i]),gone=new Set(Object.keys(b).filter(i=>!(i in a)));if(!di.length&&!gone.size)return;const loc={};(S[k]||[]).forEach(x=>loc[UID[k](x)]=x);const arr=(N[k]||[]).filter(x=>!gone.has(UID[k](x)));di.forEach(i=>{const j=arr.findIndex(x=>UID[k](x)===i);if(j>=0)arr[j]=loc[i];else arr.push(loc[i])});N[k]=arr});
-   MK.forEach(k=>{const a=cs[k]||{},b=Rm[k]||{};const di=Object.keys(a).filter(i=>a[i]!==b[i]),gone=Object.keys(b).filter(i=>!(i in a));if(!di.length&&!gone.length)return;N[k]={...(N[k]||{})};di.forEach(i=>N[k][i]=S[k][i]);gone.forEach(i=>delete N[k][i])})}
+  if(!PULLED){const PD=SS.get('amaya_dirty',[]);if(Array.isArray(PD)&&PD.length){const cs=snap(S);PD.forEach(([k,i,bs])=>{if(AK.includes(k)){const loc=(S[k]||[]).find(x=>UID[k](x)===i),sv=(N[k]||[]).find(x=>UID[k](x)===i),arr=(N[k]||[]).filter(x=>UID[k](x)!==i);if(loc)arr.push(merge3(sv,loc,bs));N[k]=arr}else if(MK.includes(k)){N[k]={...(N[k]||{})};if(cs[k]&&i in cs[k])N[k][i]=merge3(N[k][i],S[k][i],bs);else delete N[k][i]}})}}
+  if(PULLED){const cs=snap(S);AK.forEach(k=>{const a=cs[k]||{},b=Rm[k]||{},di=Object.keys(a).filter(i=>a[i]!==b[i]),gone=new Set(Object.keys(b).filter(i=>!(i in a)));if(!di.length&&!gone.size)return;const loc={};(S[k]||[]).forEach(x=>loc[UID[k](x)]=x);const arr=(N[k]||[]).filter(x=>!gone.has(UID[k](x)));di.forEach(i=>{const j=arr.findIndex(x=>UID[k](x)===i);if(j>=0)arr[j]=merge3(arr[j],loc[i],b[i]);else arr.push(loc[i])});N[k]=arr});
+   MK.forEach(k=>{const a=cs[k]||{},b=Rm[k]||{};const di=Object.keys(a).filter(i=>a[i]!==b[i]),gone=Object.keys(b).filter(i=>!(i in a));if(!di.length&&!gone.length)return;N[k]={...(N[k]||{})};di.forEach(i=>N[k][i]=(i in N[k])?merge3(N[k][i],S[k][i],b[i]):S[k][i]);gone.forEach(i=>delete N[k][i])})}
   const changed=JSON.stringify(snap(N))!==JSON.stringify(snap(S));
   PULLED=1;
   if(changed){S=N;Rm=SRV;SS.set('amaya_state',S);const a=document.activeElement;
    if(!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&tab!=='chat'))render();
    else if(tab==='chat'){const cl=document.getElementById('cl');if(cl){cl.innerHTML=chatHTML();cl.scrollTop=cl.scrollHeight}}}
   else Rm=SRV;
-  keepDirty();if(PULLED&&dirty())push();lateCheck();
+  keepDirty();if(PULLED&&dirty())push();lateCheck();tsDupFix();dupPayCheck();
   S.broken.concat(S.runners).forEach(x=>{if(x.hp&&!x.photo&&!LOAD[x.id]){LOAD[x.id]=1;fetch(`${DB}/amaya_photos/${clean(x.id)}.json${AQ()}`).then(r=>r.json()).then(v=>{const b=S.broken.concat(S.runners).find(y=>y.id===x.id);if(b&&v){b.photo=v;PHC[x.id+'|'+(x.pv||0)]=v;if(!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))render()}}).catch(()=>{}).finally(()=>{delete LOAD[x.id]})}});
  }catch(e){dbErr=(e&&e.message)||'network';dbOk=false;dbShow()}}
 
@@ -2792,12 +2795,22 @@ function vTact(){const chev=S.lang==='ar'?'‹':'›',bk=S.lang==='ar'?'›':'�
   return top+`<div class="ta-l">${T('اختر الطاولة','Pick the table',"Masayı seçin")}</div>`+(L.length?`<div class="op-tbls">${L.map(x=>`<button class="op-tb on st${tState(x)}" onclick="tpTable('${x.id}')"><span class="lb"><i class="tdot t${tState(x)}"></i>${tStateName(tState(x))}</span><b>${tLabel(x)}</b><span class="mt">${esc(nm(x.rid))} · ${x.guests} ${T('أشخاص','guests',"misafir")}</span><span class="mt">${tsOrders(x.id).reduce((a,o)=>a+ordQty(o),0)} ${T('أصناف','items',"ürün")}</span></button>`).join('')}</div>`:`<div class="nb p-6 text-center text-gray-500">${T('لا توجد طاولات مفتوحة','No open tables',"Açık masa yok")}</div>`)}
  return top+`<div class="nb p-5"><div class="flex justify-between items-center mb-2"><div class="font-bold text-lg">${T('طاولة ','Table ',"Masa ")}${tLabel(s)} <span class="text-sm text-gray-500 font-normal">· ${esc(nm(s.rid))}</span></div><span class="text-sm"><i class="tdot t${tState(s)}"></i>${tStateName(tState(s))}</span></div>${taBody(s)}</div>`}
 
-const tsOpen=t=>(S.tsess||[]).filter(x=>!x.end&&tNorm(x.table)===tNorm(t)).sort((a,b)=>b.at-a.at)[0]||null;
+const tsOpen=t=>{const L=(S.tsess||[]).filter(x=>!x.end&&tNorm(x.table)===tNorm(t)).sort((a,b)=>b.at-a.at);const r=S.session&&S.session.role==='runner'?S.session.id:'';return (r&&L.find(x=>x.rid===r))||L[0]||null};
+/* two captains opened the same number at the same moment: the earlier one keeps it, the later one gets the next free letter */
+function tsDupFix(){const r=S.session&&S.session.role==='runner'?S.session.id:'';if(!r)return;let ch=0;
+ (S.tsess||[]).filter(x=>!x.end&&x.rid===r).forEach(s=>{const same=(S.tsess||[]).filter(x=>x!==s&&!x.end&&tNorm(x.table)===tNorm(s.table));if(!same.length)return;
+  const first=[s,...same].sort((a,b)=>(a.at-b.at)||(a.id<b.id?-1:1))[0];if(first===s)return;
+  let nt='';for(const L of 'ABCDEFGHJK'){const c=tNorm(s.table)+L;if(!(S.tsess||[]).some(x=>!x.end&&tNorm(x.table)===c)){nt=c;break}}if(!nt)return;
+  const old=s.table;s.table=nt;(S.orders||[]).filter(o=>o.sess===s.id).forEach(o=>o.table=nt);const b=billOf(s.id);if(b)b.table=nt;taLog(s,{t:'table',from:old,to:nt});if(ORD.table&&tNorm(ORD.table)===tNorm(old))ORD.table=nt;ch=1;
+  toast(T('طاولة ','Table ',"Masa ")+old+T(' فتحها كابتن آخر قبلك بلحظة. صار رقم طاولتك ',' was opened by another captain a moment before you. Your table is now '," sizden hemen önce başka bir kaptan tarafından açıldı. Masanızın yeni numarası ")+nt)});
+ if(ch){save();render()}}
+async function tsDupNow(){if(!DB)return;try{await refreshTok();const a=AQ(),q='orderBy='+encodeURIComponent('"$key"')+'&startAt='+encodeURIComponent('"ts'+(Date.now()-864e5)+'"');const r=await dbf(`${DB}/amaya/tsess.json${a?a+'&':'?'}${q}`,{},5000);if(!r.ok)return;const d=await r.json(),cs=snap(S);Rm.tsess=Rm.tsess||{};
+ Object.values(d||{}).forEach(x=>{if(!x||!x.id)return;const u=clean(x.id);if(cs.tsess[u]!==Rm.tsess[u])return;const j=S.tsess.findIndex(y=>y.id===x.id);if(j<0)S.tsess.push(x);else S.tsess[j]=x;Rm.tsess[u]=JSON.stringify(x)});tsDupFix()}catch(e){}}
 const tsOrders=sid=>(S.orders||[]).filter(o=>o.sess===sid).sort((a,b)=>a.at-b.at);
 const ordQty=o=>(o.items||[]).reduce((a,x)=>a+(+x.qty||0),0);
 function tsStart(table){const r=me(),g=Math.round(+aiDigits(ORD.gin));table=tNorm(table);if(!r||!table)return toast(T('اكتب رقم الطاولة','Enter the table number',"Masa numarasını yazın"));
  if(!g||g<1||g>200)return toast(T('اكتب عدد الأشخاص','Enter the number of guests',"Misafir sayısını yazın"));{const bz=tsOpen(table);if(bz)return toast(T('طاولة ','Table ',"Masa ")+table+T(' مفتوحة باسم ',' is open under '," şu kişi adına açık: ")+nm(bz.rid)+T('. لا تُفتح مرة ثانية قبل دفع الحساب. استخدم اسماً آخر مثل ','. It cannot be opened again before the bill is paid. Use another name such as ',". Hesap ödenmeden tekrar açılamaz. Başka bir ad kullanın, örn. ")+table+'A')}
- S.tsess=S.tsess||[];S.tsess.push({id:'ts'+Date.now()+Math.random().toString(36).slice(2,5),table,rid:r.id,guests:g,at:Date.now(),day:dayKey()});ORD={table,gin:'',g:'kitchen',sec:'',cart:{},note:'',q:'',info:''};save();NAVA=1;render()}
+ S.tsess=S.tsess||[];S.tsess.push({id:'ts'+Date.now()+Math.random().toString(36).slice(2,5),table,rid:r.id,guests:g,at:Date.now(),day:dayKey()});ORD={table,gin:'',g:'kitchen',sec:'',cart:{},note:'',q:'',info:''};save();NAVA=1;render();setTimeout(tsDupNow,1500)}
 function tsPick(table){ORD={table:tNorm(table),gin:'',g:'kitchen',sec:'',cart:{},note:'',q:''};NAVA=1;render()}
 function tsLeave(){ORD={table:'',gin:'',g:'kitchen',sec:'',cart:{},note:'',q:''};NAVA=1;render()}
 function tsClose(id){const x=(S.tsess||[]).find(s=>s.id===id);if(!x||x.end)return;if(tsOrders(id).length&&!isStaff())return toast(T('الطاولة عليها طلبات، تُغلق بعد دفع الحساب عند الكاشير','This table has orders. It closes when the bill is paid at the cashier',"Masada sipariş var. Hesap kasada ödenince kapanır"));if(Object.keys(ORD.cart).length&&!confirm(T("يوجد طلب لم يُرسل بعد. هل تغلق الطاولة؟",'There is an unsent order. Close the table anyway?',"Gönderilmemiş bir sipariş var. Masa yine de kapatılsın mı?")))return;x.end=Date.now();save();tsLeave();toast(T("أُغلقت الطاولة",'Table closed',"Masa kapatıldı"))}
@@ -2847,7 +2860,8 @@ function ordSec(k){const inG=menuAll().filter(i=>!i.hide&&i.ok!==false&&ordGrp(i
 function ordSend(){const s=tsOpen(ORD.table),r=me();if(!s||!r)return;const items=Object.entries(ORD.cart).filter(([k,v])=>v.qty>0).map(([k,v])=>{const mid=kMid(k),i=mOne(mid),o={mid,qty:v.qty,note:String(v.note||'').trim().slice(0,200),g:i?ordGrp(i):'kitchen'};if(i)o.n={ar:i.name.ar||'',en:i.name.en||''};if(kOpt(k))o.opt=kOpt(k);return o});
  if(!items.length)return toast(T("اختر صنفاً واحداً على الأقل",'Pick at least one item',"En az bir ürün seçin"));
  S.orders=S.orders||[];S.orders.push({id:'or'+Date.now()+Math.random().toString(36).slice(2,5),sess:s.id,table:s.table,rid:r.id,cn:r.name,gs:s.guests,at:Date.now(),day:dayKey(),items,note:String(ORD.note||'').trim().slice(0,300)});
- ORD.cart={};ORD.note='';ORD.v='';ORD.sec='';save();render();toast(T("تم تسجيل الطلب",'Order recorded',"Sipariş kaydedildi"))}
+ ORD.cart={};ORD.note='';ORD.v='';ORD.sec='';save();render();toast(T("تم تسجيل الطلب",'Order recorded',"Sipariş kaydedildi"));ordPaidCheck(s.id)}
+async function ordPaidCheck(sid){if(!DB)return;try{await refreshTok();const r=await dbf(`${DB}/amaya/tsess/${clean(sid)}.json${AQ()}`,{},5000);if(!r.ok)return;const x=await r.json();if(x&&x.end&&!x.del)toast(T('انتبه: هذه الطاولة دُفع حسابها وأُغلقت. أبلغ الكاشير بالطلب الجديد','Note: this table was already paid and closed. Tell the cashier about the new order',"Dikkat: bu masanın hesabı ödendi ve kapandı. Yeni siparişi kasaya bildirin"))}catch(e){}}
 function ordDel(id){if(!isStaff())return;if(!confirm(T('حذف هذا الطلب؟','Delete this order?',"Bu sipariş silinsin mi?")))return;const o=(S.orders||[]).find(x=>x.id===id);if(!o)return;if(!isStaff()&&(!me()||o.rid!==me().id))return;S.orders=S.orders.filter(x=>x.id!==id);save();render()}
 /* order slip: one slip per station, preview then system print */
 const ordNo=o=>(S.orders||[]).filter(x=>x.day===o.day&&x.at<=o.at).length;
@@ -3154,7 +3168,7 @@ function billHtml(b,s,c){const ln=c.lines.filter(l=>l.net>0);return `<div class=
 async function billPrintOut(b,s,c){let pa=document.getElementById('printArea');if(!pa){pa=document.createElement('div');pa.id='printArea';document.body.appendChild(pa)}pa.innerHTML=billHtml(b,s,c);
  if(isDesk()){document.body.classList.add('tkprint');await new Promise(r=>setTimeout(r,150));let r;try{const h=pa.firstElementChild?pa.firstElementChild.offsetHeight:800;r=await window.amayaDesktop.print({heightMicrons:Math.ceil((h+24)*25400/96)})}catch(e){r={ok:false,error:String(e&&e.message||e)}}document.body.classList.remove('tkprint');return toast(r&&r.ok?T('تمت طباعة الحساب','Bill printed',"Hesap yazdırıldı"):T('لم تتم الطباعة: ','Not printed: ',"Yazdırılamadı: ")+((r&&r.error)||''))}
  document.body.classList.add('tkprint');const done=()=>{document.body.classList.remove('tkprint');removeEventListener('afterprint',done)};addEventListener('afterprint',done);setTimeout(()=>{try{window.print()}catch(e){toast(T('الطباعة غير متاحة على هذا الجهاز','Printing is not available on this device',"Bu cihazda yazdırma kullanılamıyor"))}setTimeout(done,60000)},80)}
-let PAYING=0;const LATEW={};
+const PAYING={},LATEW={};
 /* reads only this table and its orders from the database (max a few seconds) */
 async function tsFresh(sid,ms){const s0=(S.tsess||[]).find(x=>x.id===sid);if(!s0||!DB)return null;
  try{await refreshTok();const a=AQ(),q='orderBy='+encodeURIComponent('"$key"')+'&startAt='+encodeURIComponent('"or'+((+s0.at||Date.now())-36e5)+'"');
@@ -3164,7 +3178,7 @@ async function tsFresh(sid,ms){const s0=(S.tsess||[]).find(x=>x.id===sid);if(!s0
   if(ss&&ss.id===sid){const u=clean(sid);if(cs.tsess[u]===Rm.tsess[u]){const j=S.tsess.findIndex(y=>y.id===sid);if(j>=0)S.tsess[j]=ss;Rm.tsess[u]=JSON.stringify(ss)}}
   S.orders.sort((x,y)=>x.at-y.at);const s1=(S.tsess||[]).find(x=>x.id===sid);
   return {closed:!!(s1&&s1.end),more:tsOrders(sid).length>n0||billCalc(s1,billOf(sid)).total!==t0}}catch(e){return null}}
-async function bPay(sid){if(PAYING)return;PAYING=1;try{await bPay0(sid)}finally{PAYING=0}}
+async function bPay(sid){if(PAYING[sid])return toast(T('لحظة، الدفع جارٍ لهذه الطاولة','One moment, this table is being paid',"Bir saniye, bu masanın ödemesi sürüyor"));PAYING[sid]=1;try{await bPay0(sid)}finally{delete PAYING[sid]}}
 async function bPay0(sid){let s=(S.tsess||[]).find(x=>x.id===sid);if(!s)return;if(s.end)return toast(T('هذه الطاولة مغلقة','This table is closed',"Bu masa kapalı"));
  const btn=document.querySelector('.bk-side .op-main');if(btn){btn.disabled=true;btn.textContent=T('لحظة...','One moment...',"Bir saniye...")}
  const f=await tsFresh(sid,2500);s=(S.tsess||[]).find(x=>x.id===sid);
@@ -3173,13 +3187,19 @@ async function bPay0(sid){let s=(S.tsess||[]).find(x=>x.id===sid);if(!s)return;i
  if(!tsOrders(s.id).length){render();if(!confirm(T('لا توجد طلبات على طاولة ','There are no orders on table ',"Masada sipariş yok: ")+s.table+T('. إغلاقها بدون حساب؟','. Close it without a bill?',". Hesapsız kapatılsın mı?")))return;const ob=billOf(sid);if(ob&&ob.status!=='paid')S.bills=S.bills.filter(x=>x!==ob);s.end=Date.now();logAct(' '+T('إغلاق طاولة فارغة ','closed empty table ',"boş masa kapatıldı ")+s.table);KSEL='';save();render();payCheck();return toast(T('أُغلقت الطاولة','Table closed',"Masa kapatıldı"))}
  const b=billEnsure(sid),c=billCalc(s,b);if(c.miss){render();return toast(T('بعض الأصناف بدون سعر. اكتب السعر أولاً','Some items have no price. Enter it first',"Bazı ürünlerin fiyatı yok. Önce fiyatı girin"))}
  if(c.mg){if(!b.prints){render();return toast(T('اطبع الحساب ليوقّع عليه المدير أولاً','Print the bill for the manager to sign first',"Önce yöneticinin imzalaması için hesabı yazdırın"))}b.pay='mgmt'}
- if(!confirm(T('تأكيد الدفع وإغلاق الطاولة؟ ','Confirm payment and close the table? ',"Ödeme onaylanıp masa kapatılsın mı? ")+iqd(c.total)+' · '+kPayName(b.pay))){render();return}
+ const old=DB&&!f?Math.round((Date.now()-(LASTPULL||0))/1000):0,warn=old>15?T('تنبيه: الاتصال ضعيف وآخر تحديث قبل ','Warning: weak connection, last update ',"Uyarı: bağlantı zayıf, son güncelleme ")+(old>3600?T('أكثر من ساعة','over an hour',"bir saatten fazla"):old+T(' ثانية',' seconds ago'," saniye önce"))+T('. قد توجد طلبات لم تصل بعد، تأكد من الكابتن.\n\n','. Some orders may not have arrived yet; check with the captain.\n\n',". Henüz gelmemiş siparişler olabilir; kaptana sorun.\n\n"):'';
+ if(!confirm(warn+T('تأكيد الدفع وإغلاق الطاولة؟ ','Confirm payment and close the table? ',"Ödeme onaylanıp masa kapatılsın mı? ")+iqd(c.total)+' · '+kPayName(b.pay))){render();return}
  Object.assign(b,billSnap(s,b),{status:'paid',paidAt:Date.now(),cid:S.session.id,nOrd:tsOrders(s.id).length});if(!s.end)s.end=Date.now();logAct(' '+T('دفع حساب طاولة ','paid bill table ',"masa hesabı ödendi ")+s.table+' '+money(c.total));KSEL='';save();render();
  toast(T('تم الدفع وأُغلقت الطاولة','Paid and the table is closed',"Ödendi, masa kapatıldı"));payCheck()}
 /* after paying: tell the cashier if the save is still waiting for the connection */
 function payCheck(){if(!DB)return;setTimeout(async()=>{for(let i=0;i<150&&pushing;i++)await new Promise(r=>setTimeout(r,100));if(dirty())toast(T('لم يُحفظ الدفع في قاعدة البيانات بعد بسبب الاتصال. سيُحفظ تلقائياً عند رجوعه','The payment is not in the database yet because of the connection. It will be saved automatically when it is back',"Ödeme bağlantı nedeniyle henüz veritabanına kaydedilmedi. Bağlantı gelince otomatik kaydedilecek"))},400)}
 /* an order that reached a table after it was paid on this device */
-function lateCheck(){try{const now=Date.now();(S.bills||[]).forEach(b=>{if(b.status!=='paid'||!b.nOrd||b.cid!==(S.session&&S.session.id)||now-(b.paidAt||0)>4*36e5||LATEW[b.id])return;if(tsOrders(b.sess).length>b.nOrd){LATEW[b.id]=1;toast(T('وصل طلب جديد لطاولة ','A new order reached table ',"Ödenmiş masaya yeni sipariş: ")+b.table+T(' بعد الدفع',' after it was paid',''))}})}catch(e){}}
+/* the same table paid on two devices at once: the later bill is cancelled on the device that took it, and that cashier is told to return the money */
+function dupPayCheck(){try{const mine=S.session&&S.session.id;if(!mine)return;const by={};(S.bills||[]).forEach(b=>{if(b.status==='paid')(by[b.sess]=by[b.sess]||[]).push(b)});let ch=0;
+ Object.values(by).forEach(L=>{if(L.length<2)return;L.sort((a,b)=>((a.paidAt||0)-(b.paidAt||0))||(a.id<b.id?-1:1));L.slice(1).forEach(b=>{if(b.cid!==mine)return;b.status='void';b.dup=1;b.voidAt=Date.now();b.voidWhy=T('دفع مكرر','Duplicate payment',"Mükerrer ödeme");ch=1;logAct(' '+T('إلغاء دفع مكرر لطاولة ','cancelled duplicate payment, table ',"mükerrer ödeme iptal, masa ")+b.table+' '+money(+b.total||0));
+  toast(T('انتبه: طاولة ','Note: table ',"Dikkat: masa ")+b.table+T(' دُفعت قبلك من جهاز آخر. أُلغي حسابك المكرر. أرجع للزبون ',' was already paid on another device. Your duplicate bill was cancelled. Return to the guest '," başka bir cihazda zaten ödendi. Mükerrer hesabınız iptal edildi. Misafire iade edin: ")+money(+b.total||0))})});
+ if(ch){save();render()}}catch(e){}}
+function lateCheck(){try{const now=Date.now();(S.bills||[]).forEach(b=>{if(b.status!=='paid'||!b.nOrd||b.cid!==(S.session&&S.session.id)||now-(b.paidAt||0)>4*36e5||LATEW[b.id])return;if(tsOrders(b.sess).length>b.nOrd){LATEW[b.id]=1;toast(T('طاولة ','Table ',"Masa ")+b.table+T(': وصل طلب لم يُحسب في الدفع. راجع الحساب (إرجاع طاولة مدفوعة)',': an order arrived that was not in the payment. Check the bill (reopen a paid table)',': ödemede olmayan bir sipariş geldi. Hesabı kontrol edin (ödenen masayı geri aç)'))}})}catch(e){}}
 function bVoidBill(id){const b=(S.bills||[]).find(x=>x.id===id);if(!b)return;const why=prompt(T('سبب إلغاء الحساب','Reason for voiding the bill',"Hesap iptal nedeni"),'');if(!why)return;b.status='void';b.voidWhy=String(why).slice(0,160);b.voidAt=Date.now();b.voidBy=S.session.id;const s=(S.tsess||[]).find(x=>x.id===b.sess);if(s&&s.end&&b.paidAt)delete s.end;logAct(' '+T('إلغاء حساب طاولة ','void bill table ',"masa hesabı iptal ")+b.table);save();render()}
 function billEditor(s){const b=billOf(s.id)||{lines:{},disc:{},svc:0,pay:'cash',status:'open'},c=billCalc(s,b),lock=b.status==='paid',sid=s.id;
  const rows=c.lines.map(l=>`<div class="bk-l ${l.net<=0?'vd':''}"><div class="bk-n"><b>${esc(S.lang==='ar'?(l.n.ar||l.n.en):(l.n.en||l.n.ar))}</b>${l.opt?`<span class="op-tag">${sugName(l.opt)}</span>`:''}${l.comp?`<span class="op-tag">${T('ضيافة','Complimentary',"İkram")}</span>`:''}${l.void?`<small>${T('أُلغي ','voided ',"iptal ")+l.void}</small>`:''}${l.can?`<small>${T('إلغاء ','cancelled ',"iptal ")+l.can}</small>`:''}${l.ret?`<small>${T('إرجاع ','returned ',"iade ")+l.ret}</small>`:''}${l.ex?`<small>${T('تبديل ','exchanged ',"değişim ")+l.ex}</small>`:''}

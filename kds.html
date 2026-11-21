@@ -163,6 +163,8 @@ function showLogin(){NEEDLOGIN=true;$('gate').style.display='flex';$('gB').style
 $('lg').addEventListener('submit',async()=>{$('lgE').textContent='';$('lb').disabled=true;try{await signIn($('lu').value,$('lp').value);$('lp').value='';NEEDLOGIN=false;$('lg').style.display='none';$('gate').style.display='none';audioOn();wake();load()}catch(e){$('lgE').textContent=L.bad}finally{$('lb').disabled=false}});
 
 /* ---------- data ---------- */
+/* order note plus the captain's message to this station */
+const ON=o=>{const a=[];if(o.note)a.push(o.note);const g=o.gnote||{};Object.keys(g).forEach(k=>{if(g[k]&&(CFG.st==='all'||CFG.st===k))a.push((CFG.st==='all'?(L[k]||k)+': ':'')+g[k])});return a.join(' · ')};
 let ORDERS=[],SESS={},SEEN=null,LATEWARN={},ONLINE=false;
 /* ---------- auto print: one ticket per new order for this station ---------- */
 const PKEY='kds_printed_'+CFG.st;let PRINTED=null,PQ=[],PBUSY=false;
@@ -176,7 +178,7 @@ function prHtml(o){const s=SESS[o.sess]||{},its=(o.items||[]).filter(x=>CFG.st==
  return `<div class="ps">${esc(L[CFG.st]||L.all)}</div><div class="pt"><span>${L.table}</span><b>${esc(s.table||o.table)}</b></div>
  <div class="pm"><span>${esc(o.cn||'')}${(o.gs||s.guests)?' · '+esc(o.gs||s.guests)+' '+L.guests:''}</span><span>${pad(d.getHours())}:${pad(d.getMinutes())}</span></div>
  ${its.map(x=>`<div class="pi"><span class="q">${x.qty}×</span><span>${esc(itemName(x))}${x.opt?`<small>${esc(L.sugar[x.opt]||x.opt)}</small>`:''}${x.note?`<small>${L.note}: ${esc(x.note)}</small>`:''}</span></div>`).join('')}
- ${o.note?`<div class="pn">${esc(o.note)}</div>`:''}<div class="pf">amaya</div>`}
+ ${ON(o)?`<div class="pn">${esc(ON(o))}</div>`:''}<div class="pf">amaya</div>`}
 function prNext(){if(PBUSY||!PQ.length)return;PBUSY=true;const o=PQ.shift();$('tkp').innerHTML=prHtml(o);
  let done=false;const fin=()=>{if(done)return;done=true;removeEventListener('afterprint',fin);PBUSY=false;setTimeout(prNext,400)};addEventListener('afterprint',fin);
  setTimeout(()=>{try{window.print()}catch(e){}setTimeout(fin,4000)},120)}
@@ -190,7 +192,7 @@ async function load(){
  if(LS.get('kds_rt')&&!CFG.auth&&Date.now()>TEXP)await refreshTok();
  const pull=()=>{const startKey='"or'+(dayStart()-36e5)+'"';return Promise.all([getJSON('/amaya/orders.json','orderBy="$key"&startAt='+encodeURIComponent(startKey)),getJSON('/amaya/tsess.json','orderBy="$key"&startAt='+encodeURIComponent('"ts'+(dayStart()-12*36e5)+'"')),getJSON('/amaya/assign.json').catch(()=>({}))])};
  try{let o,s,a;try{[o,s,a]=await pull()}catch(e){if(e.auth&&!CFG.auth&&await refreshTok())[o,s,a]=await pull();else throw e}
-  SESS={};vals(s).forEach(x=>{SESS[x.id]=x});ASG={};Object.entries(a||{}).forEach(([k,v])=>{if(typeof v==='string'){try{v=JSON.parse(v)}catch(e){v=null}}if(v)ASG[k]=v});ORDERS=vals(o).map(x=>{const p=PEND[x.id];if(p&&p.sent){x.ready=Object.assign({},x.ready,p.sent)}return x});setNet(true);$('err').style.display='none';
+  SESS={};vals(s).forEach(x=>{SESS[x.id]=x});ASG={};Object.entries(a||{}).forEach(([k,v])=>{if(typeof v==='string'){try{v=JSON.parse(v)}catch(e){v=null}}if(v)ASG[k]=v});ORDERS=vals(o).filter(x=>!x.hold).map(x=>{const p=PEND[x.id];if(p&&p.sent){x.ready=Object.assign({},x.ready,p.sent)}return x});setNet(true);$('err').style.display='none';
  }catch(e){setNet(false);if(e.auth){if(!CFG.auth){showLogin();return}$('err').textContent=L.auth;$('err').style.display='block'}}
  draw();prScan();rdRemind();
 }
@@ -261,7 +263,7 @@ function draw(){if(CFG.view==='tables')return drawTables();const V=visible(),now
    return `<div class="tk${late?' late':''}${now-o.at<15e3?' new':''}" data-id="${esc(o.id)}" data-k="${esc(o._k||o.id)}" data-at="${o.at}"><div class="h"><div><div class="tb">${L.table}</div><div class="tn">${esc(o.table)}</div></div><div class="tm" data-t="${o.at}">${fmt(now-o.at)}</div></div>
    <div class="meta"><span>${esc(o.cn||'')}</span><span><b>${esc(o.gs||s.guests||'')}</b> ${L.guests}</span></div>
    <div class="its">${its.map(x=>`<div class="it"><span class="q">${x.qty}×</span><span class="n">${esc(itemName(x))}${x.opt?`<span class="o">${esc(L.sugar[x.opt]||x.opt)}</span>`:''}${x.note?`<span class="x">${esc(x.note)}</span>`:''}</span></div>`).join('')}</div>
-   ${v.items.length>max?`<div class="more">+${v.items.length-max} ${L.more}</div>`:''}${o.note?`<div class="nt">${esc(o.note)}</div>`:''}${rdBtn(o)}</div>`}).join('')}
+   ${v.items.length>max?`<div class="more">+${v.items.length-max} ${L.more}</div>`:''}${ON(o)?`<div class="nt">${esc(ON(o))}</div>`:''}${rdBtn(o)}</div>`}).join('')}
  tickTimers()}
 function tickTimers(){const now=Date.now(),lim=CFG.late*6e4;document.querySelectorAll('.tm[data-t]').forEach(el=>{const at=+el.dataset.t;el.textContent=fmt(now-at);const tk=el.closest('.tk,.tg');if(el.dataset.l==='0'){tk.classList.remove('late','blink');return}const late=now-at>lim;tk.classList.toggle('late',late);tk.classList.toggle('blink',late&&now-at<lim+60e3)});
  const d=new Date();$('clock').textContent=pad(d.getHours())+':'+pad(d.getMinutes())}
@@ -293,7 +295,7 @@ function drawDetail(){const t=tablesData().find(x=>x.sid===OPEN);if(!t){closeDet
  $('dL').textContent=L.table;$('dT').textContent=t.table;$('dM').textContent=[t.cn,t.gs?t.gs+' '+L.guests:'',L.opened+' '+hhmm(t.opened)].filter(Boolean).join(' · ');$('dX').textContent=L.close;
  const html=t.oo.length?t.oo.map((o,i)=>{const its=(o.items||[]).filter(x=>CFG.st==='all'||(x.g||'kitchen')===CFG.st),age=now-o.at,R=rdy(o,CFG.st),late=!R&&age>lim,rt=o.ready?Math.max(0,...myStations(o).map(g=>o.ready[g]||0)):0;
   const st=o.done?L.done:R?L.readyAt+(rt?' '+hhmm(rt):''):late?`${L.lateBy} ${minTxt(age-lim)} ${L.min}`:`${L.ago?L.ago+' ':''}${minTxt(age)} ${L.min}`;
-  return `<div class="bt${late?' late':''}${R?' done':''}"><div class="bh"><span class="t">${L.batch} ${i+1} · ${L.sent} ${hhmm(o.at)}</span><span class="s">${st}</span></div><div class="bl">${its.map(x=>`<div class="it"><span class="q">${x.qty}×</span><span class="n">${esc(itemName(x))}${x.opt?`<span class="o">${esc(L.sugar[x.opt]||x.opt)}</span>`:''}${x.note?`<span class="x x2">${esc(x.note)}</span>`:''}</span></div>`).join('')}</div>${o.note?`<div class="nt2">${esc(o.note)}</div>`:''}${R&&!(PEND[o.id]&&!PEND[o.id].sent)?'':rdBtn(o)}</div>`}).join(''):`<div class="ln" style="font-size:20px;padding:20px 0">${L.noOrd}</div>`;
+  return `<div class="bt${late?' late':''}${R?' done':''}"><div class="bh"><span class="t">${L.batch} ${i+1} · ${L.sent} ${hhmm(o.at)}</span><span class="s">${st}</span></div><div class="bl">${its.map(x=>`<div class="it"><span class="q">${x.qty}×</span><span class="n">${esc(itemName(x))}${x.opt?`<span class="o">${esc(L.sugar[x.opt]||x.opt)}</span>`:''}${x.note?`<span class="x x2">${esc(x.note)}</span>`:''}</span></div>`).join('')}</div>${ON(o)?`<div class="nt2">${esc(ON(o))}</div>`:''}${R&&!(PEND[o.id]&&!PEND[o.id].sent)?'':rdBtn(o)}</div>`}).join(''):`<div class="ln" style="font-size:20px;padding:20px 0">${L.noOrd}</div>`;
  const h=JSON.stringify([t.oo.map(o=>[o.id,rdy(o,CFG.st),now-o.at>lim,PEND[o.id]?Math.ceil((PEND[o.id].until-now)/1000):0]),minTxt(now)]);if($('dB').dataset.h!==h){$('dB').dataset.h=h;$('dB').innerHTML=html}}
 const hhmm=ts=>{const d=new Date(ts);return pad(d.getHours())+':'+pad(d.getMinutes())};
 function openDet(sid){OPEN=sid;$('det').classList.add('on');$('dB').dataset.h='';drawDetail()}

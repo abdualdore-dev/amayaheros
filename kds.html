@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="KDS">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700;800&display=swap">
 <title>Amaya KDS</title>
 <style>
 :root{--bg:#000;--fg:#fff;--dim:#9a9a9a;--line:#2b2b2b}
@@ -101,6 +102,29 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 #lgE{color:var(--fg);font-weight:700;min-height:20px;font-size:15px}
 #top .st{white-space:nowrap}
 @media (max-width:520px){#top{gap:10px;padding:0 10px}#top .k span{display:none}#clock{font-size:20px}}
+
+/* ticket look: paper tickets hanging on the pass */
+html,body{font-family:"Alexandria",-apple-system,"Segoe UI",Tahoma,"Noto Sans Arabic",sans-serif}
+body{background:#161C21}
+.tk,.tg,.bt{--fg:#0F1419;--bg:#FFFFFF;--dim:#56626B;--line:#E4E8EB;background:#FFFFFF;color:#0F1419;border:0;border-radius:4px;box-shadow:0 4px 14px rgba(0,0,0,.35);position:relative;overflow:visible}
+.tk::before,.tg::before{content:"";position:absolute;top:-5px;left:50%;width:46px;height:14px;margin-left:-23px;border-radius:4px;background:#3A4651;z-index:2}
+#grid{padding-top:18px;row-gap:22px;background:linear-gradient(#2A333B,#2A333B) 0 8px/100% 6px no-repeat}
+.tk .h,.bt .bh{border-bottom:2px dashed #C9D2DA}
+.tk .rd,.bt .rd{border-radius:8px}
+.tk.late,.tg.late{background:#FFF3EB;color:#0F1419;outline:5px solid #E07A2F;outline-offset:0}
+.tk.late .h,.tk.late .nt{border-color:#E2B79C}.tk.late .tb,.tk.late .meta,.tk.late .more{color:#7A3A17}.tk.late .meta b{color:#0F1419}.tk.late .it{border-color:#F0D8C8}.tk.late .x{border-color:#0F1419}
+.tk.late .tm{color:#A8461A}
+.tk.late .rd{background:#0F1419;color:#fff;border-color:#0F1419}
+.tg.late .ln{color:#7A3A17}.tg.late .ln b{color:#0F1419}
+.bt.late .rd{background:#0F1419;color:#fff;border-color:#0F1419}
+@keyframes lateblink{50%{outline-color:#FFB07A}}
+.tk.late.blink,.tg.late.blink{animation:lateblink 1s steps(1) infinite}
+.tk .fz{background:#2F5BFF!important;color:#fff!important}
+.tk.held,.bt.held{background:transparent;color:#DDE3E8;box-shadow:none;outline:2px dashed #6B7882;--fg:#DDE3E8;--dim:#9AA6AF;--line:#33404A}
+.tk.held::before{background:#55626C}
+@keyframes tkdrop{0%{transform:translateY(-40px) rotate(-3deg);opacity:0}70%{transform:translateY(5px) rotate(.6deg);opacity:1}100%{transform:none}}
+.tk.new{animation:tkdrop .6s cubic-bezier(.2,.9,.3,1.1)}
+@media (prefers-reduced-motion:reduce){.tk.new{animation:none}}
 </style>
 </head>
 <body>

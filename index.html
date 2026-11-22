@@ -777,6 +777,23 @@ body{font-weight:400}
 #app .pos-top .pos-tb{border-color:#5A656C}
 .pos-rail{scrollbar-width:none}.pos-rail::-webkit-scrollbar{display:none}
 #app .pos-bar,#app .pos-bar *{color:#FFFFFF!important}
+.pos-mod{max-height:86vh;overflow-y:auto}
+.pm-g{margin-bottom:14px}.pm-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}.pm-h b{font-size:1rem}.pm-h small{font-size:.78rem;color:#56616A!important}
+.pm-c{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px}
+.pm-c button{min-height:50px;padding:6px 10px;border-radius:12px;border:1.5px solid #D5DBDF;background:#fff;font-size:.98rem;font-weight:600;cursor:pointer}
+.pm-c button.on{background:#14181C;border-color:#14181C;color:#fff!important}
+.pm-a{display:grid;grid-template-columns:1fr 2fr;gap:8px;position:sticky;bottom:-1px;background:#fff;padding-top:8px}.pm-a .btn{height:52px}.pm-ok[disabled]{opacity:.4}
+.md-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.md-2 label,.md-l{display:block;font-size:.85rem;font-weight:600;margin:10px 0 4px}
+.md-ck{display:flex;gap:8px;align-items:center;margin:10px 0;font-size:.92rem}.md-ck input{width:20px;height:20px}
+.md-secs,.md-hits{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}.md-secs button,.md-hits button{min-height:40px;padding:4px 12px;border-radius:10px;border:1px solid #D5DBDF;background:#fff;font-weight:600;cursor:pointer;font-size:.88rem}
+.md-secs button.on,.md-hits button.on{background:#14181C;border-color:#14181C;color:#fff!important}.md-hits small{display:block;font-weight:400;font-size:.72rem;opacity:.75}
+.md-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.md-del{margin-inline-start:auto;color:#A8461A!important}
+.md-card{cursor:pointer}.md-chs{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 6px}.md-chs i{font-style:normal;font-size:.82rem;padding:2px 10px;border-radius:999px;background:#EEF1F3}.md-on{color:#56616A!important;font-size:.8rem}
+.sh-card{max-width:640px}.sh-mu{color:#56616A!important}.sh-big{display:flex;flex-direction:column;padding:12px 0 14px;border-bottom:1px solid #E3E7EA}.sh-big span{font-size:.85rem;color:#56616A!important}.sh-big b{font-size:2rem;font-weight:800;line-height:1.2}.sh-big small{color:#56616A!important}
+.sh-h{font-size:.8rem;font-weight:700;color:#56616A!important;margin:14px 0 4px}.sh-r{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #F0F2F4;font-variant-numeric:tabular-nums}.sh-r small{color:#56616A!important;font-size:.78rem}
+.sh-warn{background:#FCEFE6;color:#8A3A12!important;border-radius:10px;padding:10px 12px;font-weight:600;font-size:.9rem;margin-bottom:6px}.sh-go{height:52px}
+.sh-past{display:flex;justify-content:space-between;align-items:center;cursor:pointer;max-width:640px}.sh-past small{display:block;color:#56616A!important;font-size:.78rem}
+.sh-slip .sh-big b{font-size:1.5rem}.sh-slip .sh-r{padding:3px 0;border-color:#ccc}.sh-slip .sh-h{color:#000!important;border-bottom:1px solid #000;margin-top:8px}
 .pos-check{position:sticky;top:70px;background:#fff;border-radius:14px;display:flex;flex-direction:column;max-height:calc(100vh - 90px);overflow:hidden}
 .pos-chd{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
 .pos-chd>div:first-child{flex:1}.pos-chd small{display:block;color:var(--mute)!important;font-size:.75rem}.pos-chd b{font-size:1.5rem}
@@ -894,7 +911,7 @@ const COL=['pk','bl','gr','or','pu','ye'];
 
 /* ---------- State ---------- */
 let S=SS.get('amaya_state',{lang:'ar',runners:[],breaks:{},broken:[],delays:[],session:null});
-S.blog=S.blog||[];S.chat=S.chat||[];S.assign=S.assign||{};S.mgrs=S.mgrs||[];S.absences=S.absences||[];S.att=S.att||[];S.pts=S.pts||[];S.log=S.log||[];S.sched=S.sched||{};S.cfg=S.cfg||{};S.menu=S.menu||[];S.quiz=S.quiz||[];S.meet=S.meet||[];S.mresp=S.mresp||[];S.dcomp=S.dcomp||[];S.dsales=S.dsales||[];S.zrep=S.zrep||[];S.bills=S.bills||[];S.tdist=S.tdist||[];S.halls=S.halls||[];S.tsess=S.tsess||[];S.orders=S.orders||[];S.dpraise=S.dpraise||[];S.hnotes=S.hnotes||[];S.thand=S.thand||[];S.tday=S.tday||[];S.wrong=S.wrong||[];S.shifts=(S.shifts&&S.shifts.length)?S.shifts:DEFSH();S.notes=S.notes||[];S.runners=S.runners||[];S.breaks=S.breaks||{};S.broken=S.broken||[];S.delays=S.delays||[];
+S.shc=S.shc||[];S.blog=S.blog||[];S.chat=S.chat||[];S.assign=S.assign||{};S.mgrs=S.mgrs||[];S.absences=S.absences||[];S.att=S.att||[];S.pts=S.pts||[];S.log=S.log||[];S.sched=S.sched||{};S.cfg=S.cfg||{};S.menu=S.menu||[];S.quiz=S.quiz||[];S.meet=S.meet||[];S.mresp=S.mresp||[];S.dcomp=S.dcomp||[];S.dsales=S.dsales||[];S.zrep=S.zrep||[];S.bills=S.bills||[];S.tdist=S.tdist||[];S.halls=S.halls||[];S.tsess=S.tsess||[];S.orders=S.orders||[];S.dpraise=S.dpraise||[];S.hnotes=S.hnotes||[];S.thand=S.thand||[];S.tday=S.tday||[];S.wrong=S.wrong||[];S.shifts=(S.shifts&&S.shifts.length)?S.shifts:DEFSH();S.notes=S.notes||[];S.runners=S.runners||[];S.breaks=S.breaks||{};S.broken=S.broken||[];S.delays=S.delays||[];
 let tab='breaks',pendingPhoto='',selChar=0,loginErr=false;
 const save=()=>{SS.set('amaya_state',S);push()};
 const t=k=>{const d=L[S.lang]||L.en;return d[k]!==undefined?d[k]:L.en[k]};
@@ -1203,7 +1220,7 @@ function vChat(){return `<div class="nb ye p-3 mb-3 font-black"> ${t('tChat')}</
 function sendChat(){const i=document.getElementById('ci'),v=i.value.trim();if(!v)return;
  const r=isStaff()?null:me();S.chat.push({from:r?r.id:'owner',name:r?r.name:meName(),ic:'',text:v,at:Date.now()});
  S.chat=S.chat.slice(-200);save();render();const n=document.getElementById('ci');n&&n.focus()}
-addEventListener('storage',e=>{if(e.key!=='amaya_state'||!e.newValue)return;try{const n=JSON.parse(e.newValue);n.session=S.session;S=n;S.blog=S.blog||[];S.chat=S.chat||[];
+addEventListener('storage',e=>{if(e.key!=='amaya_state'||!e.newValue)return;try{const n=JSON.parse(e.newValue);n.session=S.session;S=n;S.shc=S.shc||[];S.blog=S.blog||[];S.chat=S.chat||[];
  if(S.session&&tab==='chat'){const cl=document.getElementById('cl');if(cl){cl.innerHTML=chatHTML();cl.scrollTop=cl.scrollHeight}}}catch(x){}});
 const _r=render;render=function(){_r();const cl=document.getElementById('cl');if(cl)cl.scrollTop=cl.scrollHeight};
 
@@ -1247,7 +1264,7 @@ async function pull0(){if(PULLED&&dirty()){await push();if(dirty()&&PUSHBAD<4)re
   if(!Object.keys(d).length){Rm={};PULLED=1;push();return}
   const L2=m=>Object.values(m||{}),old=Object.fromEntries(S.broken.concat(S.runners).map(x=>[x.id+'|'+(x.pv||0),x.photo])),N={...S};
   N.runners=L2(d.runners).sort((a,b)=>a.id<b.id?-1:1);N.broken=L2(d.broken).sort((a,b)=>b.at-a.at);N.delays=L2(d.delays).sort((a,b)=>b.at-a.at);
-  N.blog=L2(d.blog).sort((a,b)=>a.at-b.at);N.chat=L2(d.chat).sort((a,b)=>a.at-b.at);N.breaks=d.breaks||{};N.assign=d.assign||{};N.sched=d.sched||{};N.notes=L2(d.notes).sort((a,b)=>a.at-b.at);['mgrs','pts','log','att'].forEach(k=>N[k]=L2(d[k]).sort((a,b)=>a.at-b.at));N.cfg=d.cfg||{};N.tokens=d.tokens||{};N.absences=L2(d.absences).sort((a,b)=>a.at-b.at);N.checks=L2(d.checks).sort((a,b)=>a.at-b.at);N.warns=L2(d.warns).sort((a,b)=>a.at-b.at);N.wrong=L2(d.wrong).sort((a,b)=>a.at-b.at);N.menu=L2(d.menu);N.quiz=L2(d.quiz).sort((a,b)=>a.at-b.at);N.meet=L2(d.meet).sort((a,b)=>a.at-b.at);N.mresp=L2(d.mresp).sort((a,b)=>a.at-b.at);N.dcomp=L2(d.dcomp).sort((a,b)=>a.at-b.at);N.dsales=L2(d.dsales).sort((a,b)=>a.at-b.at);N.zrep=L2(d.zrep);N.bills=L2(d.bills);N.tdist=L2(d.tdist);N.halls=L2(d.halls);N.dpraise=L2(d.dpraise).sort((a,b)=>a.at-b.at);N.hnotes=L2(d.hnotes).sort((a,b)=>a.at-b.at);N.thand=L2(d.thand).sort((a,b)=>a.at-b.at);N.tday=L2(d.tday);N.tsess=L2(d.tsess).sort((a,b)=>a.at-b.at);N.orders=L2(d.orders).sort((a,b)=>a.at-b.at);N.notes=(N.notes||[]).map(n=>({...n,read:n.read||{}}));{const sh=L2(d.shifts).sort((a,b)=>a.ord-b.ord);N.shifts=sh.length?sh:DEFSH()}ensureSeed(N);
+  N.blog=L2(d.blog).sort((a,b)=>a.at-b.at);N.chat=L2(d.chat).sort((a,b)=>a.at-b.at);N.breaks=d.breaks||{};N.assign=d.assign||{};N.sched=d.sched||{};N.notes=L2(d.notes).sort((a,b)=>a.at-b.at);['mgrs','pts','log','att'].forEach(k=>N[k]=L2(d[k]).sort((a,b)=>a.at-b.at));N.cfg=d.cfg||{};N.tokens=d.tokens||{};N.absences=L2(d.absences).sort((a,b)=>a.at-b.at);N.checks=L2(d.checks).sort((a,b)=>a.at-b.at);N.warns=L2(d.warns).sort((a,b)=>a.at-b.at);N.wrong=L2(d.wrong).sort((a,b)=>a.at-b.at);N.menu=L2(d.menu);N.quiz=L2(d.quiz).sort((a,b)=>a.at-b.at);N.meet=L2(d.meet).sort((a,b)=>a.at-b.at);N.mresp=L2(d.mresp).sort((a,b)=>a.at-b.at);N.dcomp=L2(d.dcomp).sort((a,b)=>a.at-b.at);N.dsales=L2(d.dsales).sort((a,b)=>a.at-b.at);N.zrep=L2(d.zrep);N.shc=L2(d.shc);N.bills=L2(d.bills);N.tdist=L2(d.tdist);N.halls=L2(d.halls);N.dpraise=L2(d.dpraise).sort((a,b)=>a.at-b.at);N.hnotes=L2(d.hnotes).sort((a,b)=>a.at-b.at);N.thand=L2(d.thand).sort((a,b)=>a.at-b.at);N.tday=L2(d.tday);N.tsess=L2(d.tsess).sort((a,b)=>a.at-b.at);N.orders=L2(d.orders).sort((a,b)=>a.at-b.at);N.notes=(N.notes||[]).map(n=>({...n,read:n.read||{}}));{const sh=L2(d.shifts).sort((a,b)=>a.ord-b.ord);N.shifts=sh.length?sh:DEFSH()}ensureSeed(N);
   N.broken.concat(N.runners).forEach(x=>{const k=x.id+'|'+(x.pv||0);x.photo=old[k]||PHC[k]||'';if(x.hp)PH[x.id]=1});
   const SRV=snap(N);
   /* keep what this device changed and the database has not confirmed yet */
@@ -1276,7 +1293,7 @@ const LX=f=>{const o=S.lang;let a,e,r;try{S.lang='ar';a=f();S.lang='en';e=f();S.
 const noEmo=t=>String(t==null?'':t).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2300}-\u{23FF}]\u{FE0F}?\s?/gu,'').replace(/\u{FE0F}/gu,'');
 const loc=x=>noEmo((x&&typeof x==='object')?(x[S.lang]||(S.lang!=='ar'&&x.en)||x.ar||''):(x||''));
 function logAct(a){S.log.push({id:'l'+Date.now()+Math.random().toString(36).slice(2,5),at:Date.now(),who:LX(()=>S.session?(S.session.role==='runner'?(me()||{}).name:meName()):'-'),act:a});S.log=S.log.slice(-300)}
-AK.push('bills','zrep','menu','quiz','meet','mresp','dcomp','dsales','tdist','halls','dpraise','hnotes','thand','tday','tsess','orders');Object.assign(UID,{bills:x=>clean(x.id),zrep:x=>clean(x.id),tsess:x=>clean(x.id),orders:x=>clean(x.id),tday:x=>clean(x.id),thand:x=>clean(x.id),dpraise:x=>clean(x.id),hnotes:x=>clean(x.id),tdist:x=>clean(x.id),halls:x=>clean(x.id),dcomp:x=>clean(x.id),dsales:x=>clean(x.id),menu:x=>clean(x.id),quiz:x=>clean(x.id),meet:x=>clean(x.id),mresp:x=>clean(x.id),wrong:x=>clean(x.id),checks:x=>clean(x.id),warns:x=>clean(x.id),absences:x=>clean(x.id),notes:x=>clean(x.id),shifts:x=>clean(x.id),mgrs:x=>clean(x.id),att:x=>clean(x.id),pts:x=>clean(x.id),log:x=>clean(x.id)});
+AK.push('shc','bills','zrep','menu','quiz','meet','mresp','dcomp','dsales','tdist','halls','dpraise','hnotes','thand','tday','tsess','orders');Object.assign(UID,{shc:x=>clean(x.id),bills:x=>clean(x.id),zrep:x=>clean(x.id),tsess:x=>clean(x.id),orders:x=>clean(x.id),tday:x=>clean(x.id),thand:x=>clean(x.id),dpraise:x=>clean(x.id),hnotes:x=>clean(x.id),tdist:x=>clean(x.id),halls:x=>clean(x.id),dcomp:x=>clean(x.id),dsales:x=>clean(x.id),menu:x=>clean(x.id),quiz:x=>clean(x.id),meet:x=>clean(x.id),mresp:x=>clean(x.id),wrong:x=>clean(x.id),checks:x=>clean(x.id),warns:x=>clean(x.id),absences:x=>clean(x.id),notes:x=>clean(x.id),shifts:x=>clean(x.id),mgrs:x=>clean(x.id),att:x=>clean(x.id),pts:x=>clean(x.id),log:x=>clean(x.id)});
 const sig=()=>S.runners.length+'|'+S.broken.length+'|'+JSON.stringify(S.breaks)+JSON.stringify(S.assign);
 const nm=id=>(S.runners.find(r=>r.id===id)||{}).name||'';
 [['addRunner',()=>' '+document.getElementById('rn').value],['delRunner',id=>' '+nm(id)],['startBreak',id=>' '+nm(id)+' '+((document.getElementById('m_'+id)||{}).value)+'min'],['endBreak',id=>' '+nm(id)],['addBroken',()=>' '+T('تسجيل مكسور','broken item',"kırık kaydı")],['delBroken',()=>' '+T('حذف مكسور','broken deleted',"kırık kaydı silindi")],['setAssign',(id,k)=>' '+nm(id)+' → '+(k||'—')]].forEach(([n,f])=>{const o=window[n];window[n]=function(...a){const l=f(...a),b=sig();o.apply(this,a);if(sig()!==b){logAct(l);save();if(n==='endBreak'){const x=S.blog[S.blog.length-1];if(x&&x.rid===a[0]&&Date.now()-x.at<3000&&!(x.late>0))addPts(a[0],1,LX(()=>x.late>0?' '+x.late+T(' د تأخير',' min late'," dk gecikme"):' '+T('عودة في الوقت','back on time',"zamanında döndü")))}}}});
@@ -2685,11 +2702,39 @@ function menuReview(){const L=menuIssues();if(!L.length)return `<div class="nb g
  if(!MREV)return `<div class="nb p-3 mb-4 flex justify-between items-center gap-2" style="border-color:#f59e0b"><span class="font-bold">${T('مراجعة المنيو: ','Menu review: ',"Menü incelemesi: ")+L.length+T(' ملاحظة من المنيو الرسمي تحتاج تأكيدك',' issue(s) from the official menu need your confirmation'," resmi menüden gelen not onayınızı bekliyor")}</span><button class="btn !py-1" onclick="MREV=true;render()">${T('عرض','Show',"Göster")}</button></div>`;
  return `<div class="nb p-4 mb-4" style="border-color:#f59e0b"><div class="flex justify-between items-center mb-1"><h3 class="font-black">${T('مراجعة المنيو — ','Menu review — ',"Menü incelemesi — ")+L.length+T(' ملاحظة',' issue(s)'," not")}</h3><button class="btn bg-white !py-1" onclick="MREV=false;render()">${T('إخفاء','Hide',"Gizle")}</button></div><div class="text-sm mb-3">${T("هذه أشياء موجودة في المنيو الرسمي نفسه (FineDine). يمكنك تعديل الأسعار هنا، أما الأسماء والأوصاف فتُصحَّح من FineDine. اضغط \"تم\" لإخفاء الملاحظة.",'These come from the official FineDine menu. Prices can be fixed here; names and descriptions are fixed in FineDine. Press "Done" to dismiss.',"Bunlar resmi menünün (FineDine) kendisinde bulunan şeyler. Fiyatları burada düzeltebilirsiniz; isimler ve açıklamalar FineDine’da düzeltilir. Notu gizlemek için “Tamam”a basın.")}</div>${L.map(x=>`<div class="flex justify-between items-start gap-2 py-2 border-b border-gray-100"><div><div class="font-bold">${esc(mName(x.i))}</div><div class="text-sm" style="color:#b45309">${x.why.map(esc).join(' · ')}</div></div><div class="flex gap-1 shrink-0">${(x.i.prices||[]).some(p=>p.v===0)?`<button class="btn bg-white !py-1 text-sm" onclick="MREV=false;MGRP='all';mPriceOpen('${esc(x.i.id)}');setTimeout(()=>{const c=document.querySelector('[data-mi=&quot;${esc(x.i.id)}&quot;]');c&&c.scrollIntoView({block:'center'})},60)">${T('تعديل السعر','Edit price',"Fiyatı düzenle")}</button>`:''}<button class="btn bg-white !py-1 text-sm" onclick="menuOk('${esc(x.i.id)}')">${T('تم','Done',"Tamam")}</button></div></div>`).join('')}</div>`}
 let MNV='';
+/* manager: option groups (name, required, one or many, choices, which sections/items) */
+let MODE=null;
+function modEdit(id){const m=MODS().find(x=>x.id===id);MODE=m?{id:m.id,ar:m.ar||'',en:m.en||'',req:!!m.req,multi:!!m.multi,txt:(m.ch||[]).map(c=>c.ar+(c.en?' / '+c.en:'')).join('\n'),secs:(m.secs||[]).slice(),mids:(m.mids||[]).slice(),q:''}:{id:'',ar:'',en:'',req:false,multi:false,txt:'',secs:[],mids:[],q:''};render();try{scrollTo({top:0})}catch(e){}}
+function modSave(){if(!isStaff()||!MODE)return;const ch=MODE.txt.split('\n').map(l=>{const[a,e]=l.split('/');return {ar:modTxt(a),en:modTxt(e)}}).filter(c=>c.ar||c.en).slice(0,20);
+ const ar=modTxt(MODE.ar),en=modTxt(MODE.en);if(!ar&&!en)return toast(T('اكتب اسم المجموعة','Type the group name',"Grup adını yazın"));if(!ch.length)return toast(T('اكتب خيار واحد على الأقل','Add at least one choice',"En az bir seçenek ekleyin"));
+ if(!MODE.secs.length&&!MODE.mids.length)return toast(T('اختار قسم أو صنف','Pick a section or an item',"Bir bölüm veya ürün seçin"));
+ S.cfg=S.cfg||{};S.cfg.mods=MODS().slice();const o={id:MODE.id||'md'+Date.now().toString(36),ar,en,req:MODE.req?1:0,multi:MODE.multi?1:0,ch,secs:MODE.secs,mids:MODE.mids,at:Date.now()};
+ const ix=S.cfg.mods.findIndex(x=>x.id===o.id);if(ix>=0)S.cfg.mods[ix]=o;else S.cfg.mods.push(o);MODE=null;logAct('item options: '+(ar||en));save();render();toast(T('انحفظت الخيارات','Options saved',"Seçenekler kaydedildi"))}
+function modDel(id){const m=MODS().find(x=>x.id===id);if(!m||!confirm(T('تحذف مجموعة «','Delete the group "',"Grubu sil: \"")+modName(m)+T('»؟ الطلبات القديمة ما تتغير.','"? Past orders stay as they are.',"\"? Eski siparişler değişmez.")))return;S.cfg.mods=MODS().filter(x=>x.id!==id);MODE=null;save();render()}
+const modSecs=()=>[...new Map(menuAll().filter(i=>!i.quick).map(i=>[i.g+'|'+i.sec.en,i])).values()];
+function modSecTog(si){const i=modSecs()[si];if(i)modTog('secs',i.g+'|'+i.sec.en)}
+function modTog(kind,v){const a=MODE[kind],p=a.indexOf(v);if(p>=0)a.splice(p,1);else a.push(v);render()}
+function vMods(){const all=menuAll().filter(i=>!i.quick);
+ if(MODE){const secs=modSecs(),q=normAr(MODE.q||'').trim(),hits=q?all.filter(i=>normAr(i.name.ar+' '+i.name.en).includes(q)).slice(0,30):[];
+  return `<div class="nb p-4 md-ed"><h3 class="font-bold mb-3">${MODE.id?T('تعديل مجموعة','Edit group',"Grubu düzenle"):T('مجموعة جديدة','New group',"Yeni grup")}</h3>
+  <div class="md-2"><label>${T('الاسم بالعربي','Name in Arabic',"Arapça ad")}<input class="inp" value="${esc(MODE.ar)}" placeholder="${T('مثلاً درجة الاستواء','e.g. Doneness',"örn. Pişme derecesi")}" oninput="MODE.ar=this.value"></label><label>${T('الاسم بالإنكليزي','Name in English',"İngilizce ad")}<input class="inp" value="${esc(MODE.en)}" oninput="MODE.en=this.value"></label></div>
+  <label class="md-ck"><input type="checkbox" ${MODE.req?'checked':''} onchange="MODE.req=this.checked"> ${T('لازم الكابتن يختار منها قبل لا يضيف الصنف','The captain must pick one before adding the item',"Kaptan ürünü eklemeden önce seçmeli")}</label>
+  <label class="md-ck"><input type="checkbox" ${MODE.multi?'checked':''} onchange="MODE.multi=this.checked"> ${T('يكدر يختار أكثر من خيار','The captain can pick more than one',"Birden fazla seçilebilir")}</label>
+  <label class="md-l">${T('الخيارات، كل خيار بسطر. تكدر تكتب الإنكليزي بعد /','Choices, one per line. Add English after /',"Seçenekler, her satıra bir tane. İngilizceyi / sonrasına yazın")}<textarea class="inp" rows="5" placeholder="${T('نص استواء / Medium rare','Medium rare',"Az pişmiş")}" oninput="MODE.txt=this.value">${esc(MODE.txt)}</textarea></label>
+  <div class="md-l">${T('تطلع ويا أصناف هاي الأقسام','Show on items in these sections',"Bu bölümlerdeki ürünlerde göster")}</div><div class="md-secs">${secs.map((i,si)=>{const k=i.g+'|'+i.sec.en;return `<button class="${MODE.secs.includes(k)?'on':''}" onclick="modSecTog(${si})">${esc(mSec(i))}</button>`}).join('')}</div>
+  <div class="md-l">${T('أو أصناف معينة','Or specific items',"Veya belirli ürünler")}</div>${MODE.mids.length?`<div class="md-secs">${MODE.mids.map(id=>{const i=mOne(id);return `<button class="on" onclick="modTog('mids','${id}')">${esc(i?mName(i):id)} ×</button>`}).join('')}</div>`:''}
+  <input class="inp" id="mdq" placeholder="${T('ابحث عن صنف','Search for an item',"Ürün ara")}" value="${esc(MODE.q)}" oninput="MODE.q=this.value;clearTimeout(window._mq);window._mq=setTimeout(()=>{render();const e=document.getElementById('mdq');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}},250)">
+  ${hits.length?`<div class="md-hits">${hits.map(i=>`<button class="${MODE.mids.includes(i.id)?'on':''}" onclick="modTog('mids','${i.id}')">${esc(mName(i))}<small>${esc(mSec(i))}</small></button>`).join('')}</div>`:''}
+  <div class="md-act"><button class="btn" onclick="modSave()">${T('حفظ','Save',"Kaydet")}</button><button class="btn bg-white" onclick="MODE=null;render()">${T('إلغاء','Cancel',"İptal")}</button>${MODE.id?`<button class="btn bg-white md-del" onclick="modDel('${MODE.id}')">${T('حذف المجموعة','Delete group',"Grubu sil")}</button>`:''}</div></div>`}
+ const L=MODS(),secN=k=>{const i=all.find(x=>x.g+'|'+x.sec.en===k);return i?mSec(i):k};
+ return `<div class="nb p-4 mb-3"><div class="flex items-center gap-3 flex-wrap"><p class="text-sm" style="flex:1;min-width:220px">${T('خيارات مجانية تطلع للكابتن من يضغط على الصنف، مثل درجة الاستواء أو بدون بصل. تنكتب ويا الصنف بشاشة المطبخ والبار وبالوصل.','Free choices the captain sees when tapping an item, like doneness or no onion. They print with the item on the kitchen and bar screens and slips.',"Kaptanın ürüne dokunduğunda gördüğü ücretsiz seçenekler. Mutfak ve bar ekranında ve fişte ürünle birlikte yazılır.")}</p><button class="btn" onclick="modEdit('')">${T('مجموعة جديدة','New group',"Yeni grup")}</button></div></div>
+ ${L.length?L.map(m=>`<div class="nb p-4 mb-2 md-card" role="button" tabindex="0" onclick="modEdit('${m.id}')"><div class="flex justify-between gap-2"><b>${esc(modName(m))}</b><small>${m.req?T('إجباري','Required',"Zorunlu"):T('اختياري','Optional',"İsteğe bağlı")}${m.multi?' · '+T('أكثر من واحد','many',"çoklu"):''}</small></div><div class="md-chs">${(m.ch||[]).map(c=>`<i>${esc(S.lang==='ar'?(c.ar||c.en):(c.en||c.ar))}</i>`).join('')}</div><small class="md-on">${[...(m.secs||[]).map(secN),...(m.mids||[]).map(id=>{const i=mOne(id);return i?mName(i):''})].filter(Boolean).map(esc).join('، ')}</small></div>`).join(''):`<div class="nb p-4 text-sm">${T('ماكو مجموعات بعد. اضغط «مجموعة جديدة».','No groups yet. Tap "New group".',"Henüz grup yok. \"Yeni grup\"a dokunun.")}</div>`}`}
 function mnOpen(id){MNV=id;render()}
 function mnSheet(){const i=MNV&&mOne(MNV);if(!i)return '';const al=(i.alg||[]).filter(a=>a!=='vegetarian'),veg=(i.alg||[]).includes('vegetarian'),d=mDesc(i),o=S.lang==='ar'?i.name.en:i.name.ar;
  return `<div class="op-sh-bg" onclick="MNV='';render()"></div><div class="op-sh op-info"><div class="op-ph big ${i.img?'':'noimg'}" data-ini="${opIni(i)}">${opPic(i,900)}</div><div class="op-info-b"><div class="op-sh-t">${esc(mName(i))}</div>${o&&o!==mName(i)?`<div class="op-sub">${esc(o)}</div>`:''}<div class="op-info-p">${esc(mPriceTxt(i))}</div>${d?`<p class="op-info-d">${esc(d)}</p>`:''}${al.length||veg?`<div class="op-alg">${al.length?`<span>${T('يحتوي على','Contains',"İçerir")}</span>`:''}${al.map(a=>`<i>${esc(algName(a))}</i>`).join('')}${veg?`<i class="veg">${T('نباتي','Vegetarian',"Vejetaryen")}</i>`:''}</div>`:''}${i.note?`<p class="op-info-d" style="color:#92400e!important">${esc(i.note)}</p>`:''}<button class="btn w-full mt-4" onclick="MNV='';render()">${T('إغلاق','Close',"Kapat")}</button></div></div>`}
 function vMenu(){const mgr=isStaff(),all=menuAll().filter(i=>(mgr||!i.hide)&&(MGRP==='all'||i.g===MGRP)),G0=MG();
- const tabs=`<div class="flex gap-2 flex-wrap mb-3">${mgr?[['list',T('المنيو','Menu',"Menü")],['quiz',T('اختبار المنيو','Menu quiz',"Menü sınavı")],['res',T('نتائج الاختبار','Quiz results',"Sınav sonuçları")]].map(x=>`<button class="btn ${MVIEW===x[0]?'':'bg-white'}" onclick="MVIEW='${x[0]}';render()">${x[1]}</button>`).join(''):''}</div>`;
+ const tabs=`<div class="flex gap-2 flex-wrap mb-3">${mgr?[['list',T('المنيو','Menu',"Menü")],['mods',T('خيارات الأصناف','Item options',"Ürün seçenekleri")],['quiz',T('اختبار المنيو','Menu quiz',"Menü sınavı")],['res',T('نتائج الاختبار','Quiz results',"Sınav sonuçları")]].map(x=>`<button class="btn ${MVIEW===x[0]?'':'bg-white'}" onclick="MVIEW='${x[0]}';render()">${x[1]}</button>`).join(''):''}</div>`;
+ if(mgr&&MVIEW==='mods')return tabs+vMods();
  if(mgr&&MVIEW==='quiz')return tabs+vQuiz();
  if(mgr&&MVIEW==='res')return tabs+quizResults();
  const grps=['all','breakfast','food','bev','shisha'];
@@ -3014,7 +3059,23 @@ function tsGuests(id){const x=(S.tsess||[]).find(s=>s.id===id);if(!x)return;cons
 const OGS=()=>['kitchen','bev','shisha'];
 const GCOL={kitchen:'#c9d0cd',bev:'#2f8f83',shisha:'#8c7a6b'};
 const SUGAR=()=>[['sweet',T('حلوة','Sweet',"Şekerli")],['medium',T('وسط','Medium',"Orta")],['none',T('بدون سكر','No sugar',"Şekersiz")]];
-const sugName=k=>(SUGAR().find(x=>x[0]===k)||[0,''])[1];
+const sugName=k=>(SUGAR().find(x=>x[0]===k)||[0,k||''])[1];
+/* item options: free choices the manager sets on a section or an item; they go to the kitchen/bar as text with the item */
+const modArr=x=>Array.isArray(x)?x.filter(v=>v!=null):x&&typeof x==='object'?Object.values(x):[];
+const MODS=()=>modArr(S.cfg&&S.cfg.mods).map(m=>Object.assign({},m,{ch:modArr(m.ch),secs:modArr(m.secs),mids:modArr(m.mids)}));
+const modTxt=t=>String(t||'').replace(/[<>&"'`|\\.$#\[\]\/]/g,'').replace(/\s+/g,' ').trim().slice(0,40);
+const modName=m=>S.lang==='ar'?(m.ar||m.en):(m.en||m.ar);
+const modsFor=i=>i?MODS().filter(m=>(m.ch||[]).length&&((m.mids||[]).includes(i.id)||(m.secs||[]).includes(i.g+'|'+i.sec.en))):[];
+const modsAll=i=>(isCoffee(i)?[{id:'_sug',ar:'السكر',en:'Sugar',req:1,ch:[{ar:'حلوة',en:'Sweet'},{ar:'وسط',en:'Medium'},{ar:'بدون سكر',en:'No sugar'}]}]:[]).concat(modsFor(i));
+let PMOD=null;
+function posModTap(gid,ix){if(!PMOD)return;const m=modsAll(mOne(PMOD.mid)).find(x=>x.id===gid);if(!m)return;const a=PMOD.sel[gid]=PMOD.sel[gid]||[],p=a.indexOf(ix);if(p>=0)a.splice(p,1);else{if(!m.multi)a.length=0;a.push(ix)}render()}
+const posModMiss=()=>PMOD?modsAll(mOne(PMOD.mid)).filter(m=>m.req&&!(PMOD.sel[m.id]||[]).length):[];
+function posModOk(){if(!PMOD)return;const i=mOne(PMOD.mid);if(!i){PMOD=null;return render()}const miss=posModMiss();if(miss.length)return toast(T('اختار ','Choose ',"Seçin: ")+modName(miss[0]));
+ const parts=[];modsAll(i).forEach(m=>(PMOD.sel[m.id]||[]).slice().sort((a,b)=>a-b).forEach(ix=>{const c=m.ch[ix];if(c)parts.push(modTxt(c.ar||c.en))}));
+ const opt=parts.filter(Boolean).join(' · '),k=opt?i.id+'|'+opt:i.id,c=ORD.cart[k]=ORD.cart[k]||{qty:0,note:''};c.qty=Math.min(99,c.qty+1);PMOD=null;opHap();PSEL=k;render()}
+function posModSheet(){const i=PMOD&&mOne(PMOD.mid);if(!i)return '';const L=modsAll(i),miss=posModMiss();
+ return `<div class="op-sh-bg" onclick="PMOD=null;render()"></div><div class="op-sh pos-mod" role="dialog" aria-label="${esc(mName(i))}"><div class="op-sh-t">${esc(mName(i))}</div>${L.map(m=>`<div class="pm-g"><div class="pm-h"><b>${esc(modName(m))}</b><small>${m.req?T('لازم تختار','Required',"Zorunlu"):T('اختياري','Optional',"İsteğe bağlı")}${m.multi?' · '+T('تكدر تختار أكثر من واحد','pick any',"birden fazla seçilebilir"):''}</small></div><div class="pm-c">${m.ch.map((c,ix)=>`<button class="${(PMOD.sel[m.id]||[]).includes(ix)?'on':''}" onclick="posModTap('${m.id}',${ix})">${esc(S.lang==='ar'?(c.ar||c.en):(c.en||c.ar))}</button>`).join('')}</div></div>`).join('')}
+ <div class="pm-a"><button class="btn bg-white" onclick="PMOD=null;render()">${T('إلغاء','Cancel',"İptal")}</button><button class="btn pm-ok" ${miss.length?'disabled':''} onclick="posModOk()">${T('إضافة','Add',"Ekle")}</button></div></div>`}
 const kMid=k=>String(k).split('|')[0],kOpt=k=>String(k).split('|')[1]||'';
 const isCoffee=i=>!!i&&i.g==='bev'&&(/قهو\S*\s+تركي/.test(i.name.ar||'')||/turkish\s+(cafe|coffee)/i.test(i.name.en||''));
 const midQty=mid=>Object.entries(ORD.cart).filter(([k])=>kMid(k)===mid).reduce((a,[k,v])=>a+v.qty,0);
@@ -3079,7 +3140,7 @@ function ordHoldDel(k){const [oid,ix]=k.split(':'),o=(S.orders||[]).find(x=>x.id
  const keep=o.items.filter((y,i)=>i!==+ix);if(keep.length)o.items=keep;else S.orders=S.orders.filter(y=>y!==o);logAct(' '+T('حذف من الانتظار، طاولة ','removed from hold, table ',"beklemeden kaldırıldı, masa ")+o.table+': '+x.qty+'× '+dN(x.mid));ORD.fsel={};save();render()}
 /* POS screen for the captain: stations and categories, item keys, the open check on the side */
 let PSEL='',PSHEET=0,PMSG=0;
-function posAdd(mid){const i=mOne(mid);if(i&&isCoffee(i)){ORD.ask=ORD.ask===mid?'':mid;return render()}const c=ORD.cart[mid]=ORD.cart[mid]||{qty:0,note:''};c.qty=Math.min(99,c.qty+1);opHap();PSEL=mid;render()}
+function posAdd(mid){const i=mOne(mid);if(i&&modsFor(i).length){PMOD={mid,sel:{}};return render()}if(i&&isCoffee(i)){ORD.ask=ORD.ask===mid?'':mid;return render()}const c=ORD.cart[mid]=ORD.cart[mid]||{qty:0,note:''};c.qty=Math.min(99,c.qty+1);opHap();PSEL=mid;render()}
 function posLine(k,a){const c=ORD.cart[k];if(!c)return;if(a==='plus')c.qty=Math.min(99,c.qty+1);if(a==='minus'){c.qty--;if(c.qty<1){delete ORD.cart[k];PSEL=''}}if(a==='del'){delete ORD.cart[k];PSEL=''}if(a==='hold')c.hold=c.hold?0:1;render()}
 function posNote(k,t){const c=ORD.cart[k];if(!c)return;c.note=(c.note?c.note+'، ':'')+t;render()}
 function posSend(leave){const n=Object.keys(ORD.cart).length;if(!n)return toast(T('ماكو أصناف جديدة','No new items',"Yeni ürün yok"));ordSend();PSEL='';PSHEET=0;if(leave&&!Object.keys(ORD.cart).length)tsLeave();else render()}
@@ -3117,7 +3178,7 @@ function posScreen(s,prev){if(!OGS().includes(ORD.g))ORD.g='kitchen';ORD.gn=ORD.
   <div class="pos-acts"><button ${PSEL?'':'disabled'} onclick="posLine(PSEL,'hold')">${T('انتظار','Hold',"Bekle")}</button><button ${hasHeld?'':'disabled'} onclick="posFire('${s.id}')">Fire${selN?' ('+selN+')':''}</button><button ${prev.length?'':'disabled'} onclick="ORD.v='table';PSHEET=0;render()">${T('طباعة','Print',"Yazdır")}</button><button class="snd" onclick="posSend(0)">${T('إرسال وبقاء','Send and stay',"Gönder ve kal")}</button><button class="snd wide" onclick="posSend(1)">${T('إرسال','Send',"Gönder")}${cq?' · '+cq:''}</button></div></aside>`;
  const bar=`<button class="pos-bar" onclick="PSHEET=1;render()">${T('الحساب','Check',"Hesap")} · ${cart.length+sent.length} ${T('أصناف','items',"ürün")}${cq?' · '+cq+' '+T('جديد','new',"yeni"):''}<span>${money(sentSum+cartSum)}</span></button>`;
  const ask=ORD.ask?mOne(ORD.ask):null,sheet=ask?`<div class="op-sh-bg" onclick="ORD.ask='';render()"></div><div class="op-sh"><div class="lb">${T('السكر','Sugar',"Şeker")}</div><div class="op-sh-t">${esc(mName(ask))}</div><div class="op-sugar">${SUGAR().map(x=>`<button onclick="ORD.ask='';posAddOpt('${ask.id}','${x[0]}')">${x[1]}</button>`).join('')}</div><button class="btn bg-white w-full mt-3" onclick="ORD.ask='';render()">${T('إلغاء','Cancel',"İptal")}</button></div>`:'';
- return top+`<div class="pos-body">${rail}${keys}${check}</div>${bar}${sheet}`}
+ return top+`<div class="pos-body">${rail}${keys}${check}</div>${bar}${sheet}${posModSheet()}`}
 function posAddOpt(mid,opt){const k=mid+'|'+opt,c=ORD.cart[k]=ORD.cart[k]||{qty:0,note:''};c.qty=Math.min(99,c.qty+1);PSEL=k;render()}
 /* progress ring: how much of what was sent reached the table (ready counts part of the way) */
 function opRing(s,prev){let t=0,d=0;(prev||[]).filter(o=>!o.hold).forEach(o=>(o.items||[]).forEach(x=>{const q=+x.qty||0,g=x.g||'kitchen';t+=q;if(o.done||(o.delivered&&o.delivered[g]))d+=q;else if(o.ready&&o.ready[g])d+=q*.6}));const pr=t?d/t:0;
@@ -3388,8 +3449,9 @@ function zPeriod(){const R=dRange(),L=zList().filter(z=>{const t=new Date(z.day+
 
 /* automatic daily report built from the app's own chain: captain orders -> cashier bill -> payment */
 let ZSRC='auto';
-function zAuto(day){const f={},add=(k,c,a)=>{f[k]=f[k]||[0,0];f[k][0]+=c;f[k][1]+=a};
- const B=(S.bills||[]).filter(b=>b.day===day),paid=B.filter(b=>b.status==='paid'),voids=B.filter(b=>b.status==='void'),SS2=(S.tsess||[]).filter(x=>x.day===day&&!x.del);
+function zAuto(day,R){const inR=t=>!!R&&t>=R.from&&t<R.to,pb=R?(b=>b.status==='paid'?inR(+b.paidAt||0):b.status==='void'?inR(+(b.voidAt||b.at)||0):false):(b=>b.day===day),ps=R?(x=>x.end?inR(+x.end):(+x.at||0)<R.to):(x=>x.day===day),pl=R?(x=>!!x.end&&inR(+x.end)):(x=>x.day===day);
+ const f={},add=(k,c,a)=>{f[k]=f[k]||[0,0];f[k][0]+=c;f[k][1]+=a};
+ const B=(S.bills||[]).filter(pb),paid=B.filter(b=>b.status==='paid'),voids=B.filter(b=>b.status==='void'),SS2=(S.tsess||[]).filter(x=>ps(x)&&!x.del);
  const catOf=mid=>{const i=mOne(mid),g=i?ordGrp(i):'kitchen';return g==='bev'?'bev':g==='shisha'?'shisha':'food'};
  let net=0,svc=0,guests=0;
  paid.forEach(b=>{const s=(S.tsess||[]).find(x=>x.id===b.sess)||{id:b.sess,guests:b.guests||0},c=billCalc(s,b),n=c.sub-c.dsc,r=c.sub?n/c.sub:0;net+=n;svc+=c.svc;guests+=(+s.guests||+b.guests||0);
@@ -3399,7 +3461,7 @@ function zAuto(day){const f={},add=(k,c,a)=>{f[k]=f[k]||[0,0];f[k][0]+=c;f[k][1]
   if(c.svc)add('svc10',1,c.svc)});
  voids.forEach(b=>add('mvoid',1,-(+b.total||0)));
  const det={},dAdd=(t,why,q,v)=>{const k=t+'|'+why;det[k]=det[k]||{t,why,q:0,v:0};det[k].q+=q;det[k].v+=v};
- (S.tsess||[]).filter(x=>x.day===day).forEach(s=>{if(s.mergedInto){add('tmerge',1,0);return}
+ (S.tsess||[]).filter(pl).forEach(s=>{if(s.mergedInto){add('tmerge',1,0);return}
   if(s.del){const c=billCalc(s,s.delBill||null);add('tdel',1,c.sub);dAdd('del',s.del.why||'',1,c.sub);return}
   const L=billLines(s,billOf(s.id)),pr={};L.forEach(l=>{if(!l.comp)pr[l.mid+'|'+l.opt]=l.lp});
   (s.adj||[]).forEach(a=>{const q=+a.qty||0,v=(pr[a.mid+'|'+(a.opt||'')]||0)*q;add({cancel:'tcan',ret:'tret',exch:'texch'}[a.type],q,-v);add({cancel:'void',ret:'refund',exch:'fix'}[a.type],q,-v);dAdd(a.type,a.why||'',q,v)});
@@ -3533,15 +3595,57 @@ function kToday(){const d=dayKey();return (S.bills||[]).filter(b=>b.day===d||dkO
 function cashRoot(){if(KM==='tact'&&!isStaff())KM='open';if(KSEL){const s=(S.tsess||[]).find(x=>x.id===KSEL);if(s)return billEditor(s);KSEL=''}
  const day=dayKey(),open=(S.tsess||[]).filter(x=>!x.end&&(x.day===day||Date.now()-x.at<16*36e5)).sort((a,b)=>String(a.table).localeCompare(String(b.table),undefined,{numeric:true})),tb=kToday(),paid=tb.filter(b=>b.status==='paid');
  const kp=(l,v)=>`<div><b>${v}</b><span>${l}</span></div>`;
- const seg=`<div class="om-seg mb-4">${[['open',T('الطاولات المفتوحة','Open tables',"Açık masalar")],['bills',T('حسابات اليوم','Today’s bills',"Bugünkü hesaplar")],['live',T('متابعة الطلبات','Order tracking',"Sipariş takibi")]].concat(isStaff()?[['tact',T('إجراءات الطاولات','Table actions',"Masa işlemleri")]]:[]).map(([k,l])=>`<a class="${KM===k?'on':''}" onclick="KM='${k}';render()">${l}</a>`).join('')}</div>`;
+ const seg=`<div class="om-seg mb-4">${[['open',T('الطاولات المفتوحة','Open tables',"Açık masalar")],['bills',T('حسابات اليوم','Today’s bills',"Bugünkü hesaplar")],['live',T('متابعة الطلبات','Order tracking',"Sipariş takibi")],['shift',T('إغلاق الشفت','Close shift',"Vardiya kapanışı")]].concat(isStaff()?[['tact',T('إجراءات الطاولات','Table actions',"Masa işlemleri")]]:[]).map(([k,l])=>`<a class="${KM===k?'on':''}" onclick="KM='${k}';SHSEL='';render()">${l}</a>`).join('')}</div>`;
  const head=`<div class="nb op-kpi" style="grid-template-columns:repeat(${isStaff()?4:3},1fr)">${kp(T('مفتوحة','Open',"Açık"),open.length)}${kp(T('مدفوعة اليوم','Paid today',"Bugün ödenen"),paid.length)}${kp(T('المقبوض','Collected',"Tahsil edilen"),money(paid.reduce((a,b)=>a+(+b.total||0),0)))}${isStaff()?kp(T('الخصومات','Discounts',"İndirimler"),money(paid.reduce((a,b)=>a+(+b.dsc||0),0))):''}</div>`;
  if(KM==='live')return head+seg+omLive();
+ if(KM==='shift')return seg+vShift();
  if(KM==='tact')return head+seg+vTact();
  if(KM==='bills'){const L=tb.slice().sort((a,b)=>(b.paidAt||b.upd||b.at)-(a.paidAt||a.upd||a.at));const byPay=PAYS().map(([k,l])=>[l,paid.filter(b=>b.pay===k).reduce((a,b)=>a+(+b.total||0),0)]);
   return head+seg+`<div class="nb op-kpi" style="grid-template-columns:repeat(4,1fr)">${byPay.map(([l,v])=>`<div><b>${money(v)}</b><span>${l}</span></div>`).join('')}</div><div class="nb op-list">${L.map(b=>`<div class="op-row" style="cursor:pointer" onclick="KSEL='${b.sess}';render()"><span><b>${T('طاولة ','Table ',"Masa ")}${esc(b.table)}</b> · ${esc(nm(b.rid))}${b.disc&&b.disc.t?` · <span class="text-gray-500">${kDiscName(b.disc.t)}</span>`:''}</span><span class="flex gap-2 items-center"><b>${money(b.total||0)}</b><span class="pill ${b.status==='paid'?'ok':b.status==='void'?'bad':'warn'}">${b.status==='paid'?kPayName(b.pay):b.status==='void'?T('ملغى','Void',"İptal"):T('غير مدفوع','Unpaid',"Ödenmedi")}</span>${b.status==='paid'&&isStaff()?`<button class="btn bg-white !py-1 text-sm" onclick="event.stopPropagation();bVoidBill('${b.id}')">${T('إلغاء','Void',"İptal")}</button>`:''}</span></div>`).join('')||`<div class="op-empty">${T('لا توجد حسابات اليوم','No bills today',"Bugün hesap yok")}</div>`}</div>`}
  return head+seg+(open.length?`<div class="op-tbls">${open.map(s=>{const b=billOf(s.id),c=billCalc(s,b);return `<button class="op-tb on st${tState(s)}" onclick="KSEL='${s.id}';render()"><span class="lb"><i class="tdot t${tState(s)}"></i>${tStateName(tState(s))}</span><b>${tLabel(s)}</b><span class="mt">${esc(nm(s.rid))} · ${s.guests} ${T('أشخاص','guests',"misafir")}</span><span class="mt"><b>${money(c.total)}</b>${b&&b.status==='printed'?' · '+T('طُبع','printed',"yazdırıldı"):''}</span></button>`}).join('')}</div>`:`<div class="nb p-6 text-center text-gray-500">${T('لا توجد طاولات مفتوحة','No open tables',"Açık masa yok")}</div>`)}
 /* manager view of bills */
 let BV='cash';
+/* shift close: everything from the last close until now, printed and kept */
+let SHSEL='',SHBUSY=0;
+const shcList=()=>(S.shc||[]).filter(x=>x&&x.to).slice().sort((a,b)=>b.to-a.to);
+const shcFrom=()=>{const l=shcList()[0];if(l)return +l.to;const n=new Date();n.setHours(n.getHours()<6?-18:6,0,0,0);return n.getTime()};
+function shcCalc(from,to){const R={from,to},z=zAuto('shift',R),f=z.f,A=k=>(f[k]||[0,0])[1],C=k=>(f[k]||[0,0])[0];
+ const paid=(S.bills||[]).filter(b=>b.status==='paid'&&+b.paidAt>=from&&+b.paidAt<to),per={};
+ paid.forEach(b=>{const s=(S.tsess||[]).find(x=>x.id===b.sess)||{},rid=b.rid||s.rid||'',r=per[rid]=per[rid]||{rid,n:nm(rid)||T('غير معروف','Unknown',"Bilinmiyor"),t:0,g:0,v:0};r.t++;r.g+=(+s.guests||+b.guests||0);r.v+=(+b.total||0)});
+ const pays=PAYS().map(([k,l])=>{const L=paid.filter(b=>(b.pay||'cash')===k);return {k,l,c:L.length,v:L.reduce((a,b)=>a+(+b.total||0),0)}}).filter(x=>x.c);
+ const card=paid.filter(b=>b.pay==='card');if(card.length)pays.push({k:'card',l:T('بطاقة','Card',"Kart"),c:card.length,v:card.reduce((a,b)=>a+(+b.total||0),0)});
+ const mg=paid.filter(b=>b.pay==='mgmt');
+ const top={};paid.forEach(b=>{const s=(S.tsess||[]).find(x=>x.id===b.sess);if(!s)return;billLines(s,b).forEach(l=>{if(l.net>0&&!l.comp){const k=l.mid;top[k]=top[k]||{n:S.lang==='ar'?(l.n.ar||l.n.en):(l.n.en||l.n.ar),q:0,v:0};top[k].q+=l.net;top[k].v+=l.sum}})});
+ return {from,to,total:paid.reduce((a,b)=>a+(+b.total||0),0),net:A('net'),svc:A('svc'),checks:paid.length,guests:C('acover'),food:A('food'),bev:A('bev'),shisha:A('shisha'),
+  disc:-A('disc'),comp:{c:C('tcomp'),v:A('tcomp')},cancel:{c:C('tcan'),v:-A('tcan')},ret:{c:C('tret'),v:-A('tret')},exch:{c:C('texch'),v:-A('texch')},mvoid:{c:C('mvoid'),v:-A('mvoid')},mgmt:{c:mg.length,v:mg.reduce((a,b)=>a+(+b.sub||0),0)},
+  pays,per:Object.values(per).sort((a,b)=>b.v-a.v),top:Object.values(top).sort((a,b)=>b.q-a.q).slice(0,10),det:z.det}}
+const shcOpen=()=>(S.tsess||[]).filter(x=>!x.end&&!x.del&&!x.mergedInto);
+function shcBody(d,rec){const R=(l,v,c)=>`<div class="sh-r"><span>${l}${c!=null?` <small>${c}</small>`:''}</span><b>${money(Math.round(+v||0)||0)}</b></div>`,H=t=>`<div class="sh-h">${t}</div>`;
+ return `<div class="sh-big"><span>${T('مجموع المبيعات','Total sales',"Toplam satış")}</span><b>${money(d.total)}</b><small>${d.checks} ${T('حساب','checks',"hesap")} · ${d.guests} ${T('ضيف','guests',"misafir")}</small></div>
+ ${H(T('طرق الدفع','Payments',"Ödemeler"))}${d.pays.length?d.pays.map(p=>R(p.l,p.v,p.c)).join(''):`<div class="sh-r"><span>${T('ماكو','None',"Yok")}</span><b>0</b></div>`}
+ ${H(T('الأقسام','Stations',"Bölümler"))}${R(T('الأكل','Food',"Yemek"),d.food)}${R(T('المشروبات','Drinks',"İçecek"),d.bev)}${R(T('الشيشة','Shisha',"Nargile"),d.shisha)}${d.svc?R(T('الخدمة','Service',"Servis"),d.svc):''}
+ ${H(T('الخصومات والضيافة والإلغاءات','Discounts, complimentary, cancellations',"İndirim, ikram, iptal"))}${R(T('الخصومات','Discounts',"İndirimler"),d.disc)}${R(T('الضيافة','Complimentary',"İkram"),d.comp.v,d.comp.c)}${R(T('طاولات الإدارة','Management tables',"Yönetim masaları"),d.mgmt.v,d.mgmt.c)}${R(T('إلغاء','Cancelled',"İptal"),d.cancel.v,d.cancel.c)}${R(T('إرجاع','Returned',"İade"),d.ret.v,d.ret.c)}${d.exch.c?R(T('تبديل','Exchanged',"Değişim"),d.exch.v,d.exch.c):''}${d.mvoid.c?R(T('حسابات ملغاة','Voided bills',"İptal edilen hesaplar"),d.mvoid.v,d.mvoid.c):''}
+ ${H(T('الكباتن','Captains',"Kaptanlar"))}${d.per.length?d.per.map(x=>R(esc(x.n),x.v,x.t+' '+T('طاولة','tables',"masa"))).join(''):`<div class="sh-r"><span>${T('ماكو','None',"Yok")}</span><b>0</b></div>`}
+ ${d.top.length?H(T('أكثر الأصناف','Top items',"En çok satanlar"))+d.top.map(x=>`<div class="sh-r"><span>${esc(x.n)}</span><b>${x.q}</b></div>`).join(''):''}
+ ${rec&&rec.open&&rec.open.length?H(T('طاولات بقت مفتوحة وقت الإغلاق','Tables left open at close',"Kapanışta açık kalan masalar"))+rec.open.map(o=>`<div class="sh-r"><span>${T('طاولة ','Table ',"Masa ")}${esc(o.t)} · ${esc(o.n)}</span><b>${money(o.v)}</b></div>`).join(''):''}`}
+function shcPrint(id){const r=(S.shc||[]).find(x=>x.id===id);if(!r)return;
+ slipPrint(`<div class="tk" dir="${S.lang==='ar'?'rtl':'ltr'}"><div class="tk-brand">amaya</div><div class="tk-st">${T('إغلاق الشفت','Shift close',"Vardiya kapanışı")}</div>
+ <div class="tk-meta"><div><span>${T('من','From',"Başlangıç")}</span><b>${hm(r.from)} ${dkOf(r.from)}</b></div><div><span>${T('إلى','To',"Bitiş")}</span><b>${hm(r.to)} ${dkOf(r.to)}</b></div><div><span>${T('أغلقه','Closed by',"Kapatan")}</span><b>${esc(r.byN||'')}</b></div></div>
+ <div class="sh-slip">${shcBody(r.d,r)}</div><div class="bl-sign"><span>${T('الكاشير','Cashier',"Kasiyer")}</span><i></i><span>${T('المدير','Manager',"Yönetici")}</span><i></i></div></div>`)}
+async function shcClose(){if(!canBill()||SHBUSY)return;const op=shcOpen();
+ if(op.length&&!confirm(op.length+T(' طاولات بعدها مفتوحة: ',' tables are still open: '," masa hâlâ açık: ")+op.map(x=>x.table).join('، ')+T('\nحساباتها تنحسب بالشفت اللي تندفع بيه. تكمل الإغلاق؟','\nTheir bills count in the shift they are paid in. Close anyway?',"\nHesapları ödendikleri vardiyaya sayılır. Yine de kapatılsın mı?")))return;
+ const from=shcFrom(),to=Date.now(),d=shcCalc(from,to);
+ if(!op.length&&!confirm(T('إغلاق الشفت؟ المبيعات ','Close the shift? Sales ',"Vardiya kapatılsın mı? Satış ")+money(d.total)))return;
+ SHBUSY=1;try{if(typeof pullNow==='function')await pullNow()}catch(e){}
+ const d2=shcCalc(from,Date.now()),r={id:'sh'+Date.now().toString(36),from,to:Date.now(),by:S.session.id,byN:meName(),d:d2,open:op.map(x=>({t:x.table,n:nm(x.rid),v:(()=>{try{return billCalc(x,billOf(x.id)).total}catch(e){return 0}})()}))};
+ S.shc=S.shc||[];S.shc.push(r);logAct(' '+T('إغلاق الشفت ','closed shift ',"vardiya kapatıldı ")+money(d2.total));save();SHBUSY=0;SHSEL=r.id;render();toast(T('انغلق الشفت','Shift closed',"Vardiya kapatıldı"));shcPrint(r.id)}
+function vShift(){if(!canBill())return '';const L=shcList(),sel=SHSEL&&L.find(x=>x.id===SHSEL);
+ if(sel)return `<div class="nb p-5 sh-card"><div class="flex justify-between items-start gap-2 mb-3"><div><div class="font-bold">${T('شفت انغلق','Closed shift',"Kapanan vardiya")}</div><div class="text-sm sh-mu">${hm(sel.from)} ${dkOf(sel.from)} – ${hm(sel.to)} ${dkOf(sel.to)} · ${esc(sel.byN||'')}</div></div><button class="btn bg-white" onclick="SHSEL='';render()">${T('رجوع','Back',"Geri")}</button></div>${shcBody(sel.d,sel)}<button class="btn w-full mt-4" onclick="shcPrint('${sel.id}')">${T('طباعة','Print',"Yazdır")}</button></div>`;
+ const from=shcFrom(),d=shcCalc(from,Date.now()),op=shcOpen();
+ return `<div class="nb p-5 sh-card"><div class="mb-3"><div class="font-bold">${T('الشفت الحالي','Current shift',"Mevcut vardiya")}</div><div class="text-sm sh-mu">${T('من ','Since ',"Başlangıç ")}${hm(from)} ${dkOf(from)}${L[0]?' · '+T('آخر إغلاق: ','last close: ',"son kapanış: ")+esc(L[0].byN||''):''}</div></div>
+ ${op.length?`<div class="sh-warn">${op.length} ${T('طاولات بعدها مفتوحة: ','tables still open: ',"masa hâlâ açık: ")}${op.map(x=>esc(x.table)).join('، ')}</div>`:''}
+ ${shcBody(d)}<button class="btn w-full mt-4 sh-go" ${SHBUSY?'disabled':''} onclick="shcClose()">${T('إغلاق الشفت وطباعة','Close shift and print',"Vardiyayı kapat ve yazdır")}</button></div>
+ ${L.length?`<div class="sh-h mt-5 mb-2">${T('الشفتات السابقة','Past shifts',"Önceki vardiyalar")}</div>`+L.slice(0,30).map(x=>`<div class="nb p-3 mb-2 sh-past" role="button" tabindex="0" onclick="SHSEL='${x.id}';render()"><span>${dkOf(x.from)} · ${hm(x.from)} – ${hm(x.to)}<small>${esc(x.byN||'')}</small></span><b>${money(x.d.total)}</b></div>`).join(''):''}`}
 function vBills(){const seg=`<div class="om-seg mb-4"><a class="${BV==='cash'?'on':''}" onclick="BV='cash';render()">${T('الكاشير','Cashier',"Kasa")}</a><a class="${BV==='rep'?'on':''}" onclick="BV='rep';KSEL='';render()">${T('التقرير','Report',"Rapor")}</a></div>`;if(BV==='cash')return seg+cashRoot();return seg+vBillsRep()}
 function vBillsRep(){const R=dRange(),L=(S.bills||[]).filter(b=>{const t=b.paidAt||b.at;return t>=R.from&&t<R.to}),paid=L.filter(b=>b.status==='paid'),sum=f=>paid.reduce((a,b)=>a+(+b[f]||0),0);
  const kp=(l,v)=>`<div class="nb zr-k"><div class="text-sm text-gray-500">${l}</div><div class="zr-kv">${v}</div></div>`;

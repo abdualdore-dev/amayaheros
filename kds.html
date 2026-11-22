@@ -211,7 +211,7 @@ function prScan(){if(!CFG.print)return;if(PRINTED===null){try{PRINTED=JSON.parse
   /* first load: mark what is already on screen as printed, so opening the screen does not print a backlog */
   ORDERS.forEach(o=>{if(!PRINTED[o.id]&&Date.now()-o.at>3*6e4)PRINTED[o.id]=Date.now()});prSave()}
  const today=dayKey(),nw=Date.now();ORDERS.forEach(o=>{if(!FSEEN[o.id])FSEEN[o.id]=nw});
- ORDERS.filter(o=>!PRINTED[o.id]&&nw-FSEEN[o.id]>=2500&&(CFG.demo||o.day===today||Date.now()-o.at<12*36e5)&&MYI(o).length&&!(o.hold&&o.parent&&ORDERS.some(p=>p.id===o.parent&&MYI(p).length))).sort((a,b)=>a.at-b.at).forEach(o=>{PRINTED[o.id]=Date.now();PQ.push(o)});
+ ORDERS.filter(o=>!PRINTED[o.id]&&!o.moved&&nw-FSEEN[o.id]>=2500&&(CFG.demo||o.day===today||Date.now()-o.at<12*36e5)&&MYI(o).length&&!(o.hold&&o.parent&&ORDERS.some(p=>p.id===o.parent&&MYI(p).length))).sort((a,b)=>a.at-b.at).forEach(o=>{PRINTED[o.id]=Date.now();PQ.push(o)});
  prSave();prNext()}
 const FSEEN={};
 function prHtml(o){const s=SESS[o.sess]||{},its=o.hold?[]:MYI(o),hl=o.hold?MYI(o):KIDI(o),d=new Date(o.at);
@@ -288,7 +288,7 @@ $('dB').addEventListener('click',e=>{const b=e.target.closest('[data-rd]');if(b)
 
 /* ---------- render ---------- */
 const itemName=x=>{const n=x.n||{};return CFG.lang==='ar'?(n.ar||n.en||x.mid):(n.en||n.ar||x.mid)};
-function visible(){const today=dayKey(),now=Date.now();const base=ORDERS.filter(o=>!o.hold&&(!rdy(o,CFG.st)||(PEND[o.id]&&!PEND[o.id].sent))&&(CFG.demo||o.day===today||now-o.at<12*36e5)).filter(sessOk).map(o=>({o,items:MYI(o),held:KIDI(o)})).filter(x=>x.items.length);
+function visible(){const today=dayKey(),now=Date.now();const base=ORDERS.filter(o=>!o.hold&&!o.moved&&(!rdy(o,CFG.st)||(PEND[o.id]&&!PEND[o.id].sent))&&(CFG.demo||o.day===today||now-o.at<12*36e5)).filter(sessOk).map(o=>({o,items:MYI(o),held:KIDI(o)})).filter(x=>x.items.length);
  const vis=new Set(base.map(v=>v.o.id)),orph=ORDERS.filter(h=>h.hold&&!vis.has(h.parent)&&dayOk(h)&&sessOk(h)&&MYI(h).length).map(h=>({o:h,items:[],held:MYI(h),hold:1}));
  return base.concat(orph).sort((a,b)=>a.o.at-b.o.at)}
 function fmt(ms){const s=Math.max(0,Math.floor(ms/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),r=s%60;return (h?h+':'+pad(m):pad(m))+':'+pad(r)}

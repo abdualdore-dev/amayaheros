@@ -8,14 +8,14 @@ messaging.onBackgroundMessage(payload => {
   const title = ar ? (d.title_ar || d.title_en) : (d.title_en || d.title_ar);
   const body = ar ? (d.body_ar || d.body_en) : (d.body_en || d.body_ar);
   const orders = ['ready', 'onway', 'adj', 'comp', 'mgmt', 'move', 'del'].includes(d.kind);
-  self.registration.showNotification(title || 'Amaya Heroes', { body: body || '', tag: ['ready', 'pick', 'onway'].includes(d.kind) ? 'amaya-' + d.kind + '-' + Date.now() : 'amaya', renotify: true, requireInteraction: ['pick', 'ready', 'onway'].includes(d.kind), silent: false, vibrate: ['pick', 'ready', 'onway'].includes(d.kind) ? [500, 200, 500, 200, 700] : [200, 100, 200], dir: ar ? 'rtl' : 'ltr', data: { app: d.app || (orders ? 'orders.html' : '') } });
+  self.registration.showNotification(title || 'Amaya Heroes', { body: body || '', tag: ['ready', 'pick', 'onway'].includes(d.kind) ? 'amaya-' + d.kind + '-' + Date.now() : 'amaya', renotify: true, requireInteraction: ['pick', 'ready', 'onway'].includes(d.kind), silent: false, vibrate: ['pick', 'ready', 'onway'].includes(d.kind) ? [500, 200, 500, 200, 700] : [200, 100, 200], dir: ar ? 'rtl' : 'ltr', data: { app: orders ? 'orders.html' : '' } });
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const page = (e.notification.data && e.notification.data.app) || '';
   const url = self.registration.scope + page;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-    const hit = list.find(c => page ? c.url.includes(page) : !/orders\.html|runners\.html/.test(c.url));
+    const hit = list.find(c => page ? c.url.includes(page) : !c.url.includes('orders.html'));
     return hit ? hit.focus() : self.clients.openWindow(url);
   }));
 });

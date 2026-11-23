@@ -861,13 +861,15 @@ body{font-weight:400}
 
 <script>
 /* ---------- which app this page is: the staff app (index.html) or the orders app (orders.html, built from this file) ---------- */
-const APPM=window.AMAYA_APP==='orders'?'orders':'staff';
+const APPM=window.AMAYA_APP==='orders'?'orders':window.AMAYA_APP==='runners'?'runners':'staff';
+/* the runners app keeps its own data under rnr/ in the same database; the restaurant app stays under amaya/ */
+const RT=APPM==='runners'?'rnr':'amaya';
 const goApp=a=>{location.href=a==='orders'?'orders.html':'./'};
 const ORDTABS=['bills','orders','tact','zrep','tables','sales'];
 /* ---------- SafeStorage ---------- */
 const SS={mem:{},ok:(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return true}catch(e){return false}})(),
-get(k,d){try{const v=this.ok?localStorage.getItem(k):this.mem[k];return v?JSON.parse(v):d}catch(e){return d}},
-set(k,v){const s=JSON.stringify(v);try{if(this.ok)localStorage.setItem(k,s);else this.mem[k]=s}catch(e){this.mem[k]=s;toast(' Storage full')}}};
+get(k,d){if(APPM==='runners')k='rnr_'+k;try{const v=this.ok?localStorage.getItem(k):this.mem[k];return v?JSON.parse(v):d}catch(e){return d}},
+set(k,v){if(APPM==='runners')k='rnr_'+k;const s=JSON.stringify(v);try{if(this.ok)localStorage.setItem(k,s);else this.mem[k]=s}catch(e){this.mem[k]=s;toast(' Storage full')}}};
 
 /* ---------- i18n ---------- */
 const L0={
@@ -907,7 +909,7 @@ rulesT:'Luxury Service Constitution',opT:' Operating Rules',dsT:' Strict Discipl
 ops:[['Full In, Full Out','Never enter the kitchen with an empty tray, never leave it without a full one.'],['Serve from the right, clear from the left','Dishes are served from the guest\'s right and cleared from the left.'],['Silent Service','Calm movement, no clattering or loud whispers in front of guests.'],['Polishing priority: the Third','Polish in third-order: tools, then glasses, then plates, leaving no marks.']],
 ds:['No phone use during shifts ','No chewing gum or loud laughing ','No shouting ','Zero tolerance for racism and showing off ','Royal dress code at all times ','Nails trimmed and clean ','Black shoes and black trousers ','Clean-shaven, beard shaved to zero ','Restaurant T-shirt ironed and tidy '],
 myBreak:'Break status',myBroken:'My breakage log',welcome:'Welcome'}};
-const L=L0;if(APPM==='orders'){L.ar.app='طلبات أمايا';L.en.app='Amaya Orders';if(L.tr)L.tr.app='Amaya Siparişler'}
+const L=L0;if(APPM==='orders'){L.ar.app='طلبات أمايا';L.en.app='Amaya Orders';if(L.tr)L.tr.app='Amaya Siparişler'}if(APPM==='runners'){L.ar.app='رنرات أمايا';L.en.app='Amaya Runners';if(L.tr)L.tr.app='Amaya Komiler'}
 const CH=[['','أزرق','Blue'],['','أخضر','Green'],['','بنفسجي','Purple'],['','برتقالي','Orange'],['','أحمر','Red'],['','أصفر','Yellow'],['','أسود','Black'],['','بني','Brown'],['','أبيض','White'],['','سماوي','Cyan']];
 const COL=['pk','bl','gr','or','pu','ye'];
 
@@ -939,7 +941,7 @@ async function doLogin(){
 
 /* one-time: cashier account requested by the owner (ayad) — created from an owner session so the sign-in account exists too */
 let AYADBUSY=false;
-async function seedAyad(){if(AYADBUSY||!S.session||S.session.role!=='owner'||(S.cfg&&S.cfg.ayadSeeded))return;if((S.runners||[]).some(r=>r.user==='ayad')){S.cfg.ayadSeeded=1;save();return}
+async function seedAyad(){if(APPM==='runners'||AYADBUSY||!S.session||S.session.role!=='owner'||(S.cfg&&S.cfg.ayadSeeded))return;if((S.runners||[]).some(r=>r.user==='ayad')){S.cfg.ayadSeeded=1;save();return}
  AYADBUSY=true;try{const res=await fbCreate('ayad','121212');S.runners.push({id:'r'+Date.now(),name:'ayad',user:'ayad',pass:res==='ok'?'':'121212',dept:'cashier',phone:'',salary:700000,pv:Date.now()});S.cfg.ayadSeeded=1;logAct(' '+T('إنشاء حساب كاشير: ayad','cashier account created: ayad',"kasiyer hesabı oluşturuldu: ayad"));save();render()}catch(e){}finally{AYADBUSY=false}}
 setInterval(seedAyad,5000);
 function logout(){try{if(window.firebase&&firebase.auth&&firebase.auth().currentUser)firebase.auth().signOut()}catch(e){}FB_TOKEN='';S.session=null;try{CMODE='';ORD.table='';ORD.cart={}}catch(e){}save();render()}
@@ -1032,7 +1034,7 @@ const LGIC={
  host:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="m9 15 2 2 4-4"/></svg>',
  cashier:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h3"/></svg>'};
 const LGDEPTS0=()=>[['mgr',T('المدير','Manager',"Yönetici"),T('الإدارة والتقارير والإعدادات','Management, reports, settings',"Yönetim, raporlar, ayarlar")],['runner',T('الرنر','Runner',"Komi"),T('الحضور والاستراحات والنقاط','Attendance, breaks, points',"Devam, molalar, puanlar")],['captain',T('الكابتن','Captain',"Kaptan"),T('الطاولات والشكاوى والمبيعات','Tables, complaints, sales',"Masalar, şikayetler, satışlar")],['host',T('الاستقبال','Reception',"Karşılama"),T('الحجوزات والضيوف','Bookings and guests',"Rezervasyonlar ve misafirler")],['cashier',T('الكاشير','Cashier',"Kasa"),T('حسابات الطاولات والخصومات','Table bills and discounts',"Masa hesapları ve indirimler")]];
-const LGDEPTS=()=>APPM==='orders'?LGDEPTS0().filter(d=>['mgr','captain','cashier'].includes(d[0])):LGDEPTS0();
+const LGDEPTS=()=>APPM==='runners'?LGDEPTS0().filter(d=>d[0]==='mgr'||d[0]==='runner').map(d=>d[0]==='mgr'?[d[0],T('مسؤول الرنرات','Runner lead',"Komi sorumlusu"),T('الأقسام والتقارير والإعدادات','Sections, reports, settings',"Bölümler, raporlar, ayarlar")]:d):APPM==='orders'?LGDEPTS0().filter(d=>['mgr','captain','cashier'].includes(d[0])):LGDEPTS0();
 let INSTP=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();INSTP=e;if(!S.session)render()});addEventListener('appinstalled',()=>{INSTP=null;toast(T('تم تثبيت التطبيق','App installed',"Uygulama yüklendi"));render()});
 async function appInstall(){if(!INSTP)return toast(T("من قائمة المتصفح اختر: تثبيت التطبيق",'From the browser menu choose: Install app',"Tarayıcı menüsünden seçin: Uygulamayı yükle"));INSTP.prompt();try{await INSTP.userChoice}catch(e){}INSTP=null;render()}
 let LGD=null,LGERR='',LGUS='',LGPW='',LGANIM=true,LGBUSY=false;const LGLAST=()=>SS.get('amaya_ldept','');
@@ -1252,15 +1254,15 @@ async function push0(){await refreshTok();const cur=snap(S),ops=[],nr={};let bad
  try{[...AK,...MK].forEach(k=>{const a=cur[k],b={...(Rm[k]||{})},n=nr[k]={...b};
    Object.keys(a).forEach(i=>{if(a[i]===b[i])return;let body=a[i],method='PUT';
     if(b[i]!==undefined){try{const A=JSON.parse(a[i]),B=JSON.parse(b[i]);if(A&&B&&typeof A==='object'&&typeof B==='object'&&!Array.isArray(A)&&!Array.isArray(B)){const p={},po=v=>v&&typeof v==='object'&&!Array.isArray(v);Object.keys(A).forEach(f=>{if(JSON.stringify(A[f])===JSON.stringify(B[f]))return;if(po(A[f])&&po(B[f])&&Object.keys(A[f]).length){Object.keys(A[f]).forEach(g=>{if(JSON.stringify(A[f][g])!==JSON.stringify(B[f][g]))p[f+'/'+g]=A[f][g]});Object.keys(B[f]).forEach(g=>{if(!(g in A[f]))p[f+'/'+g]=null})}else p[f]=A[f]});Object.keys(B).forEach(f=>{if(!(f in A))p[f]=null});if(!Object.keys(p).length){n[i]=a[i];if(b[i]===(Rm[k]||{})[i])(Rm[k]=Rm[k]||{})[i]=a[i];return}body=JSON.stringify(p);method='PATCH'}}catch(e){}}
-    ops.push(dbf(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method,body}).then(r=>{if(ok(r)){n[i]=a[i];if(b[i]===(Rm[k]||{})[i])(Rm[k]=Rm[k]||{})[i]=a[i]}}).catch(fail))});
-   Object.keys(b).forEach(i=>{if(!(i in a)){ops.push(dbf(`${DB}/amaya/${k}/${i}.json${AQ()}`,{method:'DELETE'}).then(r=>{if(ok(r)){delete n[i];if(Rm[k])delete Rm[k][i]}}).catch(fail));if(k==='broken'||k==='runners')ops.push(fetch(`${DB}/amaya_photos/${i}.json${AQ()}`,{method:'DELETE'}).catch(()=>{}))}})});
-  S.broken.concat(S.runners).forEach(x=>{if(x.photo&&!PH[x.id]){PH[x.id]=1;ops.push(fetch(`${DB}/amaya_photos/${clean(x.id)}.json${AQ()}`,{method:'PUT',body:JSON.stringify(x.photo)}).catch(()=>{delete PH[x.id]}))}});
+    ops.push(dbf(`${DB}/${RT}/${k}/${i}.json${AQ()}`,{method,body}).then(r=>{if(ok(r)){n[i]=a[i];if(b[i]===(Rm[k]||{})[i])(Rm[k]=Rm[k]||{})[i]=a[i]}}).catch(fail))});
+   Object.keys(b).forEach(i=>{if(!(i in a)){ops.push(dbf(`${DB}/${RT}/${k}/${i}.json${AQ()}`,{method:'DELETE'}).then(r=>{if(ok(r)){delete n[i];if(Rm[k])delete Rm[k][i]}}).catch(fail));if(k==='broken'||k==='runners')ops.push(fetch(`${DB}/${RT}_photos/${i}.json${AQ()}`,{method:'DELETE'}).catch(()=>{}))}})});
+  S.broken.concat(S.runners).forEach(x=>{if(x.photo&&!PH[x.id]){PH[x.id]=1;ops.push(fetch(`${DB}/${RT}_photos/${clean(x.id)}.json${AQ()}`,{method:'PUT',body:JSON.stringify(x.photo)}).catch(()=>{delete PH[x.id]}))}});
   await Promise.all(ops);WSEQ++;keepDirty();if(bad){PUSHBAD++;dbErr=why;dbOk=false;dbShow()}else{PUSHBAD=0;if(PULLED&&dbErr){dbErr='';dbOk=true;dbShow()}}}catch(e){}}
 /* records changed on this device that the database has not confirmed yet */
 function dirty(){const c=snap(S);return [...AK,...MK].some(k=>{const a=c[k]||{},b=Rm[k]||{};return Object.keys(a).some(i=>a[i]!==b[i])||Object.keys(b).some(i=>!(i in a))})}
 async function pull(){if(!DB||pushing||PULLING)return;PULLING=1;try{await pull0()}finally{PULLING=0}}
 async function pull0(){if(PULLED&&dirty()){await push();if(dirty()&&PUSHBAD<4)return}await refreshTok();
- try{const w0=WSEQ,r0=await dbf(`${DB}/amaya.json${AQ()}`,{},25000),d0=await r0.json();
+ try{const w0=WSEQ,r0=await dbf(`${DB}/${RT}.json${AQ()}`,{},25000),d0=await r0.json();
   if(!r0.ok||(d0&&d0.error)){dbErr=(d0&&d0.error)||('HTTP '+r0.status);dbOk=false;dbShow();return}
   LASTPULL=Date.now();if(!PUSHBAD){dbErr='';dbOk=true}dbShow();const d=d0||{};if(pushing||WSEQ!==w0)return;
   if(!Object.keys(d).length){Rm={};PULLED=1;push();return}
@@ -1280,7 +1282,7 @@ async function pull0(){if(PULLED&&dirty()){await push();if(dirty()&&PUSHBAD<4)re
    else if(tab==='chat'){const cl=document.getElementById('cl');if(cl){cl.innerHTML=chatHTML();cl.scrollTop=cl.scrollHeight}}}
   else Rm=SRV;
   keepDirty();if(PULLED&&dirty())push();lateCheck();tsDupFix();dupPayCheck();
-  S.broken.concat(S.runners).forEach(x=>{if(x.hp&&!x.photo&&!LOAD[x.id]){LOAD[x.id]=1;fetch(`${DB}/amaya_photos/${clean(x.id)}.json${AQ()}`).then(r=>r.json()).then(v=>{const b=S.broken.concat(S.runners).find(y=>y.id===x.id);if(b&&v){b.photo=v;PHC[x.id+'|'+(x.pv||0)]=v;if(!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))render()}}).catch(()=>{}).finally(()=>{delete LOAD[x.id]})}});
+  S.broken.concat(S.runners).forEach(x=>{if(x.hp&&!x.photo&&!LOAD[x.id]){LOAD[x.id]=1;fetch(`${DB}/${RT}_photos/${clean(x.id)}.json${AQ()}`).then(r=>r.json()).then(v=>{const b=S.broken.concat(S.runners).find(y=>y.id===x.id);if(b&&v){b.photo=v;PHC[x.id+'|'+(x.pv||0)]=v;if(!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))render()}}).catch(()=>{}).finally(()=>{delete LOAD[x.id]})}});
  }catch(e){dbErr=(e&&e.message)||'network';dbOk=false;dbShow()}}
 
 /* ---------- Pro features ---------- */
@@ -1317,9 +1319,9 @@ function vStats(){const from=Date.now()-PER*864e5,byI={},byR={};
  const E=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]),card=(h,b,c)=>`<div class="nb ${c} p-3"><h3 class="font-black mb-2">${h}</h3>${b}</div>`;
  return `<div class="flex gap-2 mb-3">${[7,30].map(d=>`<button class="btn ${PER===d?'ye':'bg-white'}" onclick="PER=${d};render()">${d===7?T('أسبوعي','Weekly',"Haftalık"):T('شهري','Monthly',"Aylık")}</button>`).join('')}</div><div class="grid gap-4 md:grid-cols-2">${card(' '+T('دقائق التأخير','Late minutes',"Gecikme dakikaları"),bar(late,'rd'),'pk')}${card(' '+T('النقاط','Points',"Puanlar"),bar(pts,'gr'),'gr')}${card(' '+T('المكسورات حسب الصنف','Breakage by item',"Ürüne göre kırıklar"),bar(E(byI),'bl'),'bl')}${card(' '+T('المكسورات حسب الرنر','Breakage by runner',"Komiye göre kırıklar"),bar(E(byR),'or'),'or')}</div>`}
 const vLog=()=>`<div class="nb bg-white p-3">${S.log.slice(-100).reverse().map(l=>`<div class="border-b border-slate-200 py-1 text-sm font-bold"> ${fmt(l.at)} ·  ${esc(loc(l.who))} · ${esc(loc(l.act))}</div>`).join('')||'—'}</div>`;
-async function addMgr(){const n=mn.value.trim(),u=mu.value.trim(),p=mp.value.trim();if(!n||!u||!p||u==='abdurhman'||S.runners.concat(S.mgrs).some(x=>x.user===u))return toast(T('أكمل الحقول واسم مستخدم غير مكرر','Fill fields, unique username',"Alanları doldurun, kullanıcı adı benzersiz olmalı"));const res=await fbCreate(u,p);if(res==='short')return toast(T('كلمة السر 6 أحرف فأكثر','Password 6+ chars',"Şifre en az 6 karakter"));if(res!=='ok'&&res!=='off')return toast(T('تعذّر إنشاء الحساب: ','Could not create: ',"Oluşturulamadı: ")+res);const admin=(document.getElementById('ml')||{}).value==='full';S.mgrs.push({id:'m'+Date.now(),name:n,user:u,pass:res==='ok'?'':p,admin,at:Date.now()});logAct(LX(()=>T(admin?'مدير كامل ':'مدير مناوب ',(admin?'full admin ':'manager '),(admin?'tam yetkili yönetici ':'vardiya yöneticisi '))+n));save();render()}
+async function addMgr(){if(APPM==='runners')return;const n=mn.value.trim(),u=mu.value.trim(),p=mp.value.trim();if(!n||!u||!p||u==='abdurhman'||S.runners.concat(S.mgrs).some(x=>x.user===u))return toast(T('أكمل الحقول واسم مستخدم غير مكرر','Fill fields, unique username',"Alanları doldurun, kullanıcı adı benzersiz olmalı"));const res=await fbCreate(u,p);if(res==='short')return toast(T('كلمة السر 6 أحرف فأكثر','Password 6+ chars',"Şifre en az 6 karakter"));if(res!=='ok'&&res!=='off')return toast(T('تعذّر إنشاء الحساب: ','Could not create: ',"Oluşturulamadı: ")+res);const admin=(document.getElementById('ml')||{}).value==='full';S.mgrs.push({id:'m'+Date.now(),name:n,user:u,pass:res==='ok'?'':p,admin,at:Date.now()});logAct(LX(()=>T(admin?'مدير كامل ':'مدير مناوب ',(admin?'full admin ':'manager '),(admin?'tam yetkili yönetici ':'vardiya yöneticisi '))+n));save();render()}
 async function backup(){await saveFile('amaya-backup-'+dayKey()+'.json',new Blob([JSON.stringify({...S,session:null})],{type:'application/json'}))}
-const _vr=vRunners;vRunners=function(){return `<div class="nb or p-4 mb-4"><h3 class="font-black mb-2"> ${T('إضافة مدير','Add a manager',"Yönetici ekle")}</h3><div class="grid gap-2 sm:grid-cols-5"><input id="mn" class="inp" placeholder="${t('name')}"><input id="mu" class="inp" placeholder="${t('user')}"><input id="mp" class="inp" placeholder="${t('pass')}"><select id="ml" class="inp"><option value="shift">${T('مدير مناوب','Shift manager',"Vardiya yöneticisi")}</option><option value="full">${T('مدير كامل الصلاحيات','Full-access manager',"Tam yetkili yönetici")}</option></select><button class="btn gr" onclick="addMgr()">${t('add')}</button></div>${S.mgrs.map(m=>`<div class="flex justify-between font-bold mt-2"><span> ${esc(m.name)} @${esc(m.user)} <span class="pill ${m.admin?'ok':''}">${m.admin?T('كامل','Full',"Tam"):T('مناوب','Shift',"Vardiya")}</span></span><button class="btn rd !py-0" onclick="delMgr('${m.id}')">${t('del')}</button></div>`).join('')}</div>`+_vr()+`<div class="nb bl p-3 mt-4 flex gap-2 flex-wrap items-center"><b>${T('تعديل','Edit',"Düzenle")}</b>${RUN().map(r=>`<button class="btn !py-1" onclick="editRunner('${r.id}')">${avImg(r)} ${esc(r.name)}</button>`).join('')}${RUN().map(r=>`<label class="btn bg-white !py-1">${esc(r.name)} (${T('صورة','photo',"fotoğraf")})<input type="file" accept="image/*" class="hidden" onchange="setRunnerPhoto('${r.id}',this)"></label>`).join('')}</div><div class="nb ye p-3 mt-4 flex gap-2 flex-wrap items-center"><button class="btn gr" onclick="backup()"> ${T('نسخة احتياطية','Backup',"Yedek")}</button><label class="btn bg-white"> ${T('استرجاع','Restore',"Geri yükle")}<input type="file" accept=".json" class="hidden" onchange="restore(this)"></label></div>`};
+const _vr=vRunners;vRunners=function(){if(APPM==='runners')return _vr();return `<div class="nb or p-4 mb-4"><h3 class="font-black mb-2"> ${T('إضافة مدير','Add a manager',"Yönetici ekle")}</h3><div class="grid gap-2 sm:grid-cols-5"><input id="mn" class="inp" placeholder="${t('name')}"><input id="mu" class="inp" placeholder="${t('user')}"><input id="mp" class="inp" placeholder="${t('pass')}"><select id="ml" class="inp"><option value="shift">${T('مدير مناوب','Shift manager',"Vardiya yöneticisi")}</option><option value="full">${T('مدير كامل الصلاحيات','Full-access manager',"Tam yetkili yönetici")}</option></select><button class="btn gr" onclick="addMgr()">${t('add')}</button></div>${S.mgrs.map(m=>`<div class="flex justify-between font-bold mt-2"><span> ${esc(m.name)} @${esc(m.user)} <span class="pill ${m.admin?'ok':''}">${m.admin?T('كامل','Full',"Tam"):T('مناوب','Shift',"Vardiya")}</span></span><button class="btn rd !py-0" onclick="delMgr('${m.id}')">${t('del')}</button></div>`).join('')}</div>`+_vr()+`<div class="nb bl p-3 mt-4 flex gap-2 flex-wrap items-center"><b>${T('تعديل','Edit',"Düzenle")}</b>${RUN().map(r=>`<button class="btn !py-1" onclick="editRunner('${r.id}')">${avImg(r)} ${esc(r.name)}</button>`).join('')}${RUN().map(r=>`<label class="btn bg-white !py-1">${esc(r.name)} (${T('صورة','photo',"fotoğraf")})<input type="file" accept="image/*" class="hidden" onchange="setRunnerPhoto('${r.id}',this)"></label>`).join('')}</div><div class="nb ye p-3 mt-4 flex gap-2 flex-wrap items-center"><button class="btn gr" onclick="backup()"> ${T('نسخة احتياطية','Backup',"Yedek")}</button><label class="btn bg-white"> ${T('استرجاع','Restore',"Geri yükle")}<input type="file" accept=".json" class="hidden" onchange="restore(this)"></label></div>`};
 
 /* ---------- Shifts, dashboard, settings, photos, reset ---------- */
 const DEFN={m:['صباحي','Morning','Sabah'],e:['مسائي','Evening','Akşam'],n:['ليلي','Night','Gece']};
@@ -1329,7 +1331,7 @@ function DEFSH(){return [{id:'m',ord:1,name:'صباحي',from:'10:00',to:'17:00'
 const blank=lang=>({lang,runners:[],breaks:{},broken:[],delays:[],blog:[],chat:[],assign:{},mgrs:[],att:[],pts:[],log:[],sched:{},cfg:{},shifts:DEFSH(),notes:[],tokens:{},absences:[],checks:[],warns:[],wrong:[],session:null});
 const TOK='accounts-wipe-2026-11-02';
 if(SS.get('amaya_tok','')!==TOK){const oc=S.cfg,osh=S.shifts;S=blank(S.lang);S.cfg=oc||{};S.shifts=(osh&&osh.length)?osh:DEFSH();SS.set('amaya_tok',TOK);SS.set('amaya_state',S)}
-async function initReset(){if(!DB)return;try{const r=await fetch(`${DB}/amaya_meta/reset.json${AQ()}`),m=await r.json();if(r.ok&&(m===null||typeof m==='string')&&m!==TOK){await fetch(`${DB}/amaya.json${AQ()}`,{method:'DELETE'});await fetch(`${DB}/amaya_photos.json${AQ()}`,{method:'DELETE'});await fetch(`${DB}/amaya_meta/reset.json${AQ()}`,{method:'PUT',body:JSON.stringify(TOK)});Rm={}}}catch(e){}}
+async function initReset(){if(!DB)return;try{const r=await fetch(`${DB}/${RT}_meta/reset.json${AQ()}`),m=await r.json();if(r.ok&&(m===null||typeof m==='string')&&m!==TOK){await fetch(`${DB}/${RT}.json${AQ()}`,{method:'DELETE'});await fetch(`${DB}/${RT}_photos.json${AQ()}`,{method:'DELETE'});await fetch(`${DB}/${RT}_meta/reset.json${AQ()}`,{method:'PUT',body:JSON.stringify(TOK)});Rm={}}}catch(e){}}
 function setCfg(k,v){S.cfg[k]=k==='defMin'?(parseInt(v)||10):k==='grace'?(parseInt(v)||0):v;logAct('settings: '+k);save()}
 const avImg=(o,z)=>{z=z||36;const r=S.runners.find(x=>x.id===(o.rid||o.id))||S.runners.find(x=>x.name===o.name);return r&&r.photo?`<img src="${r.photo}" style="width:${z}px;height:${z}px;border-radius:50%;object-fit:cover;border:1px solid #D9DEE5;display:inline-block;vertical-align:middle">`:`<span style="width:${z}px;height:${z}px;border-radius:50%;background:#E5E7EB;display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:#4B5563;vertical-align:middle;font-size:${z*.45}px">${esc((o.name||'?').trim().charAt(0))}</span>`};
 let pendRP='';
@@ -1469,7 +1471,7 @@ function editRunner(id){const r=S.runners.find(x=>x.id===id);dlg({title:T('تع�
 function restore(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{let d;try{d=JSON.parse(r.result)}catch(e){return toast('Invalid file')}ask(T('استبدال كل البيانات بالنسخة الاحتياطية؟','Replace all data with the backup?',"Tüm veriler yedekle değiştirilsin mi?"),()=>{const ses=S.session;S={...S,...d,session:ses};['mgrs','att','pts','log','blog','chat','delays','broken','runners'].forEach(k=>S[k]=S[k]||[]);S.sched=S.sched||{};logAct('restore');save();render()})};r.readAsText(f)}
 function setDb(){dlg({title:'Firebase URL',fields:[{id:'u',label:'Realtime Database URL',value:DB}],ok:T('حفظ','Save',"Kaydet"),fn:f=>{SS.set('amaya_db',(f.u||'').trim());location.reload()}})}
 function resetAll(){dlg({title:T('تصفير البرنامج بالكامل','Reset everything',"Her şeyi sıfırla"),msg:T('يمسح كل الموظفين والسجلات والصور نهائياً ولا يمكن التراجع.','Erases all staff, records and photos permanently.',"Tüm personeli, kayıtları ve fotoğrafları kalıcı olarak siler; geri alınamaz."),danger:1,ok:T('مسح كل شيء','Erase everything',"Her şeyi sil"),fn:doReset})}
-async function doReset(){if(DB){pushing++;try{await fetch(`${DB}/amaya.json${AQ()}`,{method:'DELETE'});await fetch(`${DB}/amaya_photos.json${AQ()}`,{method:'DELETE'})}catch(e){}pushing--}
+async function doReset(){if(DB){pushing++;try{await fetch(`${DB}/${RT}.json${AQ()}`,{method:'DELETE'});await fetch(`${DB}/${RT}_photos.json${AQ()}`,{method:'DELETE'})}catch(e){}pushing--}
  const ses=S.session;S=blank(S.lang);S.session=ses;Rm={};Object.keys(PH).forEach(k=>delete PH[k]);SS.set('amaya_state',S);tab='dash';render();toast('OK')}
 let MOREQ='',MORE=false,_xl;let WL=null,PROF=null;
 async function toggleWake(){try{if(WL){await WL.release();WL=null}else{WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}}catch(e){toast(T('غير مدعوم في هذا المتصفح','Not supported in this browser',"Bu tarayıcıda desteklenmiyor"))}render()}
@@ -1484,7 +1486,7 @@ async function askNotif(){try{
  try{enablePush()}catch(e){}
  render();
 }catch(e){toast(T('خطأ: ','Error: ',"Hata: ")+(e&&e.message||''))}}
-const pushOff=()=>!(S&&S.cfg&&S.cfg.pushOn);
+const pushOff=()=>APPM==='runners'?!!(S&&S.cfg&&S.cfg.pushOn===false):!(S&&S.cfg&&S.cfg.pushOn);
 try{const _v=navigator.vibrate&&navigator.vibrate.bind(navigator);window.__vib=_v;if(_v)navigator.vibrate=p=>pushOff()?false:_v(p)}catch(e){}
 function sysNote(title,body,urgent){if(window.AmayaApp||pushOff())return;try{if(!('Notification'in window)||Notification.permission!=='granted')return;const o={body:body||'',tag:'amaya-'+Date.now(),renotify:true,requireInteraction:!!urgent};try{const n=new Notification(title||'Amaya Heroes',o);n.onclick=()=>{try{window.focus();if(window.amayaDesktop&&amayaDesktop.show)amayaDesktop.show()}catch(e){}};return}catch(e){}try{if('serviceWorker'in navigator&&navigator.serviceWorker){navigator.serviceWorker.ready.then(reg=>{try{reg.showNotification(title||'Amaya Heroes',o)}catch(e){}}).catch(()=>{})}}catch(e){}}catch(e){}}
 /* ---------- Push setup check (iPhone needs the app on the home screen) ---------- */
@@ -1665,13 +1667,13 @@ const fitAllOk=()=>isOwner()&&!!S.session.id;
 function fitKey(make){const r=fitRec();if(!r)return '';if(!r.fitKey&&make){const a='abcdefghijklmnopqrstuvwxyz0123456789',u=new Uint32Array(24);crypto.getRandomValues(u);r.fitKey=[...u].map(x=>a[x%36]).join('');save()}return r.fitKey||''}
 const fitDay=(d)=>{const x=d||new Date();return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
 const fitAt=v=>{const t=typeof v==='number'?v:Date.parse(v||'');return isNaN(t)?0:t};
-async function fitLoad(all){if(!DB)return;FITBUSY=1;try{if(all){const r=await fetch(`${DB}/amaya_fit.json${AQ()}`,{cache:'no-store'});const j=await r.json();FITALL=(j&&!j.error)?j:{}}const k=fitKey(false);if(k){const r=await fetch(`${DB}/amaya_fit/${k}.json${AQ()}`,{cache:'no-store'});const j=await r.json();FIT[k]=(j&&!j.error)?j:{}}}catch(e){}FITBUSY=0;if(['fit'].includes(TAB_CUR())||RS==='fit')render()}
+async function fitLoad(all){if(!DB)return;FITBUSY=1;try{if(all){const r=await fetch(`${DB}/${RT}_fit.json${AQ()}`,{cache:'no-store'});const j=await r.json();FITALL=(j&&!j.error)?j:{}}const k=fitKey(false);if(k){const r=await fetch(`${DB}/${RT}_fit/${k}.json${AQ()}`,{cache:'no-store'});const j=await r.json();FIT[k]=(j&&!j.error)?j:{}}}catch(e){}FITBUSY=0;if(['fit'].includes(TAB_CUR())||RS==='fit')render()}
 const TAB_CUR=()=>{try{return tab}catch(e){return ''}};
 /* Android app: the native side reads Health Connect and hands the days back here */
 const fitNative=()=>!!(window.AmayaApp&&window.AmayaApp.fitStatus);
 function fitAndroid(ask){try{if(ask)window.AmayaApp.fitAsk();else window.AmayaApp.fitRead()}catch(e){toast(T('حدّث تطبيق الأندرويد أولاً','Update the Android app first',"Önce Android uygulamasını güncelleyin"))}}
 window.amayaFitCb=async function(j){try{if(typeof j==='string')j=JSON.parse(j)}catch(e){return}if(!j)return;if(j.err){toast(j.err==='nohc'?T('ثبّت تطبيق Health Connect من متجر Google Play','Install Health Connect from Google Play',"Google Play'den Health Connect'i yükleyin"):j.err==='denied'?T('لم تُعطَ الصلاحية','Permission not given',"İzin verilmedi"):T('تعذّرت القراءة','Could not read the data',"Veriler okunamadı"));return}
- const k=fitKey(true);if(!k||!DB||!j.days)return;const ops=Object.entries(j.days).map(([d,v])=>fetch(`${DB}/amaya_fit/${k}/${d}.json${AQ()}`,{method:'PUT',body:JSON.stringify({s:Math.round(+v.s||0),f:Math.round(+v.f||0),d:Math.round((+v.d||0))/1000,t:Date.now(),src:'android'})}));
+ const k=fitKey(true);if(!k||!DB||!j.days)return;const ops=Object.entries(j.days).map(([d,v])=>fetch(`${DB}/${RT}_fit/${k}/${d}.json${AQ()}`,{method:'PUT',body:JSON.stringify({s:Math.round(+v.s||0),f:Math.round(+v.f||0),d:Math.round((+v.d||0))/1000,t:Date.now(),src:'android'})}));
  await Promise.all(ops).catch(()=>{});await fitLoad(fitAllOk()&&FITV==='all');if(j.loud)toast(T('تم التحديث','Updated',"Güncellendi"))};
 if(fitNative()){setTimeout(()=>{try{if(S.session&&fitRec()&&fitRec().fitKey&&window.AmayaApp.fitStatus()==='ok')window.AmayaApp.fitRead()}catch(e){}},5000);document.addEventListener('visibilitychange',()=>{try{if(document.visibilityState==='visible'&&S.session&&fitRec()&&fitRec().fitKey&&window.AmayaApp.fitStatus()==='ok')window.AmayaApp.fitRead()}catch(e){}})}
 function fitGoal(){const r=fitRec();if(!r)return;const v=prompt(T('هدفك اليومي من الخطوات:','Your daily step goal:',"Günlük adım hedefiniz:"),r.fitGoal||8000);const n=Math.round(+aiDigits(v||''));if(n>=1000&&n<=60000){r.fitGoal=n;save();render()}}
@@ -2063,7 +2065,11 @@ const RULES_JSON=`{
     "amaya":        { ".read": "auth != null", ".write": "auth != null" },
     "amaya_photos": { ".read": "auth != null", ".write": "auth != null" },
     "amaya_meta":   { ".read": "auth != null", ".write": "auth != null" },
-    "amaya_fit":    { ".read": "auth != null", "$k": { ".write": "$k.matches(/^[a-z0-9]{24}$/)" } }
+    "amaya_fit":    { ".read": "auth != null", "$k": { ".write": "$k.matches(/^[a-z0-9]{24}$/)" } },
+    "rnr":          { ".read": "auth != null", ".write": "auth != null" },
+    "rnr_photos":   { ".read": "auth != null", ".write": "auth != null" },
+    "rnr_meta":     { ".read": "auth != null", ".write": "auth != null" },
+    "rnr_fit":      { ".read": "auth != null", "$k": { ".write": "$k.matches(/^[a-z0-9]{24}$/)" } }
   }
 }`;
 function copyRules(){try{navigator.clipboard.writeText(RULES_JSON);toast(T('تم نسخ القواعد','Rules copied',"Kurallar kopyalandı"))}catch(e){toast(T("حدث خطأ",'Something went wrong',"Bir hata oluştu"))}}
@@ -2097,8 +2103,8 @@ const nr0=()=>T('لا يوجد ','No ',"Henüz ")+pMany()+T(' بعد. أضف أ�
 const ar0=()=>T('إضافة ','Add ',"Ekle: ")+pOne();
 const PN=()=>({runner:T('الرنر','Runner',"Komi"),captain:T('الكابتن','Captain',"Kaptan"),host:T('الموظف','Staff',"Personel")}[DEPT]||T('الرنر','Runner',"Komi"));
 let TBR=null;
-function ensureSeed(st){st.cfg=st.cfg||{};if(!st.cfg.ogurSeeded){st.mgrs=st.mgrs||[];if(!st.mgrs.some(m=>m.user==='ogur'))st.mgrs.push({id:'m'+Date.now()+Math.random().toString(36).slice(2,5),name:'ogur demirhan',user:'ogur',pass:'121212',admin:true,depts:['runner','captain','host'],at:Date.now()});st.cfg.ogurSeeded=1}return st}
-function myDepts(){const se=S.session;if(!se||se.role==='runner')return [];
+function ensureSeed(st){st.cfg=st.cfg||{};if(APPM==='runners')return st;if(!st.cfg.ogurSeeded){st.mgrs=st.mgrs||[];if(!st.mgrs.some(m=>m.user==='ogur'))st.mgrs.push({id:'m'+Date.now()+Math.random().toString(36).slice(2,5),name:'ogur demirhan',user:'ogur',pass:'121212',admin:true,depts:['runner','captain','host'],at:Date.now()});st.cfg.ogurSeeded=1}return st}
+function myDepts(){const se=S.session;if(!se||se.role==='runner')return [];if(APPM==='runners')return ['runner'];
  if(se.role==='owner'&&!se.id)return ['runner'];
  const m=S.mgrs.find(x=>x.id===se.id)||{};
  if(m.depts&&m.depts.length)return m.depts;
@@ -3064,7 +3070,7 @@ function tsDupFix(){const r=S.session&&S.session.role==='runner'?S.session.id:''
   const old=s.table;s.table=nt;(S.orders||[]).filter(o=>o.sess===s.id).forEach(o=>o.table=nt);const b=billOf(s.id);if(b)b.table=nt;taLog(s,{t:'table',from:old,to:nt});if(ORD.table&&tNorm(ORD.table)===tNorm(old))ORD.table=nt;ch=1;
   toast(T('طاولة ','Table ',"Masa ")+old+T(' فتحها كابتن آخر قبلك بلحظة. صار رقم طاولتك ',' was opened by another captain a moment before you. Your table is now '," sizden hemen önce başka bir kaptan tarafından açıldı. Masanızın yeni numarası ")+nt)});
  if(ch){save();render()}}
-async function tsDupNow(){if(!DB)return;try{await refreshTok();const a=AQ(),q='orderBy='+encodeURIComponent('"$key"')+'&startAt='+encodeURIComponent('"ts'+(Date.now()-864e5)+'"');const r=await dbf(`${DB}/amaya/tsess.json${a?a+'&':'?'}${q}`,{},5000);if(!r.ok)return;const d=await r.json(),cs=snap(S);Rm.tsess=Rm.tsess||{};
+async function tsDupNow(){if(!DB)return;try{await refreshTok();const a=AQ(),q='orderBy='+encodeURIComponent('"$key"')+'&startAt='+encodeURIComponent('"ts'+(Date.now()-864e5)+'"');const r=await dbf(`${DB}/${RT}/tsess.json${a?a+'&':'?'}${q}`,{},5000);if(!r.ok)return;const d=await r.json(),cs=snap(S);Rm.tsess=Rm.tsess||{};
  Object.values(d||{}).forEach(x=>{if(!x||!x.id)return;const u=clean(x.id);if(cs.tsess[u]!==Rm.tsess[u])return;const j=S.tsess.findIndex(y=>y.id===x.id);if(j<0)S.tsess.push(x);else S.tsess[j]=x;Rm.tsess[u]=JSON.stringify(x)});tsDupFix()}catch(e){}}
 const tsOrders=sid=>(S.orders||[]).filter(o=>o.sess===sid).sort((a,b)=>a.at-b.at);
 const tsHeld=sid=>(S.orders||[]).filter(o=>o.sess===sid&&o.hold).sort((a,b)=>a.at-b.at);
@@ -3224,7 +3230,7 @@ function opHold(k){const c=ORD.cart[k];if(!c)return;c.hold=c.hold?0:1;render()}
 const cartG=g=>opCartRows().filter(([k])=>{const i=mOne(kMid(k));return i&&ordGrp(i)===g});
 function opHoldAll(g){const L=cartG(g),all=L.length&&L.every(([k,v])=>v.hold);L.forEach(([k,v])=>v.hold=all?0:1);render()}
 function opGo(g){ORD.g=g;ORD.sec='';ORD.q='';ORD.ask='';ORD.v='';ORD.anim=1;NAVA=1;render();ORD.anim=0;try{scrollTo({top:0})}catch(e){}}
-async function ordPaidCheck(sid){if(!DB)return;try{await refreshTok();const r=await dbf(`${DB}/amaya/tsess/${clean(sid)}.json${AQ()}`,{},5000);if(!r.ok)return;const x=await r.json();if(x&&x.end&&!x.del)toast(T('انتبه: هذه الطاولة دُفع حسابها وأُغلقت. أبلغ الكاشير بالطلب الجديد','Note: this table was already paid and closed. Tell the cashier about the new order',"Dikkat: bu masanın hesabı ödendi ve kapandı. Yeni siparişi kasaya bildirin"))}catch(e){}}
+async function ordPaidCheck(sid){if(!DB)return;try{await refreshTok();const r=await dbf(`${DB}/${RT}/tsess/${clean(sid)}.json${AQ()}`,{},5000);if(!r.ok)return;const x=await r.json();if(x&&x.end&&!x.del)toast(T('انتبه: هذه الطاولة دُفع حسابها وأُغلقت. أبلغ الكاشير بالطلب الجديد','Note: this table was already paid and closed. Tell the cashier about the new order',"Dikkat: bu masanın hesabı ödendi ve kapandı. Yeni siparişi kasaya bildirin"))}catch(e){}}
 function ordDel(id){if(!isStaff())return;if(!confirm(T('حذف هذا الطلب؟','Delete this order?',"Bu sipariş silinsin mi?")))return;const o=(S.orders||[]).find(x=>x.id===id);if(!o)return;if(!isStaff()&&(!me()||o.rid!==me().id))return;S.orders=S.orders.filter(x=>x.id!==id);save();render()}
 /* order slip: one slip per station, preview then system print */
 const ordNo=o=>(S.orders||[]).filter(x=>x.day===o.day&&x.at<=o.at).length;
@@ -3559,7 +3565,7 @@ const PAYING={},LATEW={};
 /* reads only this table and its orders from the database (max a few seconds) */
 async function tsFresh(sid,ms){const s0=(S.tsess||[]).find(x=>x.id===sid);if(!s0||!DB)return null;
  try{await refreshTok();const a=AQ(),q='orderBy='+encodeURIComponent('"$key"')+'&startAt='+encodeURIComponent('"or'+((+s0.at||Date.now())-36e5)+'"');
-  const [ro,rs]=await Promise.all([dbf(`${DB}/amaya/orders.json${a?a+'&':'?'}${q}`,{},ms),dbf(`${DB}/amaya/tsess/${clean(sid)}.json${a}`,{},ms)]);if(!ro.ok||!rs.ok)return null;
+  const [ro,rs]=await Promise.all([dbf(`${DB}/${RT}/orders.json${a?a+'&':'?'}${q}`,{},ms),dbf(`${DB}/${RT}/tsess/${clean(sid)}.json${a}`,{},ms)]);if(!ro.ok||!rs.ok)return null;
   const os=await ro.json(),ss=await rs.json(),cs=snap(S),n0=tsOrders(sid).length,t0=billCalc(s0,billOf(sid)).total;Rm.orders=Rm.orders||{};Rm.tsess=Rm.tsess||{};
   Object.values(os||{}).forEach(x=>{if(!x||x.sess!==sid)return;const u=clean(x.id);if(cs.orders[u]!==Rm.orders[u])return;const j=S.orders.findIndex(y=>y.id===x.id);if(j<0)S.orders.push(x);else S.orders[j]=x;Rm.orders[u]=JSON.stringify(x)});
   if(ss&&ss.id===sid){const u=clean(sid);if(cs.tsess[u]===Rm.tsess[u]){const j=S.tsess.findIndex(y=>y.id===sid);if(j>=0)S.tsess[j]=ss;Rm.tsess[u]=JSON.stringify(ss)}}
@@ -3971,7 +3977,7 @@ function render(){
   tabs=base.concat(extra);tabs.push(['fit','tFit']);
   {const RO={daily:1,report:2,shiftcmp:3,stats:4,mreport:5,profile:6,salary:7,broken:8,log:9};tabs=tabs.map((x,i)=>[x,i]).sort((a,b)=>((RO[a[0][0]]||0)-(RO[b[0][0]]||0))||a[1]-b[1]).map(x=>x[0])}
   if(APPM==='orders'){if(!canOrders()){tabs=[['noacc','app']]}else{if(!['captain','cashier'].includes(DEPT))DEPT=mds.find(d=>d==='captain'||d==='cashier')||'captain';tabs=[['bills','tBills'],['tact','tTact'],['orders','tOrders'],['tables','tTables'],['sales','tSales'],['pins','tPins'],['menu','tMenu'],['notes','tNotes'],['zrep','tZrep']]}}
-  else tabs=tabs.filter(x=>!ORDTABS.includes(x[0]));
+  else tabs=tabs.filter(x=>!ORDTABS.includes(x[0])&&!(APPM==='runners'&&['zrep','capleague'].includes(x[0])));
   const BM={fit:vFit,noacc:()=>noOrdersApp(meName()),pins:vPins,check:vCheck,league:vLeague,mreport:vMReport,warns:vWarns,profile:vProfile,shiftcmp:vShiftCmp,salary:vSalary,zrep:vZrep,bills:vBills,notes:vNotes,daily:vDaily,dash:vDash,shifts:vShifts,settings:vSettings,scores:vScores,stats:vStats,log:vLog,breaks:vBreaks,assign:vAssign,report:vReport,chat:vChat,broken:vBroken,people:vRunners,runners:vRunners,wrongfood:vWrong,tables:vTables,ai:vAI,menu:vMenu,meetings:vMeetings,complaints:vComplaints,sales:vSales,praise:vPraise,handover:vHandover,capleague:vCapLeague,orders:vOrders,tact:vTact};body=BM[tab]||vDash;
   if(!tabs.some(x=>x[0]===tab)){tab=tabs.some(x=>x[0]==='dash')?'dash':tabs[0][0];body=BM[tab]||vDash}
  }else{tabs=[['me','tMe']];tab='me';body=runnerRoot}

@@ -36,7 +36,15 @@ async function accessToken(sa) {
   return j.access_token;
 }
 
+// Two apps share the database: the restaurant app under amaya/ and the runners app under rnr/.
+// Each run sends the new notes of both. The runners app has notifications on unless its owner turns them off.
+const ROOTS = [{ root: 'amaya', app: '', on: v => !!v }, { root: 'rnr', app: 'runners.html', on: v => v !== false }];
 async function sendNew(env) {
+  const out = {};
+  for (const R of ROOTS) { try { out[R.root] = await sendRoot(env, R); } catch (e) { out[R.root] = { error: String(e.message || e) }; } }
+  return out;
+}
+async function sendRoot(env, R) {
   const sa = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT || '{}');
   const db = String(env.FIREBASE_DB_URL || '').replace(/\/+$/, '');
   if (!sa.private_key || !db) throw new Error('Missing FIREBASE_SERVICE_ACCOUNT or FIREBASE_DB_URL secret');
@@ -46,17 +54,17 @@ async function sendNew(env) {
   const put = (p, v) => fetch(`${db}/${p}.json${qs}`, { method: 'PUT', body: JSON.stringify(v) });
 
   const now = Date.now();
-  const last = Number(await get('amaya_meta/pushLast')) || now - 10 * 60 * 1000;
-  const notes = Object.values((await get('amaya/notes')) || {})
+  const last = Number(await get(`${R.root}_meta/pushLast`)) || now - 10 * 60 * 1000;
+  const notes = Object.values((await get(`${R.root}/notes`)) || {})
     .filter(n => n && n.at > last && n.at > now - MAX_AGE_MS && n.at <= now + 60e3)
     .sort((a, b) => a.at - b.at);
   if (!notes.length) return { notes: 0, sent: 0 };
-  if (!(await get('amaya/cfg/pushOn'))) return { notes: notes.length, sent: 0, off: true };
+  if (!R.on(await get(`${R.root}/cfg/pushOn`))) return { notes: notes.length, sent: 0, off: true };
   // claim these notes first so a second run at the same moment does not send them again
-  await put('amaya_meta/pushLast', notes[notes.length - 1].at);
+  await put(`${R.root}_meta/pushLast`, notes[notes.length - 1].at);
 
-  const tokens = Object.values((await get('amaya/tokens')) || {}).filter(x => x && x.t);
-  const runners = (await get('amaya/runners')) || {};
+  const tokens = Object.values((await get(`${R.root}/tokens`)) || {}).filter(x => x && x.t);
+  const runners = (await get(`${R.root}/runners`)) || {};
   const muted = new Set(Object.values(runners).filter(r => r && r.notif === false).map(r => r.id));
   const pick = x => (x && typeof x === 'object') ? x : { ar: String(x || ''), en: String(x || '') };
   const dead = new Set();
@@ -67,7 +75,7 @@ async function sendNew(env) {
     const ti = pick(n.title), bo = pick(n.body);
     const data = {
       title_ar: String(ti.ar || 'Amaya Heroes').slice(0, 120), title_en: String(ti.en || ti.ar || 'Amaya Heroes').slice(0, 120),
-      body_ar: String(bo.ar || '').slice(0, 300), body_en: String(bo.en || bo.ar || '').slice(0, 300), kind: String(n.kind || 'info'),
+      body_ar: String(bo.ar || '').slice(0, 300), body_en: String(bo.en || bo.ar || '').slice(0, 300), kind: String(n.kind || 'info'), app: R.app,
     };
     for (const x of targets) jobs.push(fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
       method: 'POST', headers: { authorization: 'Bearer ' + tok, 'content-type': 'application/json' },
@@ -80,7 +88,7 @@ async function sendNew(env) {
     }).catch(() => { failed++; }));
   }
   await Promise.all(jobs);
-  await Promise.all([...dead].map(t => fetch(`${db}/amaya/tokens/${cleanKey(t)}.json${qs}`, { method: 'DELETE' })));
+  await Promise.all([...dead].map(t => fetch(`${db}/${R.root}/tokens/${cleanKey(t)}.json${qs}`, { method: 'DELETE' })));
   return { notes: notes.length, sent, failed, removed: dead.size };
 }
 

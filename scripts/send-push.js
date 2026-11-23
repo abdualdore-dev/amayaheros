@@ -36,16 +36,23 @@ async function main() {
   const get = async p => (await fetch(`${db}/${p}.json${qs}`)).json();
   const put = (p, v) => fetch(`${db}/${p}.json${qs}`, { method: 'PUT', body: JSON.stringify(v) });
 
+  // the restaurant app (amaya/) and the runners app (rnr/) share the database; send the new notes of both
+  for (const R of [{ root: 'amaya', app: '', on: v => !!v }, { root: 'rnr', app: 'runners.html', on: v => v !== false }]) {
+    try { await sendRoot(R, { sa, db, tok, qs, get, put }); } catch (e) { console.error(R.root + ': ' + e.message); }
+  }
+}
+
+async function sendRoot(R, { sa, db, tok, qs, get, put }) {
   const now = Date.now();
-  const last = Number(await get('amaya_meta/pushLast')) || now - 10 * 60 * 1000;
-  const notes = Object.values((await get('amaya/notes')) || {})
+  const last = Number(await get(`${R.root}_meta/pushLast`)) || now - 10 * 60 * 1000;
+  const notes = Object.values((await get(`${R.root}/notes`)) || {})
     .filter(n => n && n.at > last && n.at > now - MAX_AGE_MS)
     .sort((a, b) => a.at - b.at);
-  if (!notes.length) { console.log('No new notes'); return; }
-  if (!(await get('amaya/cfg/pushOn'))) { console.log('Push is off'); return; }
+  if (!notes.length) { console.log(R.root + ': no new notes'); return; }
+  if (!R.on(await get(`${R.root}/cfg/pushOn`))) { console.log(R.root + ': push is off'); return; }
 
-  const tokens = Object.values((await get('amaya/tokens')) || {}).filter(x => x && x.t);
-  const runners = (await get('amaya/runners')) || {};
+  const tokens = Object.values((await get(`${R.root}/tokens`)) || {}).filter(x => x && x.t);
+  const runners = (await get(`${R.root}/runners`)) || {};
   const muted = new Set(Object.values(runners).filter(r => r && r.notif === false).map(r => r.id));
   const pick = x => (x && typeof x === 'object') ? x : { ar: String(x || ''), en: String(x || '') };
   const dead = new Set();
@@ -62,6 +69,7 @@ async function main() {
       body_ar: String(bo.ar || '').slice(0, 300),
       body_en: String(bo.en || bo.ar || '').slice(0, 300),
       kind: String(n.kind || 'info'),
+      app: R.app,
     };
     for (const x of targets) {
       const r = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
@@ -75,9 +83,9 @@ async function main() {
       if (/UNREGISTERED|NOT_FOUND/.test(JSON.stringify(j))) dead.add(x.t);
     }
   }
-  for (const t of dead) await fetch(`${db}/amaya/tokens/${cleanKey(t)}.json${qs}`, { method: 'DELETE' });
-  await put('amaya_meta/pushLast', notes[notes.length - 1].at);
-  console.log(`Notes: ${notes.length}, sent: ${sent}, failed: ${failed}, removed devices: ${dead.size}`);
+  for (const t of dead) await fetch(`${db}/${R.root}/tokens/${cleanKey(t)}.json${qs}`, { method: 'DELETE' });
+  await put(`${R.root}_meta/pushLast`, notes[notes.length - 1].at);
+  console.log(`${R.root}: notes: ${notes.length}, sent: ${sent}, failed: ${failed}, removed devices: ${dead.size}`);
 }
 
 main().catch(e => { console.error(e.message); process.exit(1); });

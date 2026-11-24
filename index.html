@@ -1025,6 +1025,9 @@ body.th-dark.ns-on .bkq{background:#20262C!important;border-color:#2F373E!import
 body.th-dark.ns-on span[style*="background:#E5E7EB"],body.th-dark.ns-on .sl-av:not(.dk){background:#2A3137!important}
 body.th-dark.ns-on img[style*="border:1px solid #D9DEE5"]{border-color:#2A3137!important}
 body.th-dark.ns-on .ns-main div:has(>b[data-cu]){background:#1A1F24!important}
+html,html body,html body.splashing,html body.auth{background:#14181C!important}
+html.th-lt,html.th-lt body,html.th-lt body.splashing,html.th-lt body.auth{background:#F3F5F7!important}
+html body.ns-on{background:#F3F5F7!important}html body.th-dark{background:#0F1215!important}
 /* ===== loading screen (Nov 2026): same colors as the sign-in screen ===== */
 html body #splash{background:#14181C!important;overflow:hidden}
 html body #splash.sp-lt{background:#F3F5F7!important}
@@ -1143,7 +1146,7 @@ body.ns-on .ns-side .dsw button{border-color:#2C333A;background:#1C2228}body.ns-
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script></head>
 <body class="min-h-screen splashing">
 <div id="splash" role="presentation"><div class="stars"><i style="left:12%;top:14%;--z:16px;--d:3.4s;--w:0.2s"></i><i style="left:84%;top:10%;--z:22px;--d:4s;--w:0.9s"></i><i style="left:70%;top:28%;--z:12px;--d:3s;--w:1.6s"></i><i style="left:22%;top:62%;--z:18px;--d:3.8s;--w:0.5s"></i><i style="left:88%;top:58%;--z:14px;--d:3.2s;--w:1.2s"></i><i style="left:46%;top:8%;--z:10px;--d:2.8s;--w:2s"></i><i style="left:8%;top:86%;--z:20px;--d:4.2s;--w:0.7s"></i><i style="left:62%;top:82%;--z:12px;--d:3.1s;--w:1.9s"></i><i style="left:34%;top:36%;--z:9px;--d:2.6s;--w:2.4s"></i><i style="left:94%;top:90%;--z:16px;--d:3.6s;--w:0.3s"></i></div><div class="sp-g"><div class="sp2-logo" aria-hidden="true"><span>amaya</span></div><svg class="sp-mark" viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbf9ff"/><stop offset=".45" stop-color="#d0d6d3"/><stop offset="1" stop-color="#2f4552"/></linearGradient></defs><circle class="ln" cx="60" cy="60" r="54" transform="rotate(-90 60 60)"/><circle class="fl" cx="60" cy="60" r="46"/><text class="tx" x="60" y="67" text-anchor="middle">amaya</text><circle class="sh" cx="60" cy="60" r="54" transform="rotate(-135 60 60)"/></svg><div class="sp-word"><span  style="animation-delay:1.15s">A</span><span  style="animation-delay:1.20s">m</span><span  style="animation-delay:1.25s">a</span><span  style="animation-delay:1.30s">y</span><span  style="animation-delay:1.35s">a</span><span style="width:.35em"></span><span class="g" style="animation-delay:1.45s">H</span><span class="g" style="animation-delay:1.50s">e</span><span class="g" style="animation-delay:1.55s">r</span><span class="g" style="animation-delay:1.60s">o</span><span class="g" style="animation-delay:1.65s">e</span><span class="g" style="animation-delay:1.70s">s</span></div><div class="sp-sub">مطعم أمايا &middot; بغداد، المنصور</div><div class="sp-bar"><i></i></div></div></div>
-<script>try{if(JSON.parse(localStorage.getItem('amaya_theme')||'"dark"')==='light')document.getElementById('splash').classList.add('sp-lt')}catch(e){}</script>
+<script>try{if(JSON.parse(localStorage.getItem('amaya_theme')||'"dark"')==='light'){document.getElementById('splash').classList.add('sp-lt');document.documentElement.classList.add('th-lt')}}catch(e){}</script>
 <div id="app"></div>
 <div id="modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onclick="this.classList.add('hidden')"><img id="modalImg" class="max-h-full max-w-full nb"></div>
 <div id="toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 nb pk px-4 py-2 font-black z-50"></div>
@@ -1364,8 +1367,8 @@ function vPins(){if(!canPins())return '';const L0=(S.runners||[]).filter(r=>!r.o
  return show+`<div class="nb p-4 mb-3 text-sm">${T('الكابتن والكاشير يدخلون تطبيق الطلبات برمز من 6 أرقام بدون اسم مستخدم. اعمل رمز لكل شخص وسلّمه إياه بيده.','Captains and the cashier sign in to the orders app with a 6-digit code, no username. Make a code for each person and hand it over in person.',"Kaptanlar ve kasiyer sipariş uygulamasına kullanıcı adı olmadan 6 haneli kodla girer. Her kişiye kod oluşturup elden verin.")}</div>
  <div class="nb op-list">${L0.map(r=>`<div class="op-row"><span><b>${esc(r.name)}</b> <span class="text-sm text-gray-500">· ${r.dept==='cashier'?T('كاشير','Cashier',"Kasiyer"):T('كابتن','Captain',"Kaptan")}</span><br><small class="${r.pinUid?'text-gray-500':''}">${r.pinUid?T('رمز فعّال منذ ','Code active since ',"Kod aktif: ")+dkOf(r.pinAt)+' '+hm(r.pinAt):T('بدون رمز','No code',"Kod yok")}</small></span><span class="flex gap-2">${r.pinUid?`<button class="btn bg-white !py-2" onclick="pinOff('${r.id}')">${T('إيقاف','Turn off',"Kapat")}</button>`:''}<button class="btn !py-2" onclick="pinNew('${r.id}')">${r.pinUid?T('رمز جديد','New code',"Yeni kod"):T('إنشاء رمز','Make a code',"Kod oluştur")}</button></span></div>`).join('')||`<div class="op-empty">${T('لا يوجد كباتن أو كاشير','No captains or cashier',"Kaptan veya kasiyer yok")}</div>`}</div>`}
 /* sign-in screen: dark or light, chosen on this device */
-let LGTH=SS.get('amaya_theme','dark');
-function lgTheme(){LGTH=LGTH==='dark'?'light':'dark';SS.set('amaya_theme',LGTH);LGANIM=false;LGFLIP=true;render()}
+let LGTH=SS.get('amaya_theme','dark');document.documentElement.classList.toggle('th-lt',LGTH==='light');
+function lgTheme(){LGTH=LGTH==='dark'?'light':'dark';SS.set('amaya_theme',LGTH);document.documentElement.classList.toggle('th-lt',LGTH==='light');LGANIM=false;LGFLIP=true;render()}
 let LGFLIP=false,LGEYE=false;
 const LGCOL={mgr:'#BE185D',runner:'#2F5BFF',captain:'#D9692A',host:'#6D28D9',cashier:'#0F766E'};
 const LGP2={mgr:'M4 8h16v11H4zM9 8V6a2 2 0 012-2h2a2 2 0 012 2v2M4 13h16',runner:'M13 4a2 2 0 11-4 0 2 2 0 014 0zM9 21l2-6 3 3v3M7 11l3-3 4 2 3 3',captain:'M4 15h16M6 15a6 6 0 0112 0M12 7v2M3 19h18',host:'M4 21V5a2 2 0 012-2h9l5 5v13M9 13h6M9 17h6M14 3v5h5',cashier:'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6'};
@@ -4369,7 +4372,7 @@ ensureSeed(S);save();
 if(DB){initReset().then(()=>{pull();setInterval(pull,8000)})}
 /* splash: plays on every open, tap to skip */
 (function(){const sp=document.getElementById('splash');if(!sp){document.body.classList.remove('splashing');return}const sb=sp.querySelector('.sp-sub');if(sb&&S.lang==='en')sb.textContent='Amaya Restaurant \u00b7 Baghdad, Mansour';if(sb&&S.lang==='tr')sb.textContent='Amaya Restoran \u00b7 Bağdat, Mansur';let rm=false;try{rm=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)}catch(e){}let done=false;
- const end=()=>{if(done)return;done=true;sp.classList.add('out');setTimeout(()=>{document.body.classList.remove('splashing');setTimeout(()=>{LGANIM=false},1200)},rm?0:420);setTimeout(()=>sp.remove(),1100)};
+ const end=()=>{if(done)return;done=true;sp.classList.add('out');document.body.classList.remove('splashing');setTimeout(()=>{LGANIM=false},1200);setTimeout(()=>sp.remove(),1100)};
  sp.addEventListener('click',end);setTimeout(end,rm?250:2500)})();
 if(S.session&&window.Notification&&Notification.permission==='granted'&&(S.session.role!=='runner'||notifOn(S.session.id)))enablePush();
 </script>

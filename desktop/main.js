@@ -46,7 +46,7 @@ async function buildMenu() {
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 1280, height: 820, minWidth: 380, minHeight: 600, show: false, backgroundColor: '#efe9fb',
+    width: 1280, height: 820, minWidth: 380, minHeight: 600, show: false, backgroundColor: '#14181C',
     icon: path.join(__dirname, 'icon.png'), title: 'Amaya Heroes',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false, backgroundThrottling: false },
   });

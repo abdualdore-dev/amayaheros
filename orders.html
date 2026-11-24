@@ -899,6 +899,37 @@ body.ns-on .sl-days span{color:#56616A!important}.sl-days span.ab{background:#D9
 .sl-act{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sl-act .btn{height:52px}
 @media (max-width:860px){.sl-list{grid-template-columns:minmax(0,1fr)}}
 @media (prefers-reduced-motion:reduce){.ns-pg .sl-row,.ns-pg .sl-pb i,.sl-sheet.ns-op{animation:none!important}}
+.dp{min-height:100vh;background:#14181C;display:flex;align-items:center;justify-content:center;padding:32px 18px;box-sizing:border-box;position:relative;overflow:hidden}
+.dp::before{content:"";position:absolute;width:720px;height:720px;border-radius:50%;background:radial-gradient(circle,rgba(47,91,255,.22),rgba(47,91,255,0) 65%);top:-260px;inset-inline-end:-220px;animation:dpGlow 9s ease-in-out infinite alternate;pointer-events:none}
+@keyframes dpGlow{to{transform:translate(-60px,80px) scale(1.1)}}
+.dp-in{width:100%;max-width:760px;position:relative}
+.dp-hd{display:flex;align-items:center;gap:14px;margin-bottom:26px;animation:nsIn .5s cubic-bezier(.2,.8,.2,1) both}
+.dp-av{width:56px;height:56px;border-radius:18px;background:#2F5BFF;display:grid;place-items:center;font-size:22px;font-weight:800;flex:none}
+body.ns-on .dp *{color:#FFFFFF!important}body.ns-on .dp-hd small{color:#AEB8C0!important;font-size:14px}
+.dp-hd h1{margin:2px 0 0;font-size:32px;font-weight:800;line-height:1.2}
+.dp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:900px){.dp-3{max-width:1040px}.dp-3 .dp-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.dp-3 .dp-card{grid-template-columns:1fr auto;grid-template-rows:auto auto auto;padding:22px}.dp-3 .dp-ic{grid-row:1;grid-column:1;margin-bottom:10px}.dp-3 .dp-tx{grid-column:1/3;grid-row:2}.dp-3 .dp-ct{grid-column:1/3;grid-row:3;margin-top:6px}.dp-3 .dp-ar{grid-row:1;grid-column:2;align-self:start}}
+.dp-card{--c:#2F5BFF;position:relative;display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;gap:4px 14px;align-items:center;text-align:start;padding:18px;border-radius:22px;border:1px solid #2C333A;background:#1C2228;cursor:pointer;font:inherit;overflow:hidden;animation:dpIn .55s cubic-bezier(.2,.9,.3,1.15) both;transition:transform .2s,border-color .2s,background .2s,opacity .3s}
+.dp-card::after{content:"";position:absolute;inset:0;background:var(--c);opacity:0;transition:opacity .25s}
+.dp-card:hover{transform:translateY(-3px);border-color:var(--c)}.dp-card:focus-visible{outline:3px solid #FFFFFF;outline-offset:3px}
+.dp-card>*{position:relative;z-index:1}
+.dp-ic{grid-row:1/3;width:58px;height:58px;border-radius:18px;background:var(--c);display:grid;place-items:center;transition:transform .3s}
+.dp-card:hover .dp-ic{transform:rotate(-6deg) scale(1.06)}
+.dp-tx{display:flex;flex-direction:column;gap:3px;min-width:0}.dp-tx b{font-size:20px;font-weight:800}body.ns-on .dp-tx small{color:#AEB8C0!important;font-size:13px;line-height:1.4}
+.dp-ct{grid-column:2;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}.dp-ct b{font-size:22px;font-weight:800;font-family:'Alexandria',sans-serif!important}body.ns-on .dp-ct small{color:#AEB8C0!important;font-size:12px}
+.dp-ct em{font-style:normal;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;background:rgba(47,91,255,.25)}
+.dp-ar{grid-column:3;grid-row:1/3;width:40px;height:40px;border-radius:12px;border:1px solid #2C333A;display:grid;place-items:center;transition:transform .25s,background .25s}
+.dp-card:hover .dp-ar{background:var(--c);border-color:var(--c);transform:translateX(-4px)}[dir=ltr] .dp-card:hover .dp-ar{transform:translateX(4px)}
+.dp-card.go{transform:scale(1.03);border-color:var(--c)}.dp-card.go::after{opacity:1}.dp-card.go .dp-ic{background:rgba(255,255,255,.18);transform:scale(1.1)}
+.dp-card.out{opacity:.25;transform:scale(.97)}
+.dp-ft{display:flex;justify-content:space-between;align-items:center;margin-top:24px;animation:nsIn .5s .4s both}
+.dp-ft span{font-family:'Alexandria',sans-serif!important;font-size:18px;font-weight:700}.dp-ft button{height:44px;padding:0 16px;border-radius:12px;border:1px solid #2C333A;background:transparent;font-weight:600;cursor:pointer}
+@keyframes dpIn{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
+@media (max-width:640px){.dp{align-items:flex-start;padding-top:calc(40px + env(safe-area-inset-top,0px))}.dp-grid{grid-template-columns:minmax(0,1fr)}.dp-hd h1{font-size:26px}}
+.ns-chg{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;margin:0 0 10px;padding:0 12px;border-radius:12px;border:1px solid #2C333A;background:#1C2228;cursor:pointer;font:inherit;font-size:13px;font-weight:600}
+.ns-chg span{flex:1;text-align:start}.ns-chg b{font-size:12px;padding:2px 10px;border-radius:999px;background:#2F5BFF}body.ns-on .ns-chg b{color:#FFFFFF!important}
+.ns-chg.lt{border-color:#DDE2E5;background:#F3F5F7;margin-bottom:12px}
+@media (prefers-reduced-motion:reduce){.dp::before,.dp-hd,.dp-card,.dp-ft{animation:none!important}}
 /* components inside the staff app */
 body.ns-on .nb{border-radius:18px!important;border:1px solid #E3E7EA!important;background:#FFFFFF!important;box-shadow:none!important}
 body.ns-on .btn{min-height:44px;border-radius:14px!important;background:#2F5BFF!important;border:1px solid #2F5BFF!important;box-shadow:none!important;font-weight:700;transition:transform .12s,background .18s}
@@ -1054,10 +1085,10 @@ function toggleLang(){setLng(S.lang==='ar'?'en':S.lang==='en'?'tr':'ar')}
 /* ---------- Auth ---------- */
 async function doLogin(){
  const u=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value;loginErr=false;
- if(await fbSignIn(u,p)){if(sessionFromUser(u)){save();render();if(window.Notification&&Notification.permission==='granted')enablePush()}else{try{firebase.auth().signOut()}catch(e){}loginErr=true;render()}return}
+ if(await fbSignIn(u,p)){if(sessionFromUser(u)){DPICK=APPM==='staff';save();render();if(window.Notification&&Notification.permission==='granted')enablePush()}else{try{firebase.auth().signOut()}catch(e){}loginErr=true;render()}return}
  if(u==='abdurhman'&&p==='121212'){S.session={role:'owner'};tab='dash'}
  else if(S.mgrs.find(m=>m.user===u&&m.pass===p)){const mm=S.mgrs.find(m=>m.user===u&&m.pass===p);S.session=mm.admin?{role:'owner',id:mm.id}:{role:'mgr',id:mm.id};tab='dash'}else{const r=S.runners.find(r=>r.user===u&&r.pass===p&&!r.off);if(r){S.session={role:'runner',id:r.id};tab='me'}else{loginErr=true;return render()}}
- loginErr=false;save();render();
+ loginErr=false;DPICK=APPM==='staff';save();render();
 }
 
 /* one-time: cashier account requested by the owner (ayad) — created from an owner session so the sign-in account exists too */
@@ -4115,13 +4146,13 @@ function nsShell(tabs,lab,cur,body,net,who){
  const solo=tabs.length<=1,first=(who||'?').trim().charAt(0)||'?',groups=nsGroups(tabs),title=solo?esc(who):lab(cur),hi=nsHi()+'، '+esc((who||'').split(' ')[0]);
  const bk=['dash','breaks','daily',tabs.some(x=>x[0]==='salary')?'salary':'shifts'].filter(k=>tabs.some(x=>x[0]===k)),slot=MORE?bk.length:(bk.indexOf(tab)<0?bk.length:bk.indexOf(tab)),nb=bk.length+1;
  const animInd=NSIND>=0&&NSIND!==slot,from=NSIND<0?slot:NSIND;NSIND=slot;
- const side=solo?'':`<aside class="ns-side" aria-label="${T('الأقسام','Sections',"Bölümler")}"><div class="ns-me"><span class="ns-av">${esc(first)}</span><span><b>${esc(who)}</b><small>${esc(deptName(DEPT))}</small></span></div>${switcher()}
+ const side=solo?'':`<aside class="ns-side" aria-label="${T('الأقسام','Sections',"Bölümler")}"><div class="ns-me"><span class="ns-av">${esc(first)}</span><span><b>${esc(who)}</b><small>${esc(deptName(DEPT))}</small></span></div>${myDepts().length>1?`<button class="ns-chg" onclick="DPICK=true;render()">${nsIcon('shiftcmp',16)}<span>${T('تغيير القسم','Change section',"Bölüm değiştir")}</span><b>${esc(deptName(DEPT))}</b></button>`:''}
   ${groups.map(g=>`<div class="ns-g">${g.g}</div>`+g.it.map(x=>`<a class="ns-nv${tab===x[0]?' on':''}" href="#" onclick="event.preventDefault();go('${x[0]}')">${nsIcon(x[0],18)}<span>${lab(x)}</span>${x[0]==='notes'&&nsUnread()?`<i class="ns-bd">${nsUnread()}</i>`:''}</a>`).join('')).join('')}
   <div class="ns-foot"><span class="ns-net">${net}</span><select class="ns-lang" aria-label="Language" onchange="setLng(this.value)">${LNGS.map(([k,l])=>`<option value="${k}" ${S.lang===k?'selected':''}>${l}</option>`).join('')}</select><button class="ns-out" onclick="logout()">${t('logout')}</button></div></aside>`;
  const top=`<header class="ns-top"><span class="ns-av">${esc(first)}</span><div class="ns-tt"><small>${hi}</small><b class="ns-ttl">${title}</b></div><div class="ns-clk"><b id="nsClk">${nsClock()}</b><small>${esc(new Date().toLocaleDateString(S.lang==='ar'?'ar-IQ':'en-GB',{weekday:'long',day:'numeric'}))}</small></div>${solo?`<button class="ns-out ns-out-top" onclick="logout()">${t('logout')}</button>`:''}</header>`;
  const head=`<div class="ns-head"><div><small>${hi}</small><h1 class="ns-ttl">${title}</h1></div><div class="ns-pill"><i></i><b id="nsClk2">${nsClock()}</b></div></div>`;
  const bot=solo?'':`<nav class="ns-bot" aria-label="${T('الأقسام','Sections',"Bölümler")}" style="--n:${nb}"><i class="ns-ind${animInd?' ns-mv':''}" style="--s:${slot};--f:${from}"></i>${bk.map((k,i)=>{const x=tabs.find(y=>y[0]===k);const sh={dash:T('الرئيسية','Home',"Ana sayfa"),daily:T('الحضور','Attendance',"Devam"),salary:T('الرواتب','Payroll',"Bordro"),breaks:T('الاستراحات','Breaks',"Molalar"),shifts:T('الشفتات','Shifts',"Vardiyalar")}[k]||lab(x);return `<a href="#" class="${slot===i?'on':''}" onclick="event.preventDefault();MORE=false;go('${k}')">${nsIcon(k,22)}<span>${sh}</span></a>`}).join('')}<a href="#" class="${slot===bk.length?'on':''}" onclick="event.preventDefault();MORE=true;render()">${nsIcon('more',22)}<span>${T('المزيد','More',"Daha fazla")}</span></a></nav>`;
- const more=MORE&&!solo?`<div class="ns-scrim" onclick="MORE=false;render()"></div><div class="ns-more" role="dialog" aria-label="${T('كل الأقسام','All sections',"Tüm bölümler")}"><i class="ns-grab"></i><div class="ns-mh"><b>${T('كل الأقسام','All sections',"Tüm bölümler")}</b><button class="ns-x" aria-label="${T('إغلاق','Close',"Kapat")}" onclick="MORE=false;render()">✕</button></div>${switcher()}
+ const more=MORE&&!solo?`<div class="ns-scrim" onclick="MORE=false;render()"></div><div class="ns-more" role="dialog" aria-label="${T('كل الأقسام','All sections',"Tüm bölümler")}"><i class="ns-grab"></i><div class="ns-mh"><b>${T('كل الأقسام','All sections',"Tüm bölümler")}</b><button class="ns-x" aria-label="${T('إغلاق','Close',"Kapat")}" onclick="MORE=false;render()">✕</button></div>${myDepts().length>1?`<button class="ns-chg lt" onclick="MORE=false;DPICK=true;render()">${nsIcon('shiftcmp',16)}<span>${T('تغيير القسم','Change section',"Bölüm değiştir")}</span><b>${esc(deptName(DEPT))}</b></button>`:''}
   <div class="ns-tiles">${groups.flatMap(g=>g.it).map((x,i)=>`<a href="#" class="ns-tile${tab===x[0]?' on':''}" style="animation-delay:${i*18}ms" onclick="event.preventDefault();MORE=false;go('${x[0]}')"><span class="ns-ti">${nsIcon(x[0],20)}</span><span>${lab(x)}</span></a>`).join('')}</div>
   <div class="ns-mf"><span class="ns-net">${net}</span><select class="ns-lang" aria-label="Language" onchange="setLng(this.value)">${LNGS.map(([k,l])=>`<option value="${k}" ${S.lang===k?'selected':''}>${l}</option>`).join('')}</select><button class="ns-out" onclick="logout()">${t('logout')}</button></div></div>`:'';
  const opened=MORE&&!NSMO;NSMO=MORE;
@@ -4129,6 +4160,17 @@ function nsShell(tabs,lab,cur,body,net,who){
 function nsCount(){let rm=false;try{rm=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}if(rm)return;document.querySelectorAll('.ns-count[data-to]').forEach(el=>{const to=+el.dataset.to||0,t0=performance.now(),f=t=>{const k=Math.min(1,(t-t0)/850),e=1-Math.pow(1-k,3);if(!el.isConnected)return;el.textContent=Math.round(to*e).toLocaleString('en-US');if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)})}
 const nsUnread=()=>{try{return typeof unread==='function'?unread():0}catch(e){return 0}};
 setInterval(()=>{const c=nsClock();['nsClk','nsClk2'].forEach(id=>{const e=document.getElementById(id);if(e&&e.textContent!==c)e.textContent=c})},1000);
+
+/* department picker: after a manager signs in, choose where to go */
+let DPICK=false,DPGO='';
+const DPI={runner:['#2F5BFF','M13 4a2 2 0 11-4 0 2 2 0 014 0zM9 21l2-6 3 3v3M7 11l3-3 4 2 3 3'],captain:['#D9692A','M4 15h16M6 15a6 6 0 0112 0M12 7v2M3 19h18'],host:['#6D28D9','M4 21V5a2 2 0 012-2h9l5 5v13M9 13h6M9 17h6M14 3v5h5'],cashier:['#0F766E','M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6']};
+function dpGo(d){if(DPGO)return;DPGO=d;render();setTimeout(()=>{DEPT=d;DPICK=false;DPGO='';tab='dash';MORE=false;NAVA=1;render();try{scrollTo(0,0)}catch(e){}},430)}
+function dpPage(){const mds=myDepts(),who=(S.session&&S.session.id&&(S.mgrs.find(m=>m.id===S.session.id)||{}).name)||T('المدير','Manager',"Yönetici"),first=String(who).split(' ')[0];
+ const brk=S.breaks||{},cards=mds.map((d,i)=>{const L=S.runners.filter(r=>(r.dept||'runner')===d&&!r.off),onB=L.filter(r=>brk[r.id]).length,ic=DPI[d]||DPI.runner,desc=(LGDEPTS0().find(x=>x[0]===d)||[])[2]||'';
+  return `<button class="dp-card${DPGO===d?' go':''}${DPGO&&DPGO!==d?' out':''}" style="--c:${ic[0]};animation-delay:${120+i*70}ms" onclick="dpGo('${d}')"><span class="dp-ic"><svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${ic[1]}"/></svg></span><span class="dp-tx"><b>${deptName(d)}</b><small>${esc(desc)}</small></span><span class="dp-ct"><b class="num">${L.length}</b><small>${T('شخص','people',"kişi")}</small>${onB?`<em>${onB} ${T('باستراحة','on break',"molada")}</em>`:''}</span><span class="dp-ar" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="${S.lang==='ar'?'M15 6l-6 6 6 6':'M9 6l6 6-6 6'}"/></svg></span></button>`}).join('');
+ return `<div class="dp"><div class="dp-in${mds.length===3?' dp-3':''}"><div class="dp-hd"><span class="dp-av">${esc(String(who).charAt(0))}</span><div><small>${nsHi()}، ${esc(first)}</small><h1>${T('وين رايح اليوم؟','Where to today?',"Bugün nereye?")}</h1></div></div>
+ <div class="dp-grid">${cards}</div>
+ <div class="dp-ft"><span id="nsClk">${nsClock()}</span><button onclick="logout()">${t('logout')}</button></div></div></div>`}
 
 /* ---------- Render ---------- */
 function render(){
@@ -4166,6 +4208,7 @@ function render(){
  const who=esc(S.session.role==='runner'?(me()||{}).name:meName()),net=navigator.onLine?(DB?(dbErr?T('خطأ مزامنة','Sync error',"Senkronizasyon hatası"):dbOk?T('متصل','Online',"Çevrimiçi"):'...'):T('محلي','Local',"Yerel")):T('بدون إنترنت','Offline',"İnternet yok");
  const gnav=grps.length>1?`<nav class="cg" aria-label="${T('الأقسام','Sections',"Bölümler")}">${grps.map(x=>`<a class="${x.i===curG?'on':''}" onclick="go('${x.it[0][0]}')">${x.g}</a>`).join('')}</nav>`:'';
  const snav=subs.length>1?`<nav class="cs">${subs.map(x=>`<a class="${tab===x[0]?'on':''}" onclick="go('${x[0]}')">${lab(x)}</a>`).join('')}</nav>`:'';
+ if(APPM==='staff'&&DPICK&&isStaff()&&myDepts().length>1){app.innerHTML=dpPage()+dlgHtml();return}DPICK=false;
  if(APPM==='staff'){const nav0=NAVA;app.innerHTML=nsShell(tabs,lab,cur,body,net,who.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'"))+`${taSheet()}${profSheet()}${notesSheet()}${callSheet()}${dlgHtml()}`;tick();if(nav0)nsCount();if(NAVA){NAVA=0;cuRun()}return}
  app.innerHTML=`<div class="cshell"><header class="ch"><div class="ch-b"><div class="ch-logo">amaya</div><div class="ch-t"><div>${t('app')}</div><small>${esc((S.cfg&&S.cfg.name)||t('sub'))}</small></div></div>${gnav}<div class="ch-u"><span class="ch-net">${net}</span><select class="ch-lang" aria-label="Language" onchange="setLng(this.value)">${LNGS.map(([k,l])=>`<option value="${k}" ${S.lang===k?"selected":""}>${l}</option>`).join("")}</select><span class="ch-me" title="${who}">${who}</span><button class="btn" onclick="logout()">${t('logout')}</button></div></header>${capFocus()?'':snav}<main class="content cmain${NAVA?' pg':''}">${capFocus()?'':(APPM==='orders'?'':switcher())+((tab==='dash'||S.session.role==='runner')?'':`<div class="mb-5 pgh"><div><h1 class="text-2xl font-bold tracking-tight">${lab(cur)}</h1></div></div>`)}${body()}</main>${cbot}</div>${sheet}${taSheet()}${profSheet()}${notesSheet()}${callSheet()}${dlgHtml()}`;
  tick();

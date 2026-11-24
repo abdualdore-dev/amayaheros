@@ -932,6 +932,99 @@ body.ns-on .dp *{color:#FFFFFF!important}body.ns-on .dp-hd small{color:#AEB8C0!i
 .ns-chg span{flex:1;text-align:start}.ns-chg b{font-size:12px;padding:2px 10px;border-radius:999px;background:#2F5BFF}body.ns-on .ns-chg b{color:#FFFFFF!important}
 .ns-chg.lt{border-color:#DDE2E5;background:#F3F5F7;margin-bottom:12px}
 @media (prefers-reduced-motion:reduce){.dp::before,.dp-hd,.dp-card,.dp-ft,.dp-fade{animation:none!important}.dp-fade{display:none}}
+/* ===== sign-in screen (Nov 2026), dark and light ===== */
+body.auth{background:#14181C!important}body.auth:has(.lg2.lt){background:#F3F5F7!important}
+.lg.lg2{--bg:#14181C;--cd:#1C2228;--ln:#2C333A;--tx:#FFFFFF;--mu:#AEB8C0;--fd:#14181C;--gl:rgba(47,91,255,.24);--tr:#2C333A;min-height:100vh;background:var(--bg)!important;position:relative;overflow:hidden;padding:0!important;display:block!important;transition:background-color .35s}
+.lg.lg2.lt{--bg:#F3F5F7;--cd:#FFFFFF;--ln:#E3E7EA;--tx:#14181C;--mu:#56616A;--fd:#FFFFFF;--gl:rgba(47,91,255,.14);--tr:#DDE2E5}
+body.auth .lg2,body.auth .lg2 *{font-family:'IBM Plex Sans Arabic','Noto Sans Arabic',system-ui,sans-serif!important}
+body.auth .lg2 *{color:var(--tx)!important}
+body.auth .lg2 small,body.auth .lg2 .lg2-foot span,body.auth .lg2 .lg2-back,body.auth .lg2 .pin-sub,body.auth .lg2 .lg2-eye{color:var(--mu)!important}
+.lg2-wrap>*:not(.lg2-glow){position:relative;z-index:1}
+.lg2-glow{z-index:0;position:absolute;width:760px;height:760px;border-radius:50%;top:-280px;inset-inline-end:-240px;background:radial-gradient(circle,var(--gl),rgba(47,91,255,0) 65%);pointer-events:none;animation:dpGlow 9s ease-in-out infinite alternate}
+.lg2-wrap{position:relative;max-width:1000px;margin:0 auto;padding:18px 22px 36px;box-sizing:border-box}
+.lg2-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:34px}
+.lg2-pill{height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--ln);background:var(--cd);font-weight:600;cursor:pointer;transition:background-color .35s,border-color .35s}
+.lg2-pill option{background:var(--cd)}
+.lg2-tg{height:44px;padding:5px 5px 5px 5px;border-radius:999px;border:1px solid var(--ln);background:var(--cd);display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:13px;transition:background-color .35s,border-color .35s}
+.lg2-tg>span:first-child{padding:0 8px}
+.lg2-tr{position:relative;width:64px;height:34px;border-radius:999px;background:var(--tr);display:block}
+.lg2-kn{position:absolute;top:3px;right:33px;width:28px;height:28px;border-radius:50%;background:#2F5BFF;display:grid;place-items:center;transition:right .3s cubic-bezier(.3,1.3,.5,1),background-color .3s}
+.lg2.lt .lg2-kn{right:3px;background:#D9692A}
+.lg2-spin{animation:lgSpin .4s ease both}@keyframes lgSpin{from{transform:rotate(-90deg) scale(.6);opacity:0}to{transform:none;opacity:1}}
+.lg2-hero{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+.lg.anim .lg2-hero{animation:nsIn .32s cubic-bezier(.2,.8,.2,1) both}
+.lg2-logo{width:58px;height:58px;border-radius:18px;background:#2F5BFF;display:grid;place-items:center;font-family:'Alexandria',sans-serif!important;font-weight:800;font-size:15px;flex:none}
+body.auth .lg2 .lg2-logo{color:#FFFFFF!important}
+.lg2-hero small{font-size:13.5px}.lg2-hero h1{margin:2px 0 0;font-size:32px;font-weight:800;line-height:1.2}
+.lg2-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.lg2-d{--c:#2F5BFF;display:flex;flex-direction:column;align-items:flex-start;text-align:start;gap:4px;padding:20px;border-radius:22px;border:1px solid var(--ln);background:var(--cd);min-height:168px;cursor:pointer;font:inherit;transition:transform .18s,border-color .18s,background-color .35s}
+.lg.anim .lg2-d{animation:dpIn .32s cubic-bezier(.2,.9,.3,1.1) both}
+.lg2-d:hover{transform:translateY(-3px);border-color:var(--c)}.lg2-d:focus-visible{outline:3px solid #2F5BFF;outline-offset:3px}
+.lg2-top{display:flex;justify-content:space-between;align-items:flex-start;width:100%;gap:8px;margin-bottom:14px}
+.lg2-ic{width:56px;height:56px;border-radius:18px;background:var(--c);display:grid;place-items:center;flex:none;transition:transform .25s}
+.lg2-ic svg{width:26px;height:26px}body.auth .lg2 .lg2-ic,body.auth .lg2 .lg2-ic *{color:#FFFFFF!important;stroke:#FFFFFF}
+.lg2-d:hover .lg2-ic{transform:rotate(-6deg) scale(1.06)}
+.lg2-top em{font-style:normal;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(47,91,255,.2);margin-inline-start:auto;margin-inline-end:8px;align-self:center}
+.lg2-ar{width:40px;height:40px;border-radius:12px;border:1px solid var(--ln);display:grid;place-items:center;transition:transform .2s,background-color .2s,border-color .2s}
+.lg2-d:hover .lg2-ar{background:var(--c);border-color:var(--c);transform:translateX(-4px)}[dir=ltr] .lg2-d:hover .lg2-ar{transform:translateX(4px)}
+body.auth .lg2 .lg2-d:hover .lg2-ar,body.auth .lg2 .lg2-d:hover .lg2-ar *{color:#FFFFFF!important}
+.lg2-d b{font-size:20px;font-weight:800}.lg2-d small{font-size:13.5px;line-height:1.45}
+.lg2-form{--c:#2F5BFF;max-width:460px;margin:0 auto;padding:24px;border-radius:24px;border:1px solid var(--ln);background:var(--cd)!important;box-shadow:none!important;transition:background-color .35s,border-color .35s}
+.lg.step .lg2-form{animation:sw .3s cubic-bezier(.2,.8,.2,1) both}@keyframes sw{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:none}}
+.lg2-back{height:40px;padding:0 12px 0 4px;border:0;background:transparent;display:inline-flex;align-items:center;gap:4px;font-weight:600;cursor:pointer}
+.lg2-who{display:flex;align-items:center;gap:12px;margin:14px 0 20px}.lg2-who .lg2-ic{width:52px;height:52px;border-radius:16px}.lg2-who b{display:block;font-size:20px;font-weight:800}.lg2-who small{font-size:13px}
+.lg2-f{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
+.lg2-in{width:100%;height:54px;border-radius:14px;border:1px solid var(--ln);background:var(--fd);padding:0 16px;font-size:16px;margin-bottom:14px;box-sizing:border-box;transition:border-color .2s,box-shadow .2s,background-color .35s}
+.lg2-in:focus{outline:none;border-color:#2F5BFF;box-shadow:0 0 0 3px rgba(47,91,255,.25)}
+.lg2-pw{position:relative;display:block}.lg2-pw .lg2-in{padding-inline-end:52px}
+.lg2-eye{position:absolute;top:5px;inset-inline-end:5px;width:44px;height:44px;border-radius:10px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer}
+.lg2-err{background:rgba(217,105,42,.14);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:600;margin:0 0 12px}body.auth .lg2 .lg2-err{color:#E8834A!important}.lg2.lt .lg2-err{background:#FCEFE6}body.auth .lg2.lt .lg2-err{color:#9A4417!important}
+.lg2-btn{width:100%;height:56px;border-radius:16px;border:0;background:#2F5BFF;font-size:17px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(47,91,255,.35);margin-top:4px;transition:transform .12s,opacity .2s}
+body.auth .lg2 .lg2-btn{color:#FFFFFF!important}.lg2-btn:active{transform:scale(.98)}.lg2-btn[disabled]{opacity:.6}
+.lg2-inst{display:block;margin:16px auto 0;height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--ln);background:var(--cd);font-weight:600;cursor:pointer}
+.lg2-foot{display:flex;justify-content:space-between;align-items:center;margin-top:26px;font-size:13px}.lg2-foot b{font-family:'Alexandria',sans-serif!important;font-size:17px;font-weight:700}
+.lg2 .pin-card{text-align:center}.lg2 .pin-dots i{border-color:var(--mu)!important}.lg2 .pin-pad button{background:var(--bg)!important;border:1px solid var(--ln)!important}.lg2 .pin-mgr{background:transparent!important;border:1px solid var(--ln)!important;border-radius:14px!important;height:48px;padding:0 20px!important;text-decoration:none!important;font-weight:600;margin-top:18px;cursor:pointer}
+@media (max-width:700px){.lg2-ar{display:none}.lg2-top em{margin:0;font-size:11px;padding:2px 8px}.lg2-d:last-child:nth-child(odd){grid-column:1/-1}.lg2-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.lg2-d{min-height:150px;padding:16px}.lg2-d small{display:none}.lg2-hero h1{font-size:26px}.lg2-bar{margin-bottom:24px}.lg2-wrap{padding:14px 16px 30px}}
+@media (prefers-reduced-motion:reduce){.lg2-glow,.lg.anim .lg2-hero,.lg.anim .lg2-d,.lg.step .lg2-form,.lg2-spin{animation:none!important}.lg2-kn{transition:none}}
+/* ===== dark mode for the staff app ===== */
+.ns-th{height:40px;border-radius:10px;border:1px solid #2C333A;background:#1C2228;display:flex;align-items:center;gap:8px;padding:0 10px 0 4px;cursor:pointer;font-weight:600;font-size:13px}
+.ns-th .lg2-tr{width:56px;height:30px;background:#2C333A}.ns-th .lg2-kn{width:24px;height:24px;right:29px}body:not(.th-dark) .ns-th .lg2-kn{right:3px;background:#D9692A}
+.ns-mf .ns-th{background:#FFFFFF;border-color:#DDE2E5}.ns-mf .ns-th .lg2-tr{background:#DDE2E5}
+body.ns-on .ns-side .ns-th *{color:#FFFFFF!important}
+body.th-dark{background:#0F1215!important;color-scheme:dark}
+body.th-dark.ns-on .ns{background:#0F1215}
+body.th-dark.ns-on *{color:#E8ECEF!important}
+body.th-dark.ns-on .ns-side{background:#14181C;border-inline-start:1px solid #22282E}
+body.th-dark.ns-on .ns-top{background:#14181C}
+body.th-dark.ns-on .ns-pill{background:#1C2228}
+body.th-dark.ns-on .ns-head small,body.th-dark.ns-on .text-gray-500,body.th-dark.ns-on .text-gray-400,body.th-dark.ns-on .text-gray-600,body.th-dark.ns-on .text-xs.text-gray-500,body.th-dark.ns-on .sl-l2>span:first-child,body.th-dark.ns-on .sl-note,body.th-dark.ns-on .sl-sh small,body.th-dark.ns-on .sl-box>div>span:first-child,body.th-dark.ns-on .ns-me small,body.th-dark.ns-on small{color:#9AA6AF!important}
+body.th-dark.ns-on .nb,body.th-dark.ns-on .bg-white,body.th-dark.ns-on .sl-row,body.th-dark.ns-on .ns-tile,body.th-dark.ns-on .card{background:#1A1F24!important;border-color:#2A3137!important}
+body.th-dark.ns-on .nb .nb{background:#20262C!important}
+body.th-dark.ns-on .bg-red-50,body.th-dark.ns-on .nb.rd{background:#2A1D17!important;border-color:#4A2C1E!important}
+body.th-dark.ns-on .inp,body.th-dark.ns-on input,body.th-dark.ns-on select,body.th-dark.ns-on textarea{background:#0F1215!important;border-color:#2A3137!important;color:#E8ECEF!important}
+body.th-dark.ns-on .inp::placeholder,body.th-dark.ns-on input::placeholder{color:#6B7780!important}
+body.th-dark.ns-on .border-gray-100,body.th-dark.ns-on .border-gray-200,body.th-dark.ns-on .border-gray-300,body.th-dark.ns-on hr,body.th-dark.ns-on .border-b,body.th-dark.ns-on .border-t{border-color:#2A3137!important}
+body.th-dark.ns-on table thead th{background:#1A1F24!important;border-color:#2A3137!important}body.th-dark.ns-on table td,body.th-dark.ns-on table th{border-color:#2A3137!important}
+body.th-dark.ns-on table tbody tr:hover{background:#20262C!important}body.th-dark.ns-on table tbody tr:nth-child(even){background:#171B20!important}
+body.th-dark.ns-on .btn.bg-white,body.th-dark.ns-on .btn.pk,body.th-dark.ns-on .btn.bl,body.th-dark.ns-on .btn.or,body.th-dark.ns-on .btn.pu,body.th-dark.ns-on .btn.rd{background:#20262C!important;border-color:#2F373E!important}
+body.th-dark.ns-on .btn.bg-white,body.th-dark.ns-on .btn.bg-white *,body.th-dark.ns-on .btn.pk,body.th-dark.ns-on .btn.bl,body.th-dark.ns-on .btn.or,body.th-dark.ns-on .btn.pu{color:#E8ECEF!important}
+body.th-dark.ns-on .btn.gr,body.th-dark.ns-on .btn.ye{background:#E8ECEF!important;border-color:#E8ECEF!important}body.th-dark.ns-on .btn.gr,body.th-dark.ns-on .btn.gr *,body.th-dark.ns-on .btn.ye,body.th-dark.ns-on .btn.ye *{color:#14181C!important}
+body.th-dark.ns-on .pill{background:#20262C!important;border-color:#2F373E!important}
+body.th-dark.ns-on .pill.ok{background:rgba(61,220,151,.14)!important;color:#5BE0A6!important}body.th-dark.ns-on .pill.warn,body.th-dark.ns-on .pill.bad{background:rgba(217,105,42,.18)!important;color:#F2A06B!important}
+body.th-dark.ns-on .sl-or,body.th-dark.ns-on .sl-box>div.sl-or b,body.th-dark.ns-on .sl-box>div.sl-or>span:first-child{color:#F2A06B!important}body.th-dark.ns-on .sl-gr{color:#5BE0A6!important}
+body.th-dark.ns-on .sl-seg{background:#1A1F24}body.th-dark.ns-on .sl-seg button.on{background:#E8ECEF}body.th-dark.ns-on .sl-seg button.on{color:#14181C!important}
+body.th-dark.ns-on .sl-box,body.th-dark.ns-on .sl-days span{background:#0F1215}body.th-dark.ns-on .sl-pb{background:#2A3137}
+body.th-dark.ns-on .sl-sheet,body.th-dark.ns-on .ns-more,body.th-dark.ns-on .mv,body.th-dark.ns-on .sheet>div{background:#1A1F24!important}
+body.th-dark.ns-on .ns-x,body.th-dark.ns-on .sl-ty button,body.th-dark.ns-on .dsw button,body.th-dark.ns-on .ns-mf .ns-lang,body.th-dark.ns-on .ns-mf .ns-out,body.th-dark.ns-on .ns-mf .ns-th{background:#20262C!important;border-color:#2F373E!important}
+body.th-dark.ns-on .sl-ty button.on{background:#E8ECEF!important}body.th-dark.ns-on .sl-ty button.on{color:#14181C!important}
+body.th-dark.ns-on .ns-tile.on{background:#1B2440!important;border-color:#2F5BFF!important}
+body.th-dark.ns-on .ns-scrim{background:rgba(0,0,0,.6)}
+body.th-dark.ns-on .sl-hero{background:#1A1F24;border:1px solid #2A3137}body.th-dark.ns-on .sl-st>div,body.th-dark.ns-on .sl-arw{background:#0F1215;border-color:#2A3137}
+body.th-dark.ns-on ::-webkit-scrollbar-thumb{background:#2A3137}
+body.th-dark.ns-on .bkq{background:#20262C!important;border-color:#2F373E!important}
+body.th-dark.ns-on span[style*="background:#E5E7EB"],body.th-dark.ns-on .sl-av:not(.dk){background:#2A3137!important}
+body.th-dark.ns-on img[style*="border:1px solid #D9DEE5"]{border-color:#2A3137!important}
+body.th-dark.ns-on .ns-main div:has(>b[data-cu]){background:#1A1F24!important}
 /* components inside the staff app */
 body.ns-on .nb{border-radius:18px!important;border:1px solid #E3E7EA!important;background:#FFFFFF!important;box-shadow:none!important}
 body.ns-on .btn{min-height:44px;border-radius:14px!important;background:#2F5BFF!important;border:1px solid #2F5BFF!important;box-shadow:none!important;font-weight:700;transition:transform .12s,background .18s}
@@ -1215,10 +1308,10 @@ async function pinLogin(){if(PINBUSY||PINV.length!==6)return;const pin=PINV;PINB
  if(!rid){LGERR=T('الرمز غير صحيح','Wrong code',"Kod yanlış");render();return}
  S.session={role:'runner',id:rid};tab='me';CMODE='';RS=null;LGERR='';save();render()}
 function pinPad(top,an){const dots=Array.from({length:6},(_,i)=>`<i class="${i<PINV.length?'on':''}"></i>`).join(''),keys=['1','2','3','4','5','6','7','8','9','','0','del'];
- return `<div class="lg${an}">${top}<div class="lg-card pin-card"><div class="lg-h" style="margin-bottom:.4rem">${T('اكتب رمز الدخول','Enter your sign-in code',"Giriş kodunuzu girin")}</div><div class="pin-sub">${T('الرمز من 6 أرقام، يعطيك إياه المدير العام','6 digits, given to you by the general manager',"6 haneli, genel müdür verir")}</div>
+ return `<div class="lg${an}"><div class="lg2-wrap">${top}<div class="lg-card pin-card lg2-form"><div class="lg-h" style="margin-bottom:.4rem">${T('اكتب رمز الدخول','Enter your sign-in code',"Giriş kodunuzu girin")}</div><div class="pin-sub">${T('الرمز من 6 أرقام، يعطيك إياه المدير العام','6 digits, given to you by the general manager',"6 haneli, genel müdür verir")}</div>
  <div class="pin-dots${LGERR?' bad':''}" aria-live="polite">${dots}</div><div class="pin-err">${PINBUSY?T('جارٍ الدخول...','Signing in...',"Giriş yapılıyor..."):esc(LGERR||'')}</div>
  <div class="pin-pad">${keys.map(k=>k===''?'<span></span>':k==='del'?`<button aria-label="${T('مسح','Delete',"Sil")}" onclick="pinKey('del')"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 5H9l-6 7 6 7h12z"/><path d="M14 10l4 4M18 10l-4 4"/></svg></button>`:`<button onclick="pinKey('${k}')">${k}</button>`).join('')}</div>
- <button class="pin-mgr" onclick="lgPick('mgr')">${T('دخول المدير العام','General manager sign-in',"Genel müdür girişi")}</button></div></div>`}
+ <button class="pin-mgr" onclick="lgPick('mgr')">${T('دخول المدير العام','General manager sign-in',"Genel müdür girişi")}</button></div></div></div>`}
 async function fbCreatePin(pin){try{if(!fbReady())return 'off';const w=firebase.apps.find(a=>a.name==='acctworker')||firebase.initializeApp(FBCFG,'acctworker');const c=await w.auth().createUserWithEmailAndPassword(emailOf('pin'+pin),pinPass(pin));const uid=c&&c.user&&c.user.uid;await w.auth().signOut();return uid?{uid}:'err'}catch(e){if(e&&e.code==='auth/email-already-in-use')return 'used';if(e&&e.code==='auth/operation-not-allowed')return 'off';return (e&&e.code)||'err'}}
 const canPins=()=>!!(S.session&&S.session.role==='owner'&&S.session.id);
 async function pinNew(rid){const r=(S.runners||[]).find(x=>x.id===rid);if(!r||!canPins())return;if(r.pinUid&&!confirm(T('الرمز القديم يتوقف. إنشاء رمز جديد؟','The old code stops working. Make a new code?',"Eski kod çalışmaz. Yeni kod oluşturulsun mu?")))return;
@@ -1230,20 +1323,30 @@ function vPins(){if(!canPins())return '';const L0=(S.runners||[]).filter(r=>!r.o
  const show=PINSHOW?`<div class="sheet" onclick="PINSHOW=null;render()"><div class="mv" onclick="event.stopPropagation()" style="text-align:center"><div class="lb">${T('رمز دخول ','Sign-in code for ',"Giriş kodu: ")}${esc(PINSHOW.name)}</div><div class="pin-big">${PINSHOW.pin}</div><div class="text-sm text-gray-500 mb-4">${T('سلّم الرمز للشخص نفسه. الرمز ما يظهر مرة ثانية، وإذا نساه اعمل له رمز جديد.','Give the code to the person. It is not shown again; if it is forgotten, make a new one.',"Kodu kişiye verin. Tekrar gösterilmez; unutulursa yeni kod oluşturun.")}</div><button class="btn w-full" onclick="PINSHOW=null;render()">${T('تم التسليم','Done',"Tamam")}</button></div></div>`:'';
  return show+`<div class="nb p-4 mb-3 text-sm">${T('الكابتن والكاشير يدخلون تطبيق الطلبات برمز من 6 أرقام بدون اسم مستخدم. اعمل رمز لكل شخص وسلّمه إياه بيده.','Captains and the cashier sign in to the orders app with a 6-digit code, no username. Make a code for each person and hand it over in person.',"Kaptanlar ve kasiyer sipariş uygulamasına kullanıcı adı olmadan 6 haneli kodla girer. Her kişiye kod oluşturup elden verin.")}</div>
  <div class="nb op-list">${L0.map(r=>`<div class="op-row"><span><b>${esc(r.name)}</b> <span class="text-sm text-gray-500">· ${r.dept==='cashier'?T('كاشير','Cashier',"Kasiyer"):T('كابتن','Captain',"Kaptan")}</span><br><small class="${r.pinUid?'text-gray-500':''}">${r.pinUid?T('رمز فعّال منذ ','Code active since ',"Kod aktif: ")+dkOf(r.pinAt)+' '+hm(r.pinAt):T('بدون رمز','No code',"Kod yok")}</small></span><span class="flex gap-2">${r.pinUid?`<button class="btn bg-white !py-2" onclick="pinOff('${r.id}')">${T('إيقاف','Turn off',"Kapat")}</button>`:''}<button class="btn !py-2" onclick="pinNew('${r.id}')">${r.pinUid?T('رمز جديد','New code',"Yeni kod"):T('إنشاء رمز','Make a code',"Kod oluştur")}</button></span></div>`).join('')||`<div class="op-empty">${T('لا يوجد كباتن أو كاشير','No captains or cashier',"Kaptan veya kasiyer yok")}</div>`}</div>`}
-function vLogin(){const an=LGANIM?' anim':'',last=LGLAST();
- const top=`<div class="stars"><i style="left:12%;top:14%;--z:16px;--d:3.4s;--w:0.2s"></i><i style="left:84%;top:10%;--z:22px;--d:4s;--w:0.9s"></i><i style="left:70%;top:28%;--z:12px;--d:3s;--w:1.6s"></i><i style="left:22%;top:62%;--z:18px;--d:3.8s;--w:0.5s"></i><i style="left:88%;top:58%;--z:14px;--d:3.2s;--w:1.2s"></i><i style="left:46%;top:8%;--z:10px;--d:2.8s;--w:2s"></i><i style="left:8%;top:86%;--z:20px;--d:4.2s;--w:0.7s"></i><i style="left:62%;top:82%;--z:12px;--d:3.1s;--w:1.9s"></i><i style="left:34%;top:36%;--z:9px;--d:2.6s;--w:2.4s"></i><i style="left:94%;top:90%;--z:16px;--d:3.6s;--w:0.3s"></i></div><select class="lg-lang" aria-label="Language" onchange="setLng(this.value)">${LNGS.map(([k,l])=>`<option value="${k}" ${S.lang===k?'selected':''}>${l}</option>`).join('')}</select><div class="lg-brand">${LGMARK('lgG2')}<div class="lg-name">${t('app')}</div><div class="lg-sub">${t('sub')}</div></div>`;
- if(!LGD&&pinOn())return pinPad(top,an);
- if(!LGD)return `<div class="lg${an}">${top}<div class="lg-card"><div class="lg-h" style="margin-bottom:1rem">${T("اختر قسمك",'Choose your section',"Bölümünüzü seçin")}</div>
-  <div class="lg-grid">${LGDEPTS().map(d=>`<button class="lg-d${d[0]===last?' last':''}" onclick="lgPick('${d[0]}')"><span class="lg-ic">${LGIC[d[0]]}</span><span class="lg-dn">${d[1]}</span></button>`).join('')}</div></div>
-  ${INSTP&&!isStandalone()?`<button class="lg-inst" onclick="appInstall()">${T('تثبيت التطبيق على هذا الجهاز','Install the app on this device',"Uygulamayı bu cihaza yükle")}</button>`:''}<div class="lg-foot">${T('مطعم أمايا','Amaya Restaurant',"Amaya Restoran")} &middot; ${new Date().getFullYear()}</div></div>`;
+/* sign-in screen: dark or light, chosen on this device */
+let LGTH=SS.get('amaya_theme','dark');
+function lgTheme(){LGTH=LGTH==='dark'?'light':'dark';SS.set('amaya_theme',LGTH);LGANIM=false;LGFLIP=true;render()}
+let LGFLIP=false,LGEYE=false;
+const LGCOL={mgr:'#BE185D',runner:'#2F5BFF',captain:'#D9692A',host:'#6D28D9',cashier:'#0F766E'};
+const LGP2={mgr:'M4 8h16v11H4zM9 8V6a2 2 0 012-2h2a2 2 0 012 2v2M4 13h16',runner:'M13 4a2 2 0 11-4 0 2 2 0 014 0zM9 21l2-6 3 3v3M7 11l3-3 4 2 3 3',captain:'M4 15h16M6 15a6 6 0 0112 0M12 7v2M3 19h18',host:'M4 21V5a2 2 0 012-2h9l5 5v13M9 13h6M9 17h6M14 3v5h5',cashier:'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6'};
+const lgIc=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${LGP2[k]||LGP2.runner}"/></svg>`;
+function lgTop(h){const dk=LGTH==='dark',hr=new Date().getHours(),flip=LGFLIP;LGFLIP=false;
+ return `<div class="lg2-glow" aria-hidden="true"></div><div class="lg2-bar"><select class="lg2-pill" aria-label="Language" onchange="setLng(this.value)">${LNGS.map(([k,l])=>`<option value="${k}" ${S.lang===k?'selected':''}>${l}</option>`).join('')}</select>
+ <button class="lg2-tg" onclick="lgTheme()" aria-label="${dk?T('الوضع النهاري','Light mode',"Açık mod"):T('الوضع الليلي','Dark mode',"Koyu mod")}"><span>${dk?T('ليلي','Dark',"Koyu"):T('نهاري','Light',"Açık")}</span><span class="lg2-tr"><span class="lg2-kn"><svg class="${flip?'lg2-spin':''}" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${dk?'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>':'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'}</svg></span></span></button></div>
+ <div class="lg2-hero"><span class="lg2-logo">amaya</span><div><small>${hr<12?T('صباح الخير','Good morning',"Günaydın"):T('مساء الخير','Good evening',"İyi akşamlar")} · ${t('sub')}</small><h1>${h}</h1></div></div>`}
+function vLogin(){const an=LGANIM?' anim':'',last=LGLAST(),th=' lg2 '+(LGTH==='dark'?'dk':'lt');
+ const foot=`<div class="lg2-foot"><span>${T('مطعم أمايا','Amaya Restaurant',"Amaya Restoran")} · ${new Date().getFullYear()}</span><b id="nsClk">${nsClock()}</b></div>`;
+ if(!LGD&&pinOn())return pinPad(lgTop(T('أهلاً بيك','Welcome',"Hoş geldiniz")),an+th);
+ if(!LGD)return `<div class="lg${an}${th}"><div class="lg2-wrap">${lgTop(T("اختار قسمك",'Choose your section',"Bölümünüzü seçin"))}
+  <div class="lg2-grid">${LGDEPTS().map((d,i)=>`<button class="lg2-d" style="--c:${LGCOL[d[0]]||'#2F5BFF'};animation-delay:${i*40}ms" onclick="lgPick('${d[0]}')"><span class="lg2-top"><span class="lg2-ic">${lgIc(d[0])}</span>${d[0]===last?`<em>${T('آخر دخول','Last used',"Son kullanılan")}</em>`:''}<span class="lg2-ar" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="${S.lang==='ar'?'M15 6l-6 6 6 6':'M9 6l6 6-6 6'}"/></svg></span></span><b>${d[1]}</b><small>${d[2]||''}</small></button>`).join('')}</div>
+  ${INSTP&&!isStandalone()?`<button class="lg2-inst" onclick="appInstall()">${T('تثبيت التطبيق على هذا الجهاز','Install the app on this device',"Uygulamayı bu cihaza yükle")}</button>`:''}${foot}</div></div>`;
  const d=LGDEPTS().find(x=>x[0]===LGD)||LGDEPTS()[0],err=LGERR||(loginErr?t('bad'):'');
- return `<div class="lg step">${top}<div class="lg-card"><button class="lg-back" onclick="lgBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>${T('كل الأقسام','All sections',"Tüm bölümler")}</button>
-  <div class="lg-who"><span class="lg-ic">${LGIC[d[0]]}</span><div class="lg-h" style="margin:0">${T('دخول ','Sign in: ',"Giriş: ")}${d[1]}</div></div>
-  <label class="lg-f" for="lu">${t('user')}</label><input id="lu" class="lg-in" autocomplete="username" autocapitalize="off" spellcheck="false" value="${esc(LGUS)}" oninput="LGUS=this.value" onkeydown="if(event.key==='Enter')document.getElementById('lp').focus()">
-  <label class="lg-f" for="lp">${t('pass')}</label><input id="lp" type="password" class="lg-in" autocomplete="current-password" value="${esc(LGPW)}" oninput="LGPW=this.value" onkeydown="if(event.key==='Enter')lgSubmit()">
-  ${err?`<div class="lg-err" role="alert">${esc(err)}</div>`:''}
-  <button class="lg-btn" onclick="lgSubmit()" ${LGBUSY?'disabled':''}>${LGBUSY?T('جاري الدخول...','Signing in...',"Giriş yapılıyor..."):T('دخول','Sign in',"Giriş")}</button></div></div>`}
-
+ return `<div class="lg step${th}"><div class="lg2-wrap">${lgTop(T('أهلاً بيك','Welcome',"Hoş geldiniz"))}<div class="lg2-form" style="--c:${LGCOL[d[0]]||'#2F5BFF'}"><button class="lg2-back" onclick="lgBack()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="${S.lang==='ar'?'M9 6l6 6-6 6':'M15 18l-6-6 6-6'}"/></svg>${T('كل الأقسام','All sections',"Tüm bölümler")}</button>
+  <div class="lg2-who"><span class="lg2-ic">${lgIc(d[0])}</span><div><b>${T('دخول ','Sign in: ',"Giriş: ")}${d[1]}</b><small>${d[2]||''}</small></div></div>
+  <label class="lg2-f" for="lu">${t('user')}</label><input id="lu" class="lg2-in" autocomplete="username" autocapitalize="off" spellcheck="false" value="${esc(LGUS)}" oninput="LGUS=this.value" onkeydown="if(event.key==='Enter')document.getElementById('lp').focus()">
+  <label class="lg2-f" for="lp">${t('pass')}</label><span class="lg2-pw"><input id="lp" type="${LGEYE?'text':'password'}" class="lg2-in" autocomplete="current-password" value="${esc(LGPW)}" oninput="LGPW=this.value" onkeydown="if(event.key==='Enter')lgSubmit()"><button class="lg2-eye" aria-label="${LGEYE?T('إخفاء الرمز','Hide password',"Şifreyi gizle"):T('إظهار الرمز','Show password',"Şifreyi göster")}" onclick="LGEYE=!LGEYE;LGPW=document.getElementById('lp').value;LGUS=document.getElementById('lu').value;render();setTimeout(()=>{const e=document.getElementById('lp');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}},0)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>${LGEYE?'<path d="M4 4l16 16"/>':''}</svg></button></span>
+  ${err?`<div class="lg2-err" role="alert">${esc(err)}</div>`:''}
+  <button class="lg2-btn" onclick="lgSubmit()" ${LGBUSY?'disabled':''}>${LGBUSY?T('جاري الدخول...','Signing in...',"Giriş yapılıyor..."):T('دخول','Sign in',"Giriş")}</button></div>${foot}</div></div>`}
 function vBreaks(){
  if(!RUN().length)return `<div class="nb p-8 text-center"><div class="font-bold text-lg mb-1">${nr0()}</div>${isOwner()?`<button class="btn mt-3" onclick="go('runners')">${ar0()}</button>`:''}</div>`;
  const cards=RUN().map((r,i)=>{const b=S.breaks[r.id],c=COL[i%COL.length];
@@ -4150,13 +4253,13 @@ function nsShell(tabs,lab,cur,body,net,who){
  const animInd=NSIND>=0&&NSIND!==slot,from=NSIND<0?slot:NSIND;NSIND=slot;
  const side=solo?'':`<aside class="ns-side" aria-label="${T('الأقسام','Sections',"Bölümler")}"><div class="ns-me"><span class="ns-av">${esc(first)}</span><span><b>${esc(who)}</b><small>${esc(deptName(DEPT))}</small></span></div>${myDepts().length>1?`<button class="ns-chg" onclick="DPICK=true;render()">${nsIcon('shiftcmp',16)}<span>${T('تغيير القسم','Change section',"Bölüm değiştir")}</span><b>${esc(deptName(DEPT))}</b></button>`:''}
   ${groups.map(g=>`<div class="ns-g">${g.g}</div>`+g.it.map(x=>`<a class="ns-nv${tab===x[0]?' on':''}" href="#" onclick="event.preventDefault();go('${x[0]}')">${nsIcon(x[0],18)}<span>${lab(x)}</span>${x[0]==='notes'&&nsUnread()?`<i class="ns-bd">${nsUnread()}</i>`:''}</a>`).join('')).join('')}
-  <div class="ns-foot"><span class="ns-net">${net}</span><select class="ns-lang" aria-label="Language" onchange="setLng(this.value)">${LNGS.map(([k,l])=>`<option value="${k}" ${S.lang===k?'selected':''}>${l}</option>`).join('')}</select><button class="ns-out" onclick="logout()">${t('logout')}</button></div></aside>`;
+  <div class="ns-foot"><span class="ns-net">${net}</span><button class="ns-th" onclick="lgTheme()" aria-label="${LGTH==='dark'?T('الوضع النهاري','Light mode',"Açık mod"):T('الوضع الليلي','Dark mode',"Koyu mod")}"><span class="lg2-tr"><span class="lg2-kn"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${LGTH==='dark'?'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>':'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'}</svg></span></span><span>${LGTH==='dark'?T('ليلي','Dark',"Koyu"):T('نهاري','Light',"Açık")}</span></button><select class="ns-lang" aria-label="Language" onchange="setLng(this.value)">${LNGS.map(([k,l])=>`<option value="${k}" ${S.lang===k?'selected':''}>${l}</option>`).join('')}</select><button class="ns-out" onclick="logout()">${t('logout')}</button></div></aside>`;
  const top=`<header class="ns-top"><span class="ns-av">${esc(first)}</span><div class="ns-tt"><small>${hi}</small><b class="ns-ttl">${title}</b></div><div class="ns-clk"><b id="nsClk">${nsClock()}</b><small>${esc(new Date().toLocaleDateString(S.lang==='ar'?'ar-IQ':'en-GB',{weekday:'long',day:'numeric'}))}</small></div>${solo?`<button class="ns-out ns-out-top" onclick="logout()">${t('logout')}</button>`:''}</header>`;
  const head=`<div class="ns-head"><div><small>${hi}</small><h1 class="ns-ttl">${title}</h1></div><div class="ns-pill"><i></i><b id="nsClk2">${nsClock()}</b></div></div>`;
  const bot=solo?'':`<nav class="ns-bot" aria-label="${T('الأقسام','Sections',"Bölümler")}" style="--n:${nb}"><i class="ns-ind${animInd?' ns-mv':''}" style="--s:${slot};--f:${from}"></i>${bk.map((k,i)=>{const x=tabs.find(y=>y[0]===k);const sh={dash:T('الرئيسية','Home',"Ana sayfa"),daily:T('الحضور','Attendance',"Devam"),salary:T('الرواتب','Payroll',"Bordro"),breaks:T('الاستراحات','Breaks',"Molalar"),shifts:T('الشفتات','Shifts',"Vardiyalar")}[k]||lab(x);return `<a href="#" class="${slot===i?'on':''}" onclick="event.preventDefault();MORE=false;go('${k}')">${nsIcon(k,22)}<span>${sh}</span></a>`}).join('')}<a href="#" class="${slot===bk.length?'on':''}" onclick="event.preventDefault();MORE=true;render()">${nsIcon('more',22)}<span>${T('المزيد','More',"Daha fazla")}</span></a></nav>`;
  const more=MORE&&!solo?`<div class="ns-scrim" onclick="MORE=false;render()"></div><div class="ns-more" role="dialog" aria-label="${T('كل الأقسام','All sections',"Tüm bölümler")}"><i class="ns-grab"></i><div class="ns-mh"><b>${T('كل الأقسام','All sections',"Tüm bölümler")}</b><button class="ns-x" aria-label="${T('إغلاق','Close',"Kapat")}" onclick="MORE=false;render()">✕</button></div>${myDepts().length>1?`<button class="ns-chg lt" onclick="MORE=false;DPICK=true;render()">${nsIcon('shiftcmp',16)}<span>${T('تغيير القسم','Change section',"Bölüm değiştir")}</span><b>${esc(deptName(DEPT))}</b></button>`:''}
   <div class="ns-tiles">${groups.flatMap(g=>g.it).map((x,i)=>`<a href="#" class="ns-tile${tab===x[0]?' on':''}" style="animation-delay:${i*18}ms" onclick="event.preventDefault();MORE=false;go('${x[0]}')"><span class="ns-ti">${nsIcon(x[0],20)}</span><span>${lab(x)}</span></a>`).join('')}</div>
-  <div class="ns-mf"><span class="ns-net">${net}</span><select class="ns-lang" aria-label="Language" onchange="setLng(this.value)">${LNGS.map(([k,l])=>`<option value="${k}" ${S.lang===k?'selected':''}>${l}</option>`).join('')}</select><button class="ns-out" onclick="logout()">${t('logout')}</button></div></div>`:'';
+  <div class="ns-mf"><span class="ns-net">${net}</span><button class="ns-th" onclick="lgTheme()" aria-label="${LGTH==='dark'?T('الوضع النهاري','Light mode',"Açık mod"):T('الوضع الليلي','Dark mode',"Koyu mod")}"><span class="lg2-tr"><span class="lg2-kn"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${LGTH==='dark'?'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>':'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'}</svg></span></span><span>${LGTH==='dark'?T('ليلي','Dark',"Koyu"):T('نهاري','Light',"Açık")}</span></button><select class="ns-lang" aria-label="Language" onchange="setLng(this.value)">${LNGS.map(([k,l])=>`<option value="${k}" ${S.lang===k?'selected':''}>${l}</option>`).join('')}</select><button class="ns-out" onclick="logout()">${t('logout')}</button></div></div>`:'';
  const opened=MORE&&!NSMO;NSMO=MORE;
  return `<div class="ns${solo?' ns-solo':''}${NAVA?' ns-pg':''}">${side}<div class="ns-col">${top}<main class="ns-main${NAVA?' pg':''}">${solo?'':head}${body()}</main></div>${bot}</div>${more.replace('class="ns-scrim"',opened?'class="ns-scrim ns-op"':'class="ns-scrim"').replace('class="ns-more"',opened?'class="ns-more ns-op"':'class="ns-more"')}`}
 function nsCount(){let rm=false;try{rm=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}if(rm)return;document.querySelectorAll('.ns-count[data-to]').forEach(el=>{const to=+el.dataset.to||0,t0=performance.now(),f=t=>{const k=Math.min(1,(t-t0)/850),e=1-Math.pow(1-k,3);if(!el.isConnected)return;el.textContent=Math.round(to*e).toLocaleString('en-US');if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)})}
@@ -4178,7 +4281,7 @@ function dpPage(){DPANIM=!DPSHOWN;DPSHOWN=true;const mds=myDepts(),who=(S.sessio
 
 /* ---------- Render ---------- */
 function render(){
- setLang();document.body.classList.toggle('auth',!S.session);document.body.classList.toggle('ns-on',APPM==='staff'&&!!S.session);const app=document.getElementById('app');
+ setLang();document.body.classList.toggle('auth',!S.session);document.body.classList.toggle('ns-on',APPM==='staff'&&!!S.session);document.body.classList.toggle('th-dark',APPM==='staff'&&!!S.session&&LGTH==='dark');const app=document.getElementById('app');
  if(geoOn()&&!GEO.st)setTimeout(()=>geoCheck(),0);
  if(geoLocked()){app.innerHTML=geoLockHtml();return}
  if(!S.session){app.innerHTML=vLogin()+dlgHtml();return}

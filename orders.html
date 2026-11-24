@@ -903,14 +903,14 @@ body.ns-on .sl-days span{color:#56616A!important}.sl-days span.ab{background:#D9
 .dp::before{content:"";position:absolute;width:720px;height:720px;border-radius:50%;background:radial-gradient(circle,rgba(47,91,255,.22),rgba(47,91,255,0) 65%);top:-260px;inset-inline-end:-220px;animation:dpGlow 9s ease-in-out infinite alternate;pointer-events:none}
 @keyframes dpGlow{to{transform:translate(-60px,80px) scale(1.1)}}
 .dp-in{width:100%;max-width:760px;position:relative}
-.dp-hd{display:flex;align-items:center;gap:14px;margin-bottom:26px;animation:nsIn .5s cubic-bezier(.2,.8,.2,1) both}
+.dp-hd{display:flex;align-items:center;gap:14px;margin-bottom:26px;animation:nsIn .28s cubic-bezier(.2,.8,.2,1) both}
 .dp-av{width:56px;height:56px;border-radius:18px;background:#2F5BFF;display:grid;place-items:center;font-size:22px;font-weight:800;flex:none}
 body.ns-on .dp *{color:#FFFFFF!important}body.ns-on .dp-hd small{color:#AEB8C0!important;font-size:14px}
 .dp-hd h1{margin:2px 0 0;font-size:32px;font-weight:800;line-height:1.2}
 .dp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (min-width:900px){.dp-3{max-width:1040px}.dp-3 .dp-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.dp-3 .dp-card{grid-template-columns:1fr auto;grid-template-rows:auto auto auto;padding:22px}.dp-3 .dp-ic{grid-row:1;grid-column:1;margin-bottom:10px}.dp-3 .dp-tx{grid-column:1/3;grid-row:2}.dp-3 .dp-ct{grid-column:1/3;grid-row:3;margin-top:6px}.dp-3 .dp-ar{grid-row:1;grid-column:2;align-self:start}}
-.dp-card{--c:#2F5BFF;position:relative;display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;gap:4px 14px;align-items:center;text-align:start;padding:18px;border-radius:22px;border:1px solid #2C333A;background:#1C2228;cursor:pointer;font:inherit;overflow:hidden;animation:dpIn .55s cubic-bezier(.2,.9,.3,1.15) both;transition:transform .2s,border-color .2s,background .2s,opacity .3s}
-.dp-card::after{content:"";position:absolute;inset:0;background:var(--c);opacity:0;transition:opacity .25s}
+.dp-card{--c:#2F5BFF;position:relative;display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;gap:4px 14px;align-items:center;text-align:start;padding:18px;border-radius:22px;border:1px solid #2C333A;background:#1C2228;cursor:pointer;font:inherit;overflow:hidden;animation:dpIn .3s cubic-bezier(.2,.9,.3,1.1) both;transition:transform .14s,border-color .14s,background .14s,opacity .14s}
+.dp-card::after{content:"";position:absolute;inset:0;background:var(--c);opacity:0;transition:opacity .12s}
 .dp-card:hover{transform:translateY(-3px);border-color:var(--c)}.dp-card:focus-visible{outline:3px solid #FFFFFF;outline-offset:3px}
 .dp-card>*{position:relative;z-index:1}
 .dp-ic{grid-row:1/3;width:58px;height:58px;border-radius:18px;background:var(--c);display:grid;place-items:center;transition:transform .3s}
@@ -922,14 +922,16 @@ body.ns-on .dp *{color:#FFFFFF!important}body.ns-on .dp-hd small{color:#AEB8C0!i
 .dp-card:hover .dp-ar{background:var(--c);border-color:var(--c);transform:translateX(-4px)}[dir=ltr] .dp-card:hover .dp-ar{transform:translateX(4px)}
 .dp-card.go{transform:scale(1.03);border-color:var(--c)}.dp-card.go::after{opacity:1}.dp-card.go .dp-ic{background:rgba(255,255,255,.18);transform:scale(1.1)}
 .dp-card.out{opacity:.25;transform:scale(.97)}
-.dp-ft{display:flex;justify-content:space-between;align-items:center;margin-top:24px;animation:nsIn .5s .4s both}
+.dp-ft{display:flex;justify-content:space-between;align-items:center;margin-top:24px;animation:nsIn .28s .12s both}
+.still .dp-card,.dp-in.still .dp-hd,.dp-in.still .dp-ft{animation:none}
+.dp-fade{position:fixed;inset:0;background:#14181C;z-index:200;pointer-events:none;animation:dpOut .26s ease-out forwards}@keyframes dpOut{to{opacity:0;visibility:hidden}}
 .dp-ft span{font-family:'Alexandria',sans-serif!important;font-size:18px;font-weight:700}.dp-ft button{height:44px;padding:0 16px;border-radius:12px;border:1px solid #2C333A;background:transparent;font-weight:600;cursor:pointer}
-@keyframes dpIn{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes dpIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
 @media (max-width:640px){.dp{align-items:flex-start;padding-top:calc(40px + env(safe-area-inset-top,0px))}.dp-grid{grid-template-columns:minmax(0,1fr)}.dp-hd h1{font-size:26px}}
 .ns-chg{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;margin:0 0 10px;padding:0 12px;border-radius:12px;border:1px solid #2C333A;background:#1C2228;cursor:pointer;font:inherit;font-size:13px;font-weight:600}
 .ns-chg span{flex:1;text-align:start}.ns-chg b{font-size:12px;padding:2px 10px;border-radius:999px;background:#2F5BFF}body.ns-on .ns-chg b{color:#FFFFFF!important}
 .ns-chg.lt{border-color:#DDE2E5;background:#F3F5F7;margin-bottom:12px}
-@media (prefers-reduced-motion:reduce){.dp::before,.dp-hd,.dp-card,.dp-ft{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.dp::before,.dp-hd,.dp-card,.dp-ft,.dp-fade{animation:none!important}.dp-fade{display:none}}
 /* components inside the staff app */
 body.ns-on .nb{border-radius:18px!important;border:1px solid #E3E7EA!important;background:#FFFFFF!important;box-shadow:none!important}
 body.ns-on .btn{min-height:44px;border-radius:14px!important;background:#2F5BFF!important;border:1px solid #2F5BFF!important;box-shadow:none!important;font-weight:700;transition:transform .12s,background .18s}
@@ -4162,13 +4164,15 @@ const nsUnread=()=>{try{return typeof unread==='function'?unread():0}catch(e){re
 setInterval(()=>{const c=nsClock();['nsClk','nsClk2'].forEach(id=>{const e=document.getElementById(id);if(e&&e.textContent!==c)e.textContent=c})},1000);
 
 /* department picker: after a manager signs in, choose where to go */
-let DPICK=false,DPGO='';
+let DPICK=false,DPGO='',DPANIM=true,DPSHOWN=false;
 const DPI={runner:['#2F5BFF','M13 4a2 2 0 11-4 0 2 2 0 014 0zM9 21l2-6 3 3v3M7 11l3-3 4 2 3 3'],captain:['#D9692A','M4 15h16M6 15a6 6 0 0112 0M12 7v2M3 19h18'],host:['#6D28D9','M4 21V5a2 2 0 012-2h9l5 5v13M9 13h6M9 17h6M14 3v5h5'],cashier:['#0F766E','M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6']};
-function dpGo(d){if(DPGO)return;DPGO=d;render();setTimeout(()=>{DEPT=d;DPICK=false;DPGO='';tab='dash';MORE=false;NAVA=1;render();try{scrollTo(0,0)}catch(e){}},430)}
-function dpPage(){const mds=myDepts(),who=(S.session&&S.session.id&&(S.mgrs.find(m=>m.id===S.session.id)||{}).name)||T('المدير','Manager',"Yönetici"),first=String(who).split(' ')[0];
+let DPFADE=false;
+function dpGo(d){if(DPGO)return;DPGO=d;const el=document.querySelector(`.dp-card[data-d="${d}"]`);if(el){el.classList.add('go');document.querySelectorAll('.dp-card').forEach(x=>{if(x!==el)x.classList.add('out')})}
+ setTimeout(()=>{DEPT=d;DPICK=false;DPGO='';tab='dash';MORE=false;NAVA=0;DPFADE=true;render();try{scrollTo(0,0)}catch(e){}},140)}
+function dpPage(){DPANIM=!DPSHOWN;DPSHOWN=true;const mds=myDepts(),who=(S.session&&S.session.id&&(S.mgrs.find(m=>m.id===S.session.id)||{}).name)||T('المدير','Manager',"Yönetici"),first=String(who).split(' ')[0];
  const brk=S.breaks||{},cards=mds.map((d,i)=>{const L=S.runners.filter(r=>(r.dept||'runner')===d&&!r.off),onB=L.filter(r=>brk[r.id]).length,ic=DPI[d]||DPI.runner,desc=(LGDEPTS0().find(x=>x[0]===d)||[])[2]||'';
-  return `<button class="dp-card${DPGO===d?' go':''}${DPGO&&DPGO!==d?' out':''}" style="--c:${ic[0]};animation-delay:${120+i*70}ms" onclick="dpGo('${d}')"><span class="dp-ic"><svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${ic[1]}"/></svg></span><span class="dp-tx"><b>${deptName(d)}</b><small>${esc(desc)}</small></span><span class="dp-ct"><b class="num">${L.length}</b><small>${T('شخص','people',"kişi")}</small>${onB?`<em>${onB} ${T('باستراحة','on break',"molada")}</em>`:''}</span><span class="dp-ar" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="${S.lang==='ar'?'M15 6l-6 6 6 6':'M9 6l6 6-6 6'}"/></svg></span></button>`}).join('');
- return `<div class="dp"><div class="dp-in${mds.length===3?' dp-3':''}"><div class="dp-hd"><span class="dp-av">${esc(String(who).charAt(0))}</span><div><small>${nsHi()}، ${esc(first)}</small><h1>${T('وين رايح اليوم؟','Where to today?',"Bugün nereye?")}</h1></div></div>
+  return `<button class="dp-card${DPGO===d?' go':''}${DPGO&&DPGO!==d?' out':''}${DPANIM?'':' still'}" data-d="${d}" style="--c:${ic[0]};animation-delay:${i*35}ms" onclick="dpGo('${d}')"><span class="dp-ic"><svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${ic[1]}"/></svg></span><span class="dp-tx"><b>${deptName(d)}</b><small>${esc(desc)}</small></span><span class="dp-ct"><b class="num">${L.length}</b><small>${T('شخص','people',"kişi")}</small>${onB?`<em>${onB} ${T('باستراحة','on break',"molada")}</em>`:''}</span><span class="dp-ar" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="${S.lang==='ar'?'M15 6l-6 6 6 6':'M9 6l6 6-6 6'}"/></svg></span></button>`}).join('');
+ return `<div class="dp"><div class="dp-in${mds.length===3?' dp-3':''}${DPANIM?'':' still'}"><div class="dp-hd"><span class="dp-av">${esc(String(who).charAt(0))}</span><div><small>${nsHi()}، ${esc(first)}</small><h1>${T('وين رايح اليوم؟','Where to today?',"Bugün nereye?")}</h1></div></div>
  <div class="dp-grid">${cards}</div>
  <div class="dp-ft"><span id="nsClk">${nsClock()}</span><button onclick="logout()">${t('logout')}</button></div></div></div>`}
 
@@ -4208,8 +4212,8 @@ function render(){
  const who=esc(S.session.role==='runner'?(me()||{}).name:meName()),net=navigator.onLine?(DB?(dbErr?T('خطأ مزامنة','Sync error',"Senkronizasyon hatası"):dbOk?T('متصل','Online',"Çevrimiçi"):'...'):T('محلي','Local',"Yerel")):T('بدون إنترنت','Offline',"İnternet yok");
  const gnav=grps.length>1?`<nav class="cg" aria-label="${T('الأقسام','Sections',"Bölümler")}">${grps.map(x=>`<a class="${x.i===curG?'on':''}" onclick="go('${x.it[0][0]}')">${x.g}</a>`).join('')}</nav>`:'';
  const snav=subs.length>1?`<nav class="cs">${subs.map(x=>`<a class="${tab===x[0]?'on':''}" onclick="go('${x[0]}')">${lab(x)}</a>`).join('')}</nav>`:'';
- if(APPM==='staff'&&DPICK&&isStaff()&&myDepts().length>1){app.innerHTML=dpPage()+dlgHtml();return}DPICK=false;
- if(APPM==='staff'){const nav0=NAVA;app.innerHTML=nsShell(tabs,lab,cur,body,net,who.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'"))+`${taSheet()}${profSheet()}${notesSheet()}${callSheet()}${dlgHtml()}`;tick();if(nav0)nsCount();if(NAVA){NAVA=0;cuRun()}return}
+ if(APPM==='staff'&&DPICK&&isStaff()&&myDepts().length>1){app.innerHTML=dpPage()+dlgHtml();return}DPICK=false;DPSHOWN=false;
+ if(APPM==='staff'){const nav0=NAVA;app.innerHTML=nsShell(tabs,lab,cur,body,net,who.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'"))+`${taSheet()}${profSheet()}${notesSheet()}${callSheet()}${dlgHtml()}`+(DPFADE?'<div class="dp-fade" aria-hidden="true"></div>':'');if(DPFADE){DPFADE=false;nsCount()}tick();if(nav0)nsCount();if(NAVA){NAVA=0;cuRun()}return}
  app.innerHTML=`<div class="cshell"><header class="ch"><div class="ch-b"><div class="ch-logo">amaya</div><div class="ch-t"><div>${t('app')}</div><small>${esc((S.cfg&&S.cfg.name)||t('sub'))}</small></div></div>${gnav}<div class="ch-u"><span class="ch-net">${net}</span><select class="ch-lang" aria-label="Language" onchange="setLng(this.value)">${LNGS.map(([k,l])=>`<option value="${k}" ${S.lang===k?"selected":""}>${l}</option>`).join("")}</select><span class="ch-me" title="${who}">${who}</span><button class="btn" onclick="logout()">${t('logout')}</button></div></header>${capFocus()?'':snav}<main class="content cmain${NAVA?' pg':''}">${capFocus()?'':(APPM==='orders'?'':switcher())+((tab==='dash'||S.session.role==='runner')?'':`<div class="mb-5 pgh"><div><h1 class="text-2xl font-bold tracking-tight">${lab(cur)}</h1></div></div>`)}${body()}</main>${cbot}</div>${sheet}${taSheet()}${profSheet()}${notesSheet()}${callSheet()}${dlgHtml()}`;
  tick();
  if(NAVA){NAVA=0;cuRun()}

@@ -1088,6 +1088,7 @@ body.th-dark.ns-on .ta-items button:not(.on) *{color:#E8ECEF!important}
 body.th-dark.ns-on .op-chips button.on,body.th-dark.ns-on .ta-items button.on{background:#E8ECEF!important;border-color:#E8ECEF!important;color:#14181C!important}
 body.th-dark.ns-on .ta-items button.on *{color:#14181C!important}
 body.th-dark.ns-on .ta-box{background:#1A1F24!important;border-color:#2F373E!important}body.th-dark.ns-on .ta-box *:not(button):not(button *){color:#E8ECEF!important}
+#app .sheet.sh-keep,#app .sheet.sh-keep>div{animation:none!important}
 /* components inside the staff app */
 body.ns-on .nb{border-radius:18px!important;border:1px solid #E3E7EA!important;background:#FFFFFF!important;box-shadow:none!important}
 body.ns-on .btn{min-height:44px;border-radius:14px!important;background:#2F5BFF!important;border:1px solid #2F5BFF!important;box-shadow:none!important;font-weight:700;transition:transform .12s,background .18s}
@@ -3284,7 +3285,7 @@ function canAct(s){return !!isStaff()}
 function tState(s){const now=Date.now(),oo=tsOrders(s.id),lim=OLATE()*6e4;if(oo.some(o=>!o.done&&!o.comp&&!o.hold&&now-o.at>lim))return 'r';const last=oo.length?Math.max(...oo.map(o=>o.at)):0;
  if((!oo.length&&now-s.at>15*6e4)||(last&&now-last>45*6e4))return 'y';return 'g'}
 const tStateName=k=>({g:T('نشطة','Active',"Aktif"),y:T('غير نشطة','Quiet',"Sakin"),r:T('طلب متأخر','Late order',"Geciken sipariş")}[k]);
-const ADJR=()=>({cancel:[T('خطأ في الطلب','Wrong order',"Yanlış sipariş"),T('مشكلة في الصنف','Item problem',"Üründe sorun"),T('جسم غريب في الطبق','Foreign matter',"Yabancı madde"),T('الزبون غيّر رأيه','Guest changed mind',"Misafir vazgeçti"),T('حادث أثناء الخدمة','Service accident',"Servis kazası"),T('خطأ الكابتن','Server fault',"Garson hatası"),T('تجربة','Test',"Test"),T('الصنف غير متوفر','Not available',"Ürün yok")],
+const ADJR=()=>({cancel:[T('خطأ في الطلب','Wrong order',"Yanlış sipariş"),T('مشكلة في الصنف','Item problem',"Üründe sorun"),T('جسم غريب في الطبق','Foreign matter',"Yabancı madde"),T('الزبون غيّر رأيه','Guest changed mind',"Misafir vazgeçti"),T('حادث أثناء الخدمة','Service accident',"Servis kazası"),T('خطأ الكابتن','Server fault',"Garson hatası"),T('تجربة','Test',"Test"),T('الصنف غير متوفر','Not available',"Ürün yok"),T('الزبون خرج','Guest left',"Misafir ayrıldı"),T('لم يعجب الزبون','Guest did not like it',"Misafir beğenmedi")],
  ret:[T('الطعم غير جيد','Taste',"Tat"),T('بارد','Cold',"Soğuk"),T('مستوى الطبخ','Cooking level',"Pişirme"),T('شيء غريب في الطبق','Foreign object',"Yabancı madde"),T('ليس نفس الطلب','Not what was ordered',"Sipariş edilen bu değil"),T('سبب آخر','Other reason',"Başka neden")]});
 const ADJN=()=>({cancel:T('إلغاء','Cancel',"İptal"),ret:T('إرجاع','Return',"İade"),exch:T('تبديل','Exchange',"Değişim"),move:T('نقل','Moved',"Taşındı")});
 let TA=null;
@@ -4406,6 +4407,12 @@ function render(){
  if(NAVA){NAVA=0;cuRun()}
 }
 {const _rr=render;render=function(){try{_rr()}catch(e){console.error(e);toast('Error: '+(e&&e.message?e.message:e))}}}
+/* a sheet that is still open after a re-render keeps its place: no replayed animation, same scroll */
+{const _rs=render;const shSig=sh=>(sh.getAttribute('onclick')||'')+'|'+(typeof TA!=='undefined'&&TA?TA.sid+'|'+TA.tab:'');
+ render=function(){const old=document.querySelector('#app .sheet');let sig=null,pos=[];
+  if(old){sig=shSig(old);const cnt={};[old.firstElementChild,...old.firstElementChild?old.firstElementChild.querySelectorAll('*'):[]].forEach(e=>{if(!e)return;const k=e.tagName+'.'+(typeof e.className==='string'?e.className:'');cnt[k]=(cnt[k]||0)+1;if(e.scrollTop>0)pos.push([k,cnt[k]-1,e.scrollTop])})}
+  _rs();const nw=document.querySelector('#app .sheet');
+  if(old&&nw&&shSig(nw)===sig){nw.classList.add('sh-keep');const cnt={},map={};pos.forEach(p=>map[p[0]+'#'+p[1]]=p[2]);[nw.firstElementChild,...nw.firstElementChild?nw.firstElementChild.querySelectorAll('*'):[]].forEach(e=>{if(!e)return;const k=e.tagName+'.'+(typeof e.className==='string'?e.className:'');cnt[k]=(cnt[k]||0)+1;const v=map[k+'#'+(cnt[k]-1)];if(v)e.scrollTop=v})}}}
 try{if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('firebase-messaging-sw.js').catch(()=>{})}catch(e){}
 render();
 ensureSeed(S);save();
